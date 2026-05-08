@@ -1,65 +1,104 @@
-import Image from "next/image";
+import { Hero } from "./components/Hero";
+import { PageShell } from "./components/PageShell";
+import { PosterCard } from "./components/PosterCard";
+import { SectionHeader } from "./components/SectionHeader";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <PageShell wide>
+      <Hero />
+
+      <section className="px-6 pb-7 pt-6 md:px-8">
+        <SectionHeader title="Trending now" showSeeAll />
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <PosterCard
+            imageSrc="/movie_sample/poster2.png"
+            imagePriority
+            posterTitle="THE LAST DRIVE"
+            titleBelow="The Last Drive"
+            posterGradient="linear-gradient(155deg, #2a0c10, #6b1419, #0f0608)"
+            accentColor="#E50914"
+            badge={{ kind: "hd", label: "HD" }}
+            entitlement={{ kind: "price", value: "$2.99" }}
+            watchHref="/pay/movie?title=The%20Last%20Drive&price=%242.99"
+          />
+          <PosterCard
+            imageSrc="/movie_sample/poster4.png"
+            imagePriority
+            posterTitle="ECHO VALLEY"
+            titleBelow="Echo Valley"
+            posterGradient="linear-gradient(180deg, #14101a, #2c1a3d, #0c0612)"
+            accentColor="#b08fd9"
+            subtitle={{ text: "A SERIES", color: "#b08fd9" }}
+            entitlement={{ kind: "none" }}
+            watchLabel="Watch"
+            watchHref="/pay/subscription?title=Echo%20Valley"
+          />
+          <PosterCard
+            imageSrc="/movie_sample/poster3.png"
+            imagePriority
+            posterTitle="CROWN OF ASH"
+            titleBelow="Crown of Ash"
+            posterGradient="linear-gradient(140deg, #1c0d05, #3d1e08, #0f0703)"
+            accentColor="#d4a04a"
+            badge={{ kind: "owned", label: "OWNED" }}
+            entitlement={{ kind: "continue", value: "Continue · 42m left" }}
+            watchHref="/watch?title=Crown%20of%20Ash"
+          />
+          <PosterCard
+            imageSrc="/movie_sample/poster5.png"
+            imagePriority
+            posterTitle="AFTER HOURS"
+            titleBelow="After Hours"
+            posterGradient="linear-gradient(165deg, #1a0a18, #4a1538, #0a040a)"
+            accentColor="#ed7aa6"
+            entitlement={{ kind: "price", value: "$3.99" }}
+            watchHref="/pay/movie?title=After%20Hours&price=%243.99"
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="px-6 pb-10 pt-3 md:px-8">
+        <SectionHeader title="Series · Subscribe to unlock" />
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <PosterCard
+            imageSrc="/movie_sample/poster1.png"
+            posterTitle="MIDNIGHT RUN"
+            titleBelow="Midnight Run"
+            posterGradient="linear-gradient(180deg, #0a1f30, #040a14, #000000)"
+            accentColor="#5cb8d4"
+            watchLabel="Watch"
+            watchHref="/pay/subscription?title=Midnight%20Run"
+          />
+          <PosterCard
+            imageSrc="/movie_sample/poster2.png"
+            posterTitle="FINAL FRAME"
+            titleBelow="Final Frame"
+            posterGradient="linear-gradient(180deg, #1a1a08, #404010, #0a0a04)"
+            accentColor="#d4cc5c"
+            watchLabel="Watch"
+            watchHref="/pay/subscription?title=Final%20Frame"
+          />
+          <PosterCard
+            imageSrc="/movie_sample/poster3.png"
+            posterTitle="GLASSHOUSE"
+            titleBelow="Glasshouse"
+            posterGradient="linear-gradient(180deg, #0e3d20, #04140a, #000000)"
+            accentColor="#5cd49a"
+            watchLabel="Watch"
+            watchHref="/pay/subscription?title=Glasshouse"
+          />
+          <PosterCard
+            imageSrc="/movie_sample/poster4.png"
+            posterTitle="HOLLOW COAST"
+            titleBelow="Hollow Coast"
+            posterGradient="linear-gradient(180deg, #1a0e08, #421a08, #0a0604)"
+            accentColor="#e8965c"
+            watchLabel="Watch"
+            watchHref="/pay/subscription?title=Hollow%20Coast"
+          />
         </div>
-      </main>
-    </div>
+      </section>
+    </PageShell>
   );
 }
