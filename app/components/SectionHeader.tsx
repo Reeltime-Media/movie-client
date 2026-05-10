@@ -1,11 +1,18 @@
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+
+const seeAllClassName =
+  "group inline-flex items-center gap-1 text-[12px] font-medium text-text-muted transition-colors hover:text-text";
 
 export function SectionHeader({
   title,
   showSeeAll = false,
+  seeAllHref,
 }: {
   title: string;
   showSeeAll?: boolean;
+  /** When set with showSeeAll, navigates to this route instead of a placeholder hash. */
+  seeAllHref?: string;
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -14,16 +21,23 @@ export function SectionHeader({
       </h2>
 
       {showSeeAll ? (
-        <a
-          href="#"
-          className="group inline-flex items-center gap-1 text-[12px] font-medium text-text-muted transition-colors hover:text-text"
-        >
-          <span>See all</span>
-          <ChevronRight
-            size={14}
-            className="transition-transform group-hover:translate-x-[2px]"
-          />
-        </a>
+        seeAllHref ? (
+          <Link href={seeAllHref} className={seeAllClassName}>
+            <span>See all</span>
+            <ChevronRight
+              size={14}
+              className="transition-transform group-hover:translate-x-[2px]"
+            />
+          </Link>
+        ) : (
+          <a href="#" className={seeAllClassName}>
+            <span>See all</span>
+            <ChevronRight
+              size={14}
+              className="transition-transform group-hover:translate-x-[2px]"
+            />
+          </a>
+        )
       ) : null}
     </div>
   );

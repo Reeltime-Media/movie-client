@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { Bell, Moon, Search, Sun } from "lucide-react";
 
 const navLinks = [
@@ -12,24 +13,56 @@ const navLinks = [
   { label: "My library", href: "/my-library" },
 ] as const;
 
+const themeSubscribers = new Set<() => void>();
+
+function resolveTheme(): "dark" | "light" {
+  const explicit = document.documentElement.dataset.theme as
+    | "dark"
+    | "light"
+    | undefined;
+  if (explicit === "dark" || explicit === "light") return explicit;
+  return window.matchMedia("(prefers-color-scheme: light)").matches
+    ? "light"
+    : "dark";
+}
+
+function subscribeTheme(onStoreChange: () => void) {
+  themeSubscribers.add(onStoreChange);
+  const mq = window.matchMedia("(prefers-color-scheme: light)");
+  mq.addEventListener("change", onStoreChange);
+  function onStorage(e: StorageEvent) {
+    if (e.key === "reeltime-theme") onStoreChange();
+  }
+  window.addEventListener("storage", onStorage);
+  return () => {
+    themeSubscribers.delete(onStoreChange);
+    mq.removeEventListener("change", onStoreChange);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function notifyThemeSubscribers() {
+  themeSubscribers.forEach((fn) => fn());
+}
+
+function applyTheme(t: "dark" | "light") {
+  document.documentElement.dataset.theme = t;
+  try {
+    localStorage.setItem("reeltime-theme", t);
+  } catch {}
+  notifyThemeSubscribers();
+}
+
 export function TopNav() {
   const pathname = usePathname();
-
-  function applyTheme(t: "dark" | "light") {
-    document.documentElement.dataset.theme = t;
-    try {
-      localStorage.setItem("reeltime-theme", t);
-    } catch {}
-  }
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    resolveTheme,
+    () => "dark",
+  );
 
   function toggleTheme() {
-    const current =
-      (document.documentElement.dataset.theme as "dark" | "light" | undefined) ??
-      (window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: light)").matches
-        ? "light"
-        : "dark");
-    applyTheme(current === "dark" ? "light" : "dark");
+    applyTheme(resolveTheme() === "dark" ? "light" : "dark");
   }
 
   return (
@@ -75,12 +108,20 @@ export function TopNav() {
           <button
             type="button"
             onClick={toggleTheme}
+            suppressHydrationWarning
             className="grid h-9 w-9 place-items-center rounded-[6px] text-text-muted transition-colors hover:text-text"
-            aria-label="Toggle theme"
-            title="Toggle theme"
+            aria-label={
+              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
+            title={
+              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
           >
-            <Sun size={16} className="rt-theme-sun" />
-            <Moon size={16} className="rt-theme-moon" />
+            {theme === "dark" ? (
+              <Moon size={16} aria-hidden />
+            ) : (
+              <Sun size={16} aria-hidden />
+            )}
           </button>
           <button
             type="button"

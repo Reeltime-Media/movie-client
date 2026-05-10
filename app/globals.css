@@ -51,6 +51,37 @@
   }
 }
 
+/* Home hero stays cinematic (dark tokens) while the rest of the app is light */
+[data-theme="light"] .hero-featured {
+  color-scheme: dark;
+  --rt-bg: #0a0a0a;
+  --rt-surface: #141414;
+  --rt-surface-elevated: #1f1f1f;
+  --rt-border: #2a2a2a;
+  --rt-border-hover: #3a3a3a;
+  --rt-text: #fafafa;
+  --rt-text-muted: #a3a3a3;
+  --rt-text-disabled: #525252;
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .hero-featured {
+    color-scheme: dark;
+    --rt-bg: #0a0a0a;
+    --rt-surface: #141414;
+    --rt-surface-elevated: #1f1f1f;
+    --rt-border: #2a2a2a;
+    --rt-border-hover: #3a3a3a;
+    --rt-text: #fafafa;
+    --rt-text-muted: #a3a3a3;
+    --rt-text-disabled: #525252;
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+  }
+}
+
 @theme inline {
   --color-bg: var(--rt-bg);
   --color-surface: var(--rt-surface);
@@ -75,18 +106,4 @@
 body {
   background: var(--background);
   color: var(--foreground);
-}
-
-/* Theme toggle icons (avoid hydration mismatch by CSS switching) */
-.rt-theme-sun {
-  display: none;
-}
-.rt-theme-moon {
-  display: block;
-}
-html[data-theme="dark"] .rt-theme-sun {
-  display: block;
-}
-html[data-theme="dark"] .rt-theme-moon {
-  display: none;
 }

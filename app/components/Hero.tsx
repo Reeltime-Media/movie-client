@@ -1,122 +1,294 @@
+"use client";
+
 import { Info, PlayCircle, Star } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+
+const AUTO_MS = 6500;
+
+type HeroSlide = {
+  id: string;
+  title: string;
+  year: string;
+  duration: string;
+  rating: string;
+  genres: string;
+  description: string;
+  imageSrc: string;
+  watchHref: string;
+  accentColor: string;
+};
+
+const HERO_SLIDES: HeroSlide[] = [
+  {
+    id: "last-drive",
+    title: "The Last Drive",
+    year: "2026",
+    duration: "2h 14m",
+    rating: "8.7",
+    genres: "Action · Thriller",
+    description:
+      "A rideshare driver picks up the wrong passenger on a quiet Tuesday. By dawn, half the city is hunting them, and the truth is more dangerous than either of them.",
+    imageSrc: "/movie_sample/poster2.png",
+    watchHref: "/watch?title=The%20Last%20Drive",
+    accentColor: "#E50914",
+  },
+  {
+    id: "echo-valley",
+    title: "Echo Valley",
+    year: "2025",
+    duration: "8 episodes",
+    rating: "8.4",
+    genres: "Drama · Mystery",
+    description:
+      "A small town journalist returns home after a decade away and finds the valley wired with secrets that refuse to stay buried.",
+    imageSrc: "/movie_sample/poster4.png",
+    watchHref: "/watch/series/echo-valley/1/1",
+    accentColor: "#b08fd9",
+  },
+  {
+    id: "crown-of-ash",
+    title: "Crown of Ash",
+    year: "2026",
+    duration: "1h 58m",
+    rating: "8.2",
+    genres: "Epic · Fantasy",
+    description:
+      "When the old king falls, three rivals claim the ash throne. Alliances shatter, armies march, and one exile holds the key to who burns last.",
+    imageSrc: "/movie_sample/poster3.png",
+    watchHref: "/watch?title=Crown%20of%20Ash",
+    accentColor: "#d4a04a",
+  },
+  {
+    id: "after-hours",
+    title: "After Hours",
+    year: "2025",
+    duration: "1h 44m",
+    rating: "7.9",
+    genres: "Noir · Thriller",
+    description:
+      "One night shift, one locked door, and a ledger that names everyone who paid to look the other way. Getting out alive means choosing a side.",
+    imageSrc: "/movie_sample/poster5.png",
+    watchHref: "/watch?title=After%20Hours",
+    accentColor: "#ed7aa6",
+  },
+];
 
 function HeroBackground() {
   return (
-    <svg
-      className="absolute inset-0 h-full w-full"
-      viewBox="0 0 1440 340"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <defs>
-        <radialGradient id="rt-hero-radial" cx="38%" cy="40%" r="80%">
-          <stop offset="0%" stopColor="#B81D24" stopOpacity="0.95" />
-          <stop offset="35%" stopColor="#5B0E14" stopOpacity="0.65" />
-          <stop offset="70%" stopColor="#0A0A0A" stopOpacity="1" />
-          <stop offset="100%" stopColor="#0A0A0A" stopOpacity="1" />
-        </radialGradient>
-        <linearGradient id="rt-hero-streak" x1="0" x2="1">
-          <stop offset="0%" stopColor="#E50914" stopOpacity="0.0" />
-          <stop offset="45%" stopColor="#E50914" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#E50914" stopOpacity="0.0" />
-        </linearGradient>
-      </defs>
+    <>
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 1440 340"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <radialGradient id="rt-hero-spot" cx="68%" cy="38%" r="58%">
+            <stop offset="0%" stopColor="#7A1A20" stopOpacity="1" />
+            <stop offset="30%" stopColor="#3D0C12" stopOpacity="1" />
+            <stop offset="70%" stopColor="#0A0A0A" stopOpacity="1" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="1" />
+          </radialGradient>
 
-      <rect width="1440" height="340" fill="url(#rt-hero-radial)" />
+          <radialGradient id="rt-hero-haze" cx="68%" cy="38%" r="40%">
+            <stop offset="0%" stopColor="#E50914" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#E50914" stopOpacity="0" />
+          </radialGradient>
 
-      <g opacity="0.35">
-        <path
-          d="M-50 250 C 200 140, 360 220, 620 120 C 820 40, 980 70, 1490 -20"
-          fill="none"
-          stroke="url(#rt-hero-streak)"
-          strokeWidth="34"
-        />
-        <path
-          d="M-80 320 C 260 260, 460 290, 720 210 C 960 140, 1120 150, 1520 70"
-          fill="none"
-          stroke="url(#rt-hero-streak)"
-          strokeWidth="18"
-          opacity="0.7"
-        />
-      </g>
+          <filter id="rt-hero-grain">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves="2"
+              stitchTiles="stitch"
+            />
+            <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0" />
+          </filter>
+        </defs>
 
-      <g opacity="0.18">
-        <circle cx="1080" cy="110" r="78" fill="#FAFAFA" />
-        <circle cx="1240" cy="170" r="34" fill="#FAFAFA" />
-        <rect x="880" y="52" width="220" height="10" fill="#FAFAFA" />
-        <rect x="910" y="74" width="160" height="8" fill="#FAFAFA" />
-      </g>
-    </svg>
+        <rect width="1440" height="340" fill="url(#rt-hero-spot)" />
+        <rect width="1440" height="340" fill="url(#rt-hero-haze)" />
+
+        <g opacity="0.06" transform="translate(980, 120)">
+          <circle cx="0" cy="0" r="120" fill="none" stroke="#FAFAFA" strokeWidth="1" />
+          <circle cx="0" cy="0" r="80" fill="none" stroke="#FAFAFA" strokeWidth="1" />
+          <circle cx="0" cy="0" r="40" fill="none" stroke="#FAFAFA" strokeWidth="1" />
+        </g>
+
+        <rect width="1440" height="340" filter="url(#rt-hero-grain)" />
+      </svg>
+
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)",
+        }}
+      />
+    </>
   );
 }
 
 export function Hero() {
+  const [active, setActive] = useState(0);
+  const total = HERO_SLIDES.length;
+
+  const goNext = useCallback(() => {
+    setActive((i) => (i + 1) % total);
+  }, [total]);
+
+  useEffect(() => {
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const id = window.setInterval(goNext, AUTO_MS);
+    return () => window.clearInterval(id);
+  }, [goNext]);
+
+  const activeSlide = HERO_SLIDES[active];
+  const indexLabel = String(active + 1).padStart(2, "0");
+  const totalLabel = String(total).padStart(2, "0");
+
   return (
-    <section className="relative h-[340px] w-full overflow-hidden">
+    <section className="hero-featured relative mt-3 h-[460px] w-full overflow-hidden md:mt-4">
       <HeroBackground />
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg to-transparent" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-bg/75 to-transparent to-[80%]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-bg via-bg/90 to-transparent" />
 
-      <div className="absolute inset-0">
-        <div className="h-full w-full px-8 py-[50px]">
-          <div className="max-w-[460px]">
-            <div className="inline-flex items-center rounded-[3px] bg-brand px-[9px] py-1 text-[10px] font-bold tracking-[0.12em] text-white">
-              FEATURED
-            </div>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-[58%] max-w-[900px] bg-gradient-to-r from-bg/92 via-bg/45 to-transparent" />
 
-            <h1 className="mt-3 text-[44px] font-extrabold leading-[1.02] tracking-[-0.025em] text-text">
-              The Last Drive
-            </h1>
-
-            <div className="mt-3 flex flex-wrap items-center gap-[10px] text-[12px] font-medium text-text-muted">
-              <span>2026</span>
-              <span className="h-[3px] w-[3px] rounded-full bg-border-hover" />
-              <span>2h 14m</span>
-              <span className="h-[3px] w-[3px] rounded-full bg-border-hover" />
-              <span className="inline-flex items-center gap-1">
-                <Star size={14} className="text-warning" />
-                <span>8.7</span>
-              </span>
-              <span className="h-[3px] w-[3px] rounded-full bg-border-hover" />
-              <span>Action</span>
-              <span className="h-[3px] w-[3px] rounded-full bg-border-hover" />
-              <span>Thriller</span>
-            </div>
-
-            <p className="mt-4 max-w-[420px] text-[13px] leading-relaxed text-[#E5E5E5]">
-              A rideshare driver picks up the wrong passenger on a quiet Tuesday.
-              By dawn, half the city is hunting them, and the truth is more
-              dangerous than either of them.
-            </p>
-
-            <div className="mt-6 flex items-center gap-[10px]">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-[6px] bg-brand px-[22px] py-[10px] text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+      <div className="relative z-[2] h-full">
+        <div className="mx-auto flex h-full max-w-[1440px] items-end justify-between gap-8 px-6 pb-12 md:gap-12 md:px-12 md:pb-16">
+          <div className="relative min-w-0 max-w-[520px]">
+            {HERO_SLIDES.map((s, i) => (
+              <div
+                key={s.id}
+                className={`transition-opacity duration-500 ease-out ${
+                  i === active
+                    ? "relative z-10 opacity-100"
+                    : "pointer-events-none absolute inset-0 z-0 opacity-0"
+                }`}
+                aria-hidden={i !== active}
               >
-                <PlayCircle size={15} />
-                Watch now
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-[6px] border border-white/20 bg-white/10 px-[22px] py-[10px] text-[13px] font-bold text-white backdrop-blur transition-colors hover:bg-white/20"
-              >
-                <Info size={15} />
-                More info
-              </button>
-            </div>
+                <div className="mb-5 flex items-center gap-2.5">
+                  <div className="h-[1px] w-8 bg-brand" />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand">
+                    Featured
+                  </span>
+                </div>
+
+                <h1 className="text-[56px] font-black leading-[0.95] tracking-[-0.035em] text-text">
+                  {s.title}
+                </h1>
+
+                <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-medium text-text-muted">
+                  <span className="text-text/90">{s.year}</span>
+                  <span className="text-border">·</span>
+                  <span>{s.duration}</span>
+                  <span className="text-border">·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Star size={12} className="fill-warning text-warning" />
+                    <span className="text-text/90">{s.rating}</span>
+                  </span>
+                  <span className="text-border">·</span>
+                  <span>{s.genres}</span>
+                </div>
+
+                <p className="mt-5 max-w-[440px] text-[14px] leading-[1.65] text-text/80">
+                  {s.description}
+                </p>
+
+                <div className="mt-7 flex items-center gap-3">
+                  <Link
+                    href={s.watchHref}
+                    className="group inline-flex items-center gap-2 rounded-[6px] bg-brand px-7 py-3 text-[14px] font-bold text-white shadow-[0_4px_24px_-4px_rgba(229,9,20,0.5)] transition-all hover:bg-brand-hover hover:shadow-[0_4px_24px_-4px_rgba(229,9,20,0.7)]"
+                  >
+                    <PlayCircle size={18} className="fill-white text-brand" />
+                    Watch now
+                  </Link>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-[6px] border border-white/15 bg-white/[0.06] px-6 py-3 text-[13px] font-semibold text-text/90 backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-white/[0.12]"
+                  >
+                    <Info size={15} />
+                    More info
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="absolute bottom-5 left-8 flex items-center gap-[6px]">
-            <div className="h-[3px] w-[22px] rounded-[2px] bg-brand" />
-            <div className="h-[3px] w-[22px] rounded-[2px] bg-border" />
-            <div className="h-[3px] w-[22px] rounded-[2px] bg-border" />
-            <div className="h-[3px] w-[22px] rounded-[2px] bg-border" />
+          <Link
+            href={activeSlide.watchHref}
+            className="group/pstr relative hidden shrink-0 md:block"
+            aria-label={`Watch ${activeSlide.title}`}
+          >
+            <div className="relative aspect-[2/3] w-[200px] lg:w-[248px] overflow-hidden rounded-[4px] border border-border bg-surface transition-colors duration-200 group-hover/pstr:border-border-hover">
+              {HERO_SLIDES.map((s, i) => (
+                <div
+                  key={s.id}
+                  className={`absolute inset-0 transition-opacity duration-700 ease-out ${
+                    i === active ? "z-[1] opacity-100" : "z-0 opacity-0"
+                  }`}
+                >
+                  <Image
+                    src={s.imageSrc}
+                    alt={`${s.title} key art`}
+                    fill
+                    sizes="(max-width: 1024px) 200px, 248px"
+                    quality={88}
+                    loading="eager"
+                    className="object-cover object-[center_12%] transition-transform duration-500 ease-out group-hover/pstr:scale-[1.02]"
+                    priority={i === 0}
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 rounded-[4px] bg-gradient-to-t from-black/45 via-transparent to-black/20"
+                    aria-hidden="true"
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 rounded-[4px] ring-1 ring-inset ring-white/[0.06]"
+                    aria-hidden="true"
+                  />
+                </div>
+              ))}
+            </div>
+            <div
+              className="mx-auto mt-2 h-[2px] w-[72px] max-w-full rounded-full transition-colors duration-500 ease-out"
+              style={{ backgroundColor: activeSlide.accentColor }}
+              aria-hidden="true"
+            />
+          </Link>
+        </div>
+
+        <div className="absolute bottom-8 right-12 z-[3] flex items-center gap-3">
+          <span className="text-[11px] font-medium tabular-nums text-text-muted">
+            {indexLabel}
+            <span className="text-border"> / </span>
+            <span className="text-text-muted/60">{totalLabel}</span>
+          </span>
+          <div className="flex items-center gap-1.5" role="tablist" aria-label="Featured titles">
+            {HERO_SLIDES.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                role="tab"
+                aria-selected={i === active}
+                aria-label={`Show ${s.title}`}
+                onClick={() => setActive(i)}
+                className={`h-[2px] rounded-full transition-all duration-300 ${
+                  i === active
+                    ? "w-8 bg-brand"
+                    : "w-4 bg-text-muted/30 hover:bg-text-muted/50"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
     </section>
   );
 }
-
