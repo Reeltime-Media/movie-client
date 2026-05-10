@@ -7,8 +7,9 @@ import { WatchDiscoveryRails } from "../../../../components/WatchDiscoveryRails"
 import { WatchPlayer } from "../../../../components/WatchPlayer";
 import { WatchSeriesEpisodeSidebar } from "../../../../components/WatchSeriesEpisodeSidebar";
 import {
+  SAMPLE_FALLBACK_SRC,
+  SAMPLE_HLS_SRC,
   SAMPLE_VIDEO_ATTRIBUTION,
-  SAMPLE_VIDEO_SOURCES,
 } from "../../../../lib/sampleVideoSources";
 import { getSeason, getWatchSeries } from "../../../../lib/watchSeriesCatalog";
 
@@ -65,7 +66,7 @@ export default async function WatchSeriesPlaybackPage({
           </span>
         }
         title={series.title}
-        description={`${episode.title} · Preview playback uses sample files. Season ${seasonNum}, episode ${episodeNum} of ${seasonData.episodes.length}.`}
+        description={`${episode.title} · Season ${seasonNum}, Episode ${episodeNum} of ${seasonData.episodes.length}`}
       />
 
       <section className="border-b border-border px-6 pb-8 md:px-8">
@@ -73,7 +74,8 @@ export default async function WatchSeriesPlaybackPage({
           <div className="min-w-0">
             <WatchPlayer
               key={`${seriesSlug}-${seasonNum}-${episodeNum}`}
-              sources={SAMPLE_VIDEO_SOURCES}
+              hlsSrc={SAMPLE_HLS_SRC}
+              fallbackSrc={SAMPLE_FALLBACK_SRC}
               title={playerTitle}
               attribution={SAMPLE_VIDEO_ATTRIBUTION}
             />
@@ -110,7 +112,7 @@ export default async function WatchSeriesPlaybackPage({
           <span className="select-none text-border-hover" aria-hidden>
             ·
           </span>
-          <span className="rounded-[4px] border border-border bg-surface px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+          <span className="rounded-sm border border-border bg-surface px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
             {series.maturity}
           </span>
         </div>
@@ -119,7 +121,7 @@ export default async function WatchSeriesPlaybackPage({
           {series.genres.map((g) => (
             <span
               key={g}
-              className="rounded-[6px] border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted"
+              className="rounded-md border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted"
             >
               {g}
             </span>
@@ -135,19 +137,19 @@ export default async function WatchSeriesPlaybackPage({
         <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
           <Link
             href="/movies"
-            className="rounded-[6px] border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
+            className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
           >
             Movies
           </Link>
           <Link
             href="/series"
-            className="rounded-[6px] border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
+            className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
           >
             Series
           </Link>
           <Link
             href="/my-library"
-            className="rounded-[6px] border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
+            className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
           >
             My library
           </Link>

@@ -20,9 +20,9 @@ export const posterCatalog = {
       "linear-gradient(180deg, #14101a, #2c1a3d, #0c0612)",
     accentColor: "#b08fd9",
     subtitle: { text: "A SERIES", color: "#b08fd9" },
-    entitlement: { kind: "none" },
-    watchLabel: "Watch",
-    watchHref: "/watch/series/echo-valley/1/1",
+    entitlement: { kind: "continue", value: "S1 E3" },
+    progressPct: 37,
+    watchHref: "/watch/series/echo-valley/1/3",
   },
   crownOfAsh: {
     imageSrc: "/movie_sample/poster3.png",
@@ -32,7 +32,8 @@ export const posterCatalog = {
       "linear-gradient(140deg, #1c0d05, #3d1e08, #0f0703)",
     accentColor: "#d4a04a",
     badge: { kind: "owned", label: "OWNED" },
-    entitlement: { kind: "continue", value: "Continue · 42m left" },
+    entitlement: { kind: "continue", value: "42m left" },
+    progressPct: 64,
     watchHref: "/watch?title=Crown%20of%20Ash",
   },
   afterHours: {
@@ -230,7 +231,8 @@ export const posterCatalog = {
     posterGradient:
       "linear-gradient(155deg, #0a1a18, #0f3a33, #04110f)",
     accentColor: "#5cd49a",
-    entitlement: { kind: "price", value: "$2.99" },
+    entitlement: { kind: "continue", value: "28m left" },
+    progressPct: 71,
     watchHref: "/watch?title=Night%20Ferry",
   },
   finalTurnWatch: {
@@ -240,7 +242,8 @@ export const posterCatalog = {
     posterGradient:
       "linear-gradient(160deg, #1c1206, #3d2708, #0f0a03)",
     accentColor: "#f59e0b",
-    entitlement: { kind: "price", value: "$2.99" },
+    entitlement: { kind: "continue", value: "51m left" },
+    progressPct: 49,
     watchHref: "/watch?title=Final%20Turn",
   },
   midnightRunSeriesSubscribe: {

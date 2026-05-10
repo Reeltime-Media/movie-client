@@ -16,14 +16,9 @@ const navLinks = [
 const themeSubscribers = new Set<() => void>();
 
 function resolveTheme(): "dark" | "light" {
-  const explicit = document.documentElement.dataset.theme as
-    | "dark"
-    | "light"
-    | undefined;
+  const explicit = document.documentElement.dataset.theme as "dark" | "light" | undefined;
   if (explicit === "dark" || explicit === "light") return explicit;
-  return window.matchMedia("(prefers-color-scheme: light)").matches
-    ? "light"
-    : "dark";
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
 
 function subscribeTheme(onStoreChange: () => void) {
@@ -47,30 +42,27 @@ function notifyThemeSubscribers() {
 
 function applyTheme(t: "dark" | "light") {
   document.documentElement.dataset.theme = t;
-  try {
-    localStorage.setItem("reeltime-theme", t);
-  } catch {}
+  try { localStorage.setItem("reeltime-theme", t); } catch {}
   notifyThemeSubscribers();
 }
 
 export function TopNav() {
   const pathname = usePathname();
-  const theme = useSyncExternalStore(
-    subscribeTheme,
-    resolveTheme,
-    () => "dark",
-  );
+  const theme = useSyncExternalStore(subscribeTheme, resolveTheme, () => "dark");
 
   function toggleTheme() {
     applyTheme(resolveTheme() === "dark" ? "light" : "dark");
   }
 
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-surface-elevated bg-bg/95 backdrop-blur">
-      <div className="flex items-center justify-between px-6 py-[14px]">
+      <div className="flex items-center justify-between px-6 py-3.5">
+        {/* Left — logo + nav */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-[10px]">
-            <div className="h-[26px] w-[26px] overflow-hidden rounded-[4px] bg-brand">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="h-6.5 w-6.5 overflow-hidden rounded-sm bg-brand">
               <Image
                 src="/logo_r.jpeg"
                 alt="Reeltime logo"
@@ -80,97 +72,91 @@ export function TopNav() {
                 className="h-full w-full object-cover object-top"
               />
             </div>
-            <div className="text-[14px] font-extrabold tracking-[0.06em] text-text">
+            <span className="text-[14px] font-extrabold tracking-[0.06em] text-text">
               REELTIME
-            </div>
+            </span>
           </Link>
 
-          <nav className="hidden items-center gap-[22px] md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className={[
-                  "text-[12px] font-medium transition-colors",
-                  pathname === link.href
-                    ? "text-text"
-                    : "text-text-muted hover:text-text",
-                ].join(" ")}
-                aria-current={pathname === link.href ? "page" : undefined}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <nav className="hidden items-center gap-5.5 md:flex">
+            {navLinks.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  aria-current={active ? "page" : undefined}
+                  className={[
+                    "relative pb-0.5 text-[12px] font-medium transition-colors",
+                    active ? "text-text" : "text-text-muted hover:text-text",
+                  ].join(" ")}
+                >
+                  {link.label}
+                  {/* Active dot indicator */}
+                  {active && (
+                    <span className="absolute -bottom-0.75 left-1/2 h-0.75 w-0.75 -translate-x-1/2 rounded-full bg-brand" />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* Right — actions */}
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={toggleTheme}
             suppressHydrationWarning
-            className="grid h-9 w-9 place-items-center rounded-[6px] text-text-muted transition-colors hover:text-text"
-            aria-label={
-              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-            }
-            title={
-              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-            }
+            className="grid h-9 w-9 place-items-center rounded-md text-text-muted transition-colors hover:bg-surface hover:text-text"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {theme === "dark" ? (
-              <Moon size={16} aria-hidden />
-            ) : (
-              <Sun size={16} aria-hidden />
-            )}
+            {theme === "dark" ? <Moon size={16} aria-hidden /> : <Sun size={16} aria-hidden />}
           </button>
+
           <button
             type="button"
-            className="grid h-9 w-9 place-items-center rounded-[6px] text-text-muted transition-colors hover:text-text"
+            className="grid h-9 w-9 place-items-center rounded-md text-text-muted transition-colors hover:bg-surface hover:text-text"
             aria-label="Search"
           >
             <Search size={16} />
           </button>
+
           <button
             type="button"
-            className="grid h-9 w-9 place-items-center rounded-[6px] text-text-muted transition-colors hover:text-text"
+            className="grid h-9 w-9 place-items-center rounded-md text-text-muted transition-colors hover:bg-surface hover:text-text"
             aria-label="Notifications"
           >
             <Bell size={16} />
           </button>
 
-          {pathname === "/login" ? (
+          {isAuthPage ? (
             <Link
-              href="/register"
-              className="hidden rounded-[6px] border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover md:inline-flex"
+              href={pathname === "/login" ? "/register" : "/login"}
+              className="hidden rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover md:inline-flex"
             >
-              Create account
-            </Link>
-          ) : pathname === "/register" ? (
-            <Link
-              href="/login"
-              className="hidden rounded-[6px] border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover md:inline-flex"
-            >
-              Sign in
+              {pathname === "/login" ? "Create account" : "Sign in"}
             </Link>
           ) : (
             <Link
               href="/login"
-              className="hidden rounded-[6px] border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover md:inline-flex"
+              className="hidden rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover md:inline-flex"
             >
               Sign in
             </Link>
           )}
 
-          <div
-            className="grid h-[26px] w-[26px] place-items-center rounded-full bg-border text-[12px] font-semibold text-text"
-            aria-label="Avatar"
-            title="Account"
+          {/* Avatar — links to profile */}
+          <Link
+            href="/profile"
+            className="grid h-6.5 w-6.5 place-items-center rounded-full bg-surface-elevated text-[12px] font-bold text-text ring-1 ring-border transition-all hover:ring-2 hover:ring-brand"
+            aria-label="Your profile"
+            title="Your profile"
           >
-            K
-          </div>
+            B
+          </Link>
         </div>
       </div>
     </header>
   );
 }
-

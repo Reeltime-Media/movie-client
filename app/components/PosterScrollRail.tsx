@@ -18,7 +18,7 @@ export function PosterScrollRail({
       ].join(" ")}
       style={{ WebkitOverflowScrolling: "touch" }}
     >
-      <ul className="m-0 flex w-max list-none flex-row gap-3 p-0 snap-x snap-mandatory">
+      <ul className="m-0 mx-auto flex w-max list-none flex-row gap-3 p-0 snap-x snap-mandatory">
         {posters.map((poster, i) => (
           <li
             key={`${poster.watchHref ?? "no-href"}-${i}`}

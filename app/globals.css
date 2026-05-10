@@ -82,6 +82,28 @@
   }
 }
 
+/* Cinematic banners (staff pick, subscription upsell) always render with dark tokens */
+.cinematic-banner,
+[data-theme="light"] .cinematic-banner {
+  color-scheme: dark;
+  --rt-text: #fafafa;
+  --rt-text-muted: #a3a3a3;
+  --rt-text-disabled: #525252;
+  --rt-border: #2a2a2a;
+  --rt-border-hover: #3a3a3a;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .cinematic-banner {
+    color-scheme: dark;
+    --rt-text: #fafafa;
+    --rt-text-muted: #a3a3a3;
+    --rt-text-disabled: #525252;
+    --rt-border: #2a2a2a;
+    --rt-border-hover: #3a3a3a;
+  }
+}
+
 @theme inline {
   --color-bg: var(--rt-bg);
   --color-surface: var(--rt-surface);
