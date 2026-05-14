@@ -129,3 +129,62 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Series page — motion (respect reduced-motion) */
+@keyframes rt-series-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rt-series-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rt-series-hero-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.rt-series-fade-up {
+  animation: rt-series-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--rt-enter-delay, 0s);
+}
+
+.rt-series-fade-in {
+  animation: rt-series-fade-in 0.45s ease-out both;
+  animation-delay: var(--rt-enter-delay, 0s);
+}
+
+.rt-series-hero-breathe {
+  animation: rt-series-hero-breathe 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rt-series-fade-up,
+  .rt-series-fade-in,
+  .rt-series-hero-breathe {
+    animation: none !important;
+  }
+
+  .rt-series-fade-up,
+  .rt-series-fade-in {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
