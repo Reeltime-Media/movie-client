@@ -8,11 +8,14 @@ export function SectionHeader({
   title,
   showSeeAll = false,
   seeAllHref,
+  seeAllLabel = "See all",
 }: {
   title: string;
   showSeeAll?: boolean;
   /** When set with showSeeAll, navigates to this route instead of a placeholder hash. */
   seeAllHref?: string;
+  /** Override for i18n (default English). */
+  seeAllLabel?: string;
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -23,7 +26,7 @@ export function SectionHeader({
       {showSeeAll ? (
         seeAllHref ? (
           <Link href={seeAllHref} className={seeAllClassName}>
-            <span>See all</span>
+            <span>{seeAllLabel}</span>
             <ChevronRight
               size={14}
               className="transition-transform group-hover:translate-x-[2px]"
@@ -31,7 +34,7 @@ export function SectionHeader({
           </Link>
         ) : (
           <a href="#" className={seeAllClassName}>
-            <span>See all</span>
+            <span>{seeAllLabel}</span>
             <ChevronRight
               size={14}
               className="transition-transform group-hover:translate-x-[2px]"

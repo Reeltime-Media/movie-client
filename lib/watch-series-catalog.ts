@@ -6,6 +6,7 @@ export type WatchSeriesEpisode = {
 
 export type WatchSeriesSeason = {
   n: number;
+  freeEpisodeCount?: number;
   episodes: readonly WatchSeriesEpisode[];
 };
 
@@ -21,6 +22,7 @@ export type WatchSeriesDetail = {
 };
 
 const EP_DEMO = "24m" as const;
+export const DEFAULT_FREE_EPISODE_COUNT = 3;
 
 function eps(
   titles: readonly string[],
@@ -34,7 +36,13 @@ function eps(
 
 /** One season numbered 1 (most catalog titles). */
 function s1(titles: readonly string[]): readonly WatchSeriesSeason[] {
-  return [{ n: 1, episodes: eps(titles) }];
+  return [
+    {
+      n: 1,
+      freeEpisodeCount: Math.min(DEFAULT_FREE_EPISODE_COUNT, titles.length),
+      episodes: eps(titles),
+    },
+  ];
 }
 
 export const WATCH_SERIES_BY_SLUG = {
@@ -50,6 +58,7 @@ export const WATCH_SERIES_BY_SLUG = {
     seasons: [
       {
         n: 1,
+        freeEpisodeCount: DEFAULT_FREE_EPISODE_COUNT,
         episodes: eps([
           "Signal in the static",
           "Paper trail",
@@ -59,6 +68,7 @@ export const WATCH_SERIES_BY_SLUG = {
       },
       {
         n: 2,
+        freeEpisodeCount: DEFAULT_FREE_EPISODE_COUNT,
         episodes: eps([
           "Night choir",
           "Cold return",
@@ -210,6 +220,17 @@ export function getSeason(
   seasonNumber: number,
 ): WatchSeriesSeason | null {
   return series.seasons.find((s) => s.n === seasonNumber) ?? null;
+}
+
+export function getFreeEpisodeCount(season: WatchSeriesSeason): number {
+  return Math.min(season.freeEpisodeCount ?? 0, season.episodes.length);
+}
+
+export function isEpisodeFree(
+  season: WatchSeriesSeason,
+  episodeNumber: number,
+): boolean {
+  return episodeNumber <= getFreeEpisodeCount(season);
 }
 
 export function watchSeriesPath(

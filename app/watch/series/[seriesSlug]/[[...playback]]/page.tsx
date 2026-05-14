@@ -10,8 +10,13 @@ import {
   SAMPLE_FALLBACK_SRC,
   SAMPLE_HLS_SRC,
   SAMPLE_VIDEO_ATTRIBUTION,
-} from "../../../../lib/sampleVideoSources";
-import { getSeason, getWatchSeries } from "../../../../lib/watchSeriesCatalog";
+} from "@/lib/sample-video-sources";
+import {
+  getFreeEpisodeCount,
+  getSeason,
+  getWatchSeries,
+  isEpisodeFree,
+} from "@/lib/watch-series-catalog";
 
 type Params = { seriesSlug: string; playback?: string[] };
 
@@ -54,8 +59,16 @@ export default async function WatchSeriesPlaybackPage({
     notFound();
   }
 
+  // UI-only gate until real subscription state is available.
+  if (!isEpisodeFree(seasonData, episodeNum)) {
+    permanentRedirect(
+      `/pay/subscription?title=${encodeURIComponent(series.title)}&season=${seasonNum}&episode=${episodeNum}`,
+    );
+  }
+
   const episode = seasonData.episodes[episodeNum - 1]!;
   const playerTitle = `${series.title}: S${seasonNum} · ${episode.title}`;
+  const freeEpisodeCount = getFreeEpisodeCount(seasonData);
 
   return (
     <PageShell wide>
@@ -82,10 +95,12 @@ export default async function WatchSeriesPlaybackPage({
           </div>
           <WatchSeriesEpisodeSidebar
             seriesSlug={series.slug}
+            seriesTitle={series.title}
             seasons={series.seasons}
             activeSeason={seasonNum}
             activeEpisode={episodeNum}
             episodes={seasonData.episodes}
+            freeEpisodeCount={freeEpisodeCount}
           />
         </div>
 

@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { useI18n } from "./LocaleProvider";
+
 const AUTO_MS = 6500;
 
 type HeroSlide = {
@@ -132,6 +134,7 @@ function HeroBackground() {
 }
 
 export function Hero() {
+  const { t } = useI18n();
   const [active, setActive] = useState(0);
   const total = HERO_SLIDES.length;
 
@@ -177,7 +180,7 @@ export function Hero() {
                 <div className="mb-5 flex items-center gap-2.5">
                   <div className="h-[1px] w-8 bg-brand" />
                   <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand">
-                    Featured
+                    {t("heroFeatured")}
                   </span>
                 </div>
 
@@ -208,14 +211,14 @@ export function Hero() {
                     className="group inline-flex items-center gap-2 rounded-[6px] bg-brand px-7 py-3 text-[14px] font-bold text-white shadow-[0_4px_24px_-4px_rgba(229,9,20,0.5)] transition-all hover:bg-brand-hover hover:shadow-[0_4px_24px_-4px_rgba(229,9,20,0.7)]"
                   >
                     <PlayCircle size={18} className="fill-white text-brand" />
-                    Watch now
+                    {t("heroWatchNow")}
                   </Link>
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-[6px] border border-white/15 bg-white/[0.06] px-6 py-3 text-[13px] font-semibold text-text/90 backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-white/[0.12]"
                   >
                     <Info size={15} />
-                    More info
+                    {t("heroMoreInfo")}
                   </button>
                 </div>
               </div>
@@ -270,7 +273,7 @@ export function Hero() {
             <span className="text-border"> / </span>
             <span className="text-text-muted/60">{totalLabel}</span>
           </span>
-          <div className="flex items-center gap-1.5" role="tablist" aria-label="Featured titles">
+          <div className="flex items-center gap-1.5" role="tablist" aria-label={t("heroFeaturedTitlesAria")}>
             {HERO_SLIDES.map((s, i) => (
               <button
                 key={s.id}

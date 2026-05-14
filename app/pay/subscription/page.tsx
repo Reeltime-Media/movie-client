@@ -2,7 +2,7 @@ import { CreditCard, Lock, ShieldCheck } from "lucide-react";
 import { PageHeader } from "../../components/PageHeader";
 import { PageShell } from "../../components/PageShell";
 
-type SearchParams = { title?: string };
+type SearchParams = { title?: string; season?: string; episode?: string };
 
 function PlanCard({
   label,
@@ -59,6 +59,8 @@ export default async function SubscriptionPayPage({
 }) {
   const sp = (await searchParams) ?? {};
   const title = sp.title;
+  const lockedEpisode =
+    sp.season && sp.episode ? `Season ${sp.season}, Episode ${sp.episode}` : null;
 
   return (
     <PageShell>
@@ -75,6 +77,12 @@ export default async function SubscriptionPayPage({
               <>
                 You tried to watch{" "}
                 <span className="font-semibold text-text">{title}</span>.{" "}
+              </>
+            ) : null}
+            {lockedEpisode ? (
+              <>
+                <span className="font-semibold text-text">{lockedEpisode}</span>{" "}
+                is part of the paid season.{" "}
               </>
             ) : null}
             Choose a plan. This is UI only — connect your payment provider later.

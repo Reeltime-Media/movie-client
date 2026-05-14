@@ -53,8 +53,8 @@ export const posterCatalog = {
     posterGradient:
       "linear-gradient(180deg, #0a1f30, #040a14, #000000)",
     accentColor: "#5cb8d4",
-    watchLabel: "Watch",
-    watchHref: "/pay/subscription?title=Midnight%20Run",
+    watchLabel: "Start free",
+    watchHref: "/watch/series/midnight-run/1/1",
   },
   finalFrame: {
     imageSrc: "/movie_sample/poster2.png",
@@ -63,8 +63,8 @@ export const posterCatalog = {
     posterGradient:
       "linear-gradient(180deg, #1a1a08, #404010, #0a0a04)",
     accentColor: "#d4cc5c",
-    watchLabel: "Watch",
-    watchHref: "/pay/subscription?title=Final%20Frame",
+    watchLabel: "Start free",
+    watchHref: "/watch/series/final-frame/1/1",
   },
   glasshouse: {
     imageSrc: "/movie_sample/poster3.png",
@@ -73,8 +73,8 @@ export const posterCatalog = {
     posterGradient:
       "linear-gradient(180deg, #0e3d20, #04140a, #000000)",
     accentColor: "#5cd49a",
-    watchLabel: "Watch",
-    watchHref: "/pay/subscription?title=Glasshouse",
+    watchLabel: "Start free",
+    watchHref: "/watch/series/glasshouse/1/1",
   },
   hollowCoast: {
     imageSrc: "/movie_sample/poster4.png",
@@ -83,8 +83,8 @@ export const posterCatalog = {
     posterGradient:
       "linear-gradient(180deg, #1a0e08, #421a08, #0a0604)",
     accentColor: "#e8965c",
-    watchLabel: "Watch",
-    watchHref: "/pay/subscription?title=Hollow%20Coast",
+    watchLabel: "Start free",
+    watchHref: "/watch/series/hollow-coast/1/1",
   },
   riverSignal: {
     imageSrc: "/movie_sample/poster1.png",

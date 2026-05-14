@@ -8,7 +8,7 @@ import {
   SAMPLE_FALLBACK_SRC,
   SAMPLE_HLS_SRC,
   SAMPLE_VIDEO_ATTRIBUTION,
-} from "../lib/sampleVideoSources";
+} from "@/lib/sample-video-sources";
 
 const GENRES = ["Thriller", "Action", "Neo-noir"] as const;
 

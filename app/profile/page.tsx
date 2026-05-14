@@ -18,6 +18,7 @@ import { useState } from "react";
 import { PageShell } from "../components/PageShell";
 import { PosterScrollRail } from "../components/PosterScrollRail";
 import { SectionHeader } from "../components/SectionHeader";
+import { useI18n } from "../components/LocaleProvider";
 import { libraryContinuePosters } from "../mock/posters";
 
 const user = {
@@ -79,6 +80,7 @@ function FieldRow({
 }
 
 export default function ProfilePage() {
+  const { t } = useI18n();
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
 
@@ -293,7 +295,12 @@ export default function ProfilePage() {
       {/* ── Continue watching ── */}
       <section className="mt-6 pb-10">
         <div className="px-6 md:px-8">
-          <SectionHeader title="Continue watching" showSeeAll seeAllHref="/my-library" />
+          <SectionHeader
+            title={t("homeContinueWatching")}
+            showSeeAll
+            seeAllHref="/my-library"
+            seeAllLabel={t("sectionSeeAll")}
+          />
         </div>
         <PosterScrollRail posters={libraryContinuePosters} />
       </section>

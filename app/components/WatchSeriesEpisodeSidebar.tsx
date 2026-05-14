@@ -1,19 +1,24 @@
 import Link from "next/link";
+import { Lock, PlayCircle } from "lucide-react";
 
-import type { WatchSeriesSeason } from "../lib/watchSeriesCatalog";
+import type { WatchSeriesEpisode, WatchSeriesSeason } from "@/lib/watch-series-catalog";
 
 export function WatchSeriesEpisodeSidebar({
   seriesSlug,
+  seriesTitle,
   seasons,
   activeSeason,
   activeEpisode,
   episodes,
+  freeEpisodeCount,
 }: {
   seriesSlug: string;
+  seriesTitle: string;
   seasons: readonly WatchSeriesSeason[];
   activeSeason: number;
   activeEpisode: number;
-  episodes: readonly { n: number; title: string }[];
+  episodes: readonly WatchSeriesEpisode[];
+  freeEpisodeCount: number;
 }) {
   const showSeasonTabs = seasons.length > 1;
 
@@ -62,10 +67,14 @@ export function WatchSeriesEpisodeSidebar({
         <ul className="m-0 list-none divide-y divide-border p-0">
           {episodes.map((ep) => {
             const isActive = ep.n === activeEpisode;
+            const isFree = ep.n <= freeEpisodeCount;
+            const href = isFree
+              ? `/watch/series/${seriesSlug}/${activeSeason}/${ep.n}`
+              : `/pay/subscription?title=${encodeURIComponent(seriesTitle)}&season=${activeSeason}&episode=${ep.n}`;
             return (
               <li key={ep.n}>
                 <Link
-                  href={`/watch/series/${seriesSlug}/${activeSeason}/${ep.n}`}
+                  href={href}
                   className={[
                     "flex min-h-[52px] items-stretch outline-none transition-colors",
                     isActive
@@ -85,13 +94,28 @@ export function WatchSeriesEpisodeSidebar({
                     <span className="shrink-0 text-[14px] font-bold tabular-nums text-brand">
                       {ep.n}
                     </span>
-                    <span
-                      className={[
-                        "min-w-0 text-[13px] font-medium leading-snug text-text",
-                        isActive ? "font-semibold" : "",
-                      ].join(" ")}
-                    >
-                      {ep.title}
+                    <span className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span
+                        className={[
+                          "min-w-0 text-[13px] font-medium leading-snug text-text",
+                          isActive ? "font-semibold" : "",
+                        ].join(" ")}
+                      >
+                        {ep.title}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest">
+                        {isFree ? (
+                          <>
+                            <PlayCircle size={11} className="text-success" aria-hidden />
+                            <span className="text-success">Free</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock size={11} className="text-brand" aria-hidden />
+                            <span className="text-text-muted">Subscribe</span>
+                          </>
+                        )}
+                      </span>
                     </span>
                   </span>
                 </Link>
