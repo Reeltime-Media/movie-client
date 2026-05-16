@@ -95,6 +95,12 @@ export const en = {
   homeLibrarySpotlight: "Library spotlight",
   watchMoreLikeThis: "More like this",
   watchSeriesPicks: "Series picks for you",
+
+  homeDecorKicker: "Tonight at Reeltime",
+  homeDecorTitle: "Cinema energy, on your screen.",
+  homeDecorDesc:
+    "Premieres, late-night marathons, and stories that stick — the same mood as the theater, wherever you watch.",
+  homeDecorCta: "Browse movies",
 } as const;
 
 export type TranslationKey = keyof typeof en;

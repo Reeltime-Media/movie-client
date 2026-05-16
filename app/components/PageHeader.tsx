@@ -13,7 +13,7 @@ export function PageHeader({
   action?: { href: string; label: string };
 }) {
   return (
-    <section className="px-6 pb-6 pt-7 md:px-8">
+    <section className="box-border ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 pb-6 pl-6 pr-6 pt-7 md:pl-8 md:pr-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           {kicker ? (

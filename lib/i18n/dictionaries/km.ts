@@ -97,4 +97,10 @@ export const km = {
   homeLibrarySpotlight: "បញ្ចាំងបណ្ណាល័យ",
   watchMoreLikeThis: "ស្រដៀងនេះ",
   watchSeriesPicks: "ស៊េរីសម្រាប់អ្នក",
+
+  homeDecorKicker: "យប់នៅ Reeltime",
+  homeDecorTitle: "អារម្មណ៍រោងភាពយន្ត លើអេក្រង់របស់អ្នក។",
+  homeDecorDesc:
+    "រឿងចាក់មុន ម៉ារ៉ាតុងយប់ និងរឿងដែលនៅក្នុងចិត្ត — អារម្មណ៍ដូចនៅរោង មើលបានគ្រប់ទីកន្លែង។",
+  homeDecorCta: "រកមើលភាពយន្ត",
 } satisfies Record<TranslationKey, string>;
