@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Lock, PlayCircle } from "lucide-react";
-
-import type { WatchSeriesEpisode, WatchSeriesSeason } from "@/lib/watch-series-catalog";
+import type { SeasonRead } from "@/lib/api/types";
 
 export function WatchSeriesEpisodeSidebar({
   seriesSlug,
@@ -9,17 +8,17 @@ export function WatchSeriesEpisodeSidebar({
   seasons,
   activeSeason,
   activeEpisode,
-  episodes,
   freeEpisodeCount,
 }: {
   seriesSlug: string;
   seriesTitle: string;
-  seasons: readonly WatchSeriesSeason[];
+  seasons: SeasonRead[];
   activeSeason: number;
   activeEpisode: number;
-  episodes: readonly WatchSeriesEpisode[];
   freeEpisodeCount: number;
 }) {
+  const seasonData = seasons.find((s) => s.season_number === activeSeason);
+  const episodes = seasonData?.episodes ?? [];
   const showSeasonTabs = seasons.length > 1;
 
   return (
@@ -28,13 +27,13 @@ export function WatchSeriesEpisodeSidebar({
         <div className="shrink-0 border-b border-border px-2 py-2">
           <div className="flex flex-wrap gap-1" role="tablist" aria-label="Seasons">
             {seasons.map((s) => {
-              const isSeasonActive = s.n === activeSeason;
+              const isSeasonActive = s.season_number === activeSeason;
               return (
                 <Link
-                  key={s.n}
+                  key={s.season_number}
                   role="tab"
                   aria-selected={isSeasonActive}
-                  href={`/watch/series/${seriesSlug}/${s.n}/1`}
+                  href={`/watch/series/${seriesSlug}/${s.season_number}/1`}
                   className={[
                     "rounded-[6px] px-3 py-1.5 text-[12px] font-semibold transition-colors",
                     isSeasonActive
@@ -42,7 +41,7 @@ export function WatchSeriesEpisodeSidebar({
                       : "text-text-muted hover:bg-surface-elevated/70 hover:text-text",
                   ].join(" ")}
                 >
-                  Season {s.n}
+                  Season {s.season_number}
                 </Link>
               );
             })}
@@ -60,26 +59,26 @@ export function WatchSeriesEpisodeSidebar({
           ) : null}
         </h2>
       </div>
+
       <nav
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         aria-label={`Season ${activeSeason} episodes`}
       >
         <ul className="m-0 list-none divide-y divide-border p-0">
           {episodes.map((ep) => {
-            const isActive = ep.n === activeEpisode;
-            const isFree = ep.n <= freeEpisodeCount;
+            const epNum = ep.episode_number ?? 0;
+            const isActive = epNum === activeEpisode;
+            const isFree = epNum <= freeEpisodeCount;
             const href = isFree
-              ? `/watch/series/${seriesSlug}/${activeSeason}/${ep.n}`
-              : `/pay/subscription?title=${encodeURIComponent(seriesTitle)}&season=${activeSeason}&episode=${ep.n}`;
+              ? `/watch/series/${seriesSlug}/${activeSeason}/${epNum}`
+              : `/pay/subscription?title=${encodeURIComponent(seriesTitle)}&season=${activeSeason}&episode=${epNum}`;
             return (
-              <li key={ep.n}>
+              <li key={epNum}>
                 <Link
                   href={href}
                   className={[
                     "flex min-h-[52px] items-stretch outline-none transition-colors",
-                    isActive
-                      ? "bg-surface-elevated"
-                      : "hover:bg-surface-elevated/70",
+                    isActive ? "bg-surface-elevated" : "hover:bg-surface-elevated/70",
                     "focus-visible:bg-surface-elevated/80",
                   ].join(" ")}
                 >
@@ -92,7 +91,7 @@ export function WatchSeriesEpisodeSidebar({
                   />
                   <span className="flex min-w-0 flex-1 items-baseline gap-3 px-3 py-3 pr-4">
                     <span className="shrink-0 text-[14px] font-bold tabular-nums text-brand">
-                      {ep.n}
+                      {epNum}
                     </span>
                     <span className="flex min-w-0 flex-1 flex-col gap-1">
                       <span
@@ -117,6 +116,9 @@ export function WatchSeriesEpisodeSidebar({
                         )}
                       </span>
                     </span>
+                    {ep.runtime && (
+                      <span className="shrink-0 text-[11px] text-text-disabled">{ep.runtime}</span>
+                    )}
                   </span>
                 </Link>
               </li>

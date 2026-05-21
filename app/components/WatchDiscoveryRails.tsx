@@ -1,16 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PosterScrollRail } from "./PosterScrollRail";
 import { SectionHeader } from "./SectionHeader";
 import { useI18n } from "./LocaleProvider";
-import {
-  watchMoreLikeThisPosters,
-  watchSeriesPicksPosters,
-  watchTrendingPosters,
-} from "../mock/posters";
+import { listMovies } from "@/lib/api/movies";
+import { listSeries } from "@/lib/api/series";
+import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
+import type { PosterCardProps } from "./PosterCard";
 
 export function WatchDiscoveryRails() {
   const { t } = useI18n();
+  const [moreLikeThis, setMoreLikeThis] = useState<PosterCardProps[]>([]);
+  const [trending, setTrending] = useState<PosterCardProps[]>([]);
+  const [seriesPicks, setSeriesPicks] = useState<PosterCardProps[]>([]);
+
+  useEffect(() => {
+    listMovies()
+      .then((movies) => {
+        const posters = movies.map((m, i) => movieToPoster(m, i));
+        setMoreLikeThis(posters.slice(0, 8));
+        setTrending([...posters].reverse().slice(0, 8));
+      })
+      .catch(() => {});
+
+    listSeries()
+      .then((series) => {
+        setSeriesPicks(series.map((s, i) => seriesToPoster(s, i)));
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <>
@@ -23,7 +42,7 @@ export function WatchDiscoveryRails() {
             seeAllLabel={t("sectionSeeAll")}
           />
         </div>
-        <PosterScrollRail posters={watchMoreLikeThisPosters} />
+        <PosterScrollRail posters={moreLikeThis} />
       </section>
 
       <section className="pb-8">
@@ -35,7 +54,7 @@ export function WatchDiscoveryRails() {
             seeAllLabel={t("sectionSeeAll")}
           />
         </div>
-        <PosterScrollRail posters={watchTrendingPosters} />
+        <PosterScrollRail posters={trending} />
       </section>
 
       <section className="pb-12">
@@ -47,7 +66,7 @@ export function WatchDiscoveryRails() {
             seeAllLabel={t("sectionSeeAll")}
           />
         </div>
-        <PosterScrollRail posters={watchSeriesPicksPosters} />
+        <PosterScrollRail posters={seriesPicks} />
       </section>
     </>
   );

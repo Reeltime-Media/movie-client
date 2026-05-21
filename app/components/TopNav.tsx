@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { Bell, Moon, Search, Sun } from "lucide-react";
 
+import { clearToken, getAuthSnapshot, subscribeAuth } from "@/lib/api/client";
 import type { Locale, TranslationKey } from "@/lib/i18n";
 import { useI18n } from "./LocaleProvider";
 
@@ -55,7 +56,9 @@ function applyTheme(t: "dark" | "light") {
 
 export function TopNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const theme = useSyncExternalStore(subscribeTheme, resolveTheme, () => "dark");
+  const loggedIn = useSyncExternalStore(subscribeAuth, getAuthSnapshot, () => false);
   const { locale, setLocale, t } = useI18n();
 
   function toggleTheme() {
@@ -66,6 +69,11 @@ export function TopNav() {
 
   function setLang(next: Locale) {
     setLocale(next);
+  }
+
+  function handleSignOut() {
+    clearToken();
+    router.push("/login");
   }
 
   return (
@@ -172,7 +180,25 @@ export function TopNav() {
             <Bell size={16} />
           </button>
 
-          {isAuthPage ? (
+          {loggedIn ? (
+            <>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="hidden rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover md:inline-flex"
+              >
+                {t("navSignOut")}
+              </button>
+              <Link
+                href="/profile"
+                className="grid h-6.5 w-6.5 cursor-pointer place-items-center rounded-full bg-surface-elevated text-[12px] font-bold text-text ring-1 ring-border transition-all hover:ring-2 hover:ring-brand"
+                aria-label={t("navProfile")}
+                title={t("navProfile")}
+              >
+                B
+              </Link>
+            </>
+          ) : isAuthPage ? (
             <Link
               href={pathname === "/login" ? "/register" : "/login"}
               className="hidden rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover md:inline-flex"
@@ -187,15 +213,6 @@ export function TopNav() {
               {t("navSignIn")}
             </Link>
           )}
-
-          <Link
-            href="/profile"
-            className="grid h-6.5 w-6.5 cursor-pointer place-items-center rounded-full bg-surface-elevated text-[12px] font-bold text-text ring-1 ring-border transition-all hover:ring-2 hover:ring-brand"
-            aria-label={t("navProfile")}
-            title={t("navProfile")}
-          >
-            B
-          </Link>
         </div>
       </div>
     </header>

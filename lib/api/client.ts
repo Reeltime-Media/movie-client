@@ -8,21 +8,51 @@ export function posterUrl(posterKey: string | null | undefined): string | undefi
   return `${R2_PUBLIC_URL}/${posterKey}`;
 }
 
+export function mediaUrl(key: string | null | undefined): string | undefined {
+  if (!key || !R2_PUBLIC_URL) return undefined;
+  return `${R2_PUBLIC_URL}/${key}`;
+}
+
+const TOKEN_KEY = "rt_token";
+const authSubscribers = new Set<() => void>();
+
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("rt_token");
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function notifyAuthSubscribers() {
+  authSubscribers.forEach((fn) => fn());
+}
+
+export function subscribeAuth(onStoreChange: () => void) {
+  authSubscribers.add(onStoreChange);
+  function onStorage(e: StorageEvent) {
+    if (e.key === TOKEN_KEY) onStoreChange();
+  }
+  window.addEventListener("storage", onStorage);
+  return () => {
+    authSubscribers.delete(onStoreChange);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+export function getAuthSnapshot(): boolean {
+  return Boolean(getToken());
 }
 
 export function saveToken(token: string): void {
-  localStorage.setItem("rt_token", token);
+  localStorage.setItem(TOKEN_KEY, token);
+  notifyAuthSubscribers();
 }
 
 export function clearToken(): void {
-  localStorage.removeItem("rt_token");
+  localStorage.removeItem(TOKEN_KEY);
+  notifyAuthSubscribers();
 }
 
 export function isLoggedIn(): boolean {
-  return Boolean(getToken());
+  return getAuthSnapshot();
 }
 
 type FetchOptions = Omit<RequestInit, "body"> & { body?: unknown };

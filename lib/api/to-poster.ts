@@ -20,9 +20,15 @@ function pick(index: number) {
   return GRADIENTS[index % GRADIENTS.length];
 }
 
-export function movieToPoster(movie: ContentRead, index = 0): PosterCardProps {
+export function movieToPoster(
+  movie: ContentRead,
+  index = 0,
+  ownedIds?: Set<string>,
+): PosterCardProps {
   const { gradient, accent } = pick(index);
-  const price = movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : null;
+  const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
+  const isOwned = isFree || ownedIds?.has(movie.id);
+  const price = !isFree ? `$${parseFloat(movie.price_usd!).toFixed(2)}` : null;
 
   return {
     imageSrc: posterUrl(movie.poster_key),
@@ -30,14 +36,19 @@ export function movieToPoster(movie: ContentRead, index = 0): PosterCardProps {
     titleBelow: movie.title,
     posterGradient: gradient,
     accentColor: accent,
-    entitlement: price ? { kind: "price", value: price } : undefined,
-    watchHref: price
-      ? `/pay/movie?title=${encodeURIComponent(movie.title)}&price=${encodeURIComponent(price)}`
-      : `/watch?title=${encodeURIComponent(movie.title)}`,
+    badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
+    entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
+    watchHref: isOwned
+      ? `/watch?slug=${movie.slug}`
+      : `/pay/movie?slug=${movie.slug}&title=${encodeURIComponent(movie.title)}`,
   };
 }
 
-export function seriesToPoster(series: SeriesRead, index = 0): PosterCardProps {
+export function seriesToPoster(
+  series: SeriesRead,
+  index = 0,
+  hasSubscription?: boolean,
+): PosterCardProps {
   const { gradient, accent } = pick(index);
 
   return {
@@ -47,7 +58,10 @@ export function seriesToPoster(series: SeriesRead, index = 0): PosterCardProps {
     posterGradient: gradient,
     accentColor: accent,
     subtitle: { text: "A SERIES", color: accent },
-    watchLabel: "Subscribe",
-    watchHref: `/pay/subscription?title=${encodeURIComponent(series.title)}`,
+    entitlement: hasSubscription ? { kind: "subscribed", value: "Subscribed" } : { kind: "none" },
+    watchLabel: hasSubscription ? "Watch" : "Subscribe",
+    watchHref: hasSubscription
+      ? `/watch/series/${series.slug}/1/1`
+      : `/pay/subscription?slug=${series.slug}`,
   };
 }

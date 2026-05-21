@@ -5,6 +5,7 @@ export const en = {
   navMyLibrary: "My library",
   navProfile: "Profile",
   navSignIn: "Sign in",
+  navSignOut: "Sign out",
   navCreateAccount: "Create account",
   navSearch: "Search",
   navNotifications: "Notifications",

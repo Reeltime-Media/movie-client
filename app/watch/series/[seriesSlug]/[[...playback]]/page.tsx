@@ -1,74 +1,121 @@
+"use client";
+
 import { Layers, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { PageHeader } from "../../../../components/PageHeader";
 import { PageShell } from "../../../../components/PageShell";
 import { WatchDiscoveryRails } from "../../../../components/WatchDiscoveryRails";
 import { WatchPlayer } from "../../../../components/WatchPlayer";
 import { WatchSeriesEpisodeSidebar } from "../../../../components/WatchSeriesEpisodeSidebar";
-import {
-  SAMPLE_FALLBACK_SRC,
-  SAMPLE_HLS_SRC,
-  SAMPLE_VIDEO_ATTRIBUTION,
-} from "@/lib/sample-video-sources";
-import {
-  getFreeEpisodeCount,
-  getSeason,
-  getWatchSeries,
-  isEpisodeFree,
-} from "@/lib/watch-series-catalog";
+import { getSeries, listEpisodes } from "@/lib/api/series";
+import { listMySubscriptions } from "@/lib/api/subscriptions";
+import { mediaUrl, isLoggedIn } from "@/lib/api/client";
+import type { SeriesRead, SeasonRead } from "@/lib/api/types";
+import { SAMPLE_HLS_SRC, SAMPLE_FALLBACK_SRC, SAMPLE_VIDEO_ATTRIBUTION } from "@/lib/sample-video-sources";
 
-type Params = { seriesSlug: string; playback?: string[] };
+const FREE_EPISODE_COUNT = 3;
 
-export default async function WatchSeriesPlaybackPage({
-  params,
-}: {
-  params: Promise<Params>;
-}) {
-  const { seriesSlug, playback } = await params;
-  const series = getWatchSeries(seriesSlug);
-  if (!series) notFound();
+export default function WatchSeriesPlaybackPage() {
+  const params = useParams<{ seriesSlug: string; playback?: string[] }>();
+  const router = useRouter();
 
-  const parts = playback ?? [];
+  const seriesSlug = params.seriesSlug;
+  const playback = params.playback ?? [];
 
-  if (parts.length === 0) {
-    permanentRedirect(`/watch/series/${seriesSlug}/1/1`);
-  }
+  const seasonNum = playback[0] ? parseInt(playback[0], 10) : 1;
+  const episodeNum = playback[1] ? parseInt(playback[1], 10) : 1;
 
-  if (parts.length === 1) {
-    const only = parts[0];
-    if (!/^\d+$/.test(only)) notFound();
-    permanentRedirect(`/watch/series/${seriesSlug}/1/${only}`);
-  }
+  const [series, setSeries] = useState<SeriesRead | null>(null);
+  const [seasons, setSeasons] = useState<SeasonRead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
 
-  if (parts.length !== 2) notFound();
+  useEffect(() => {
+    if (playback.length === 0) {
+      router.replace(`/watch/series/${seriesSlug}/1/1`);
+      return;
+    }
 
-  const seasonNum = Number.parseInt(parts[0]!, 10);
-  const episodeNum = Number.parseInt(parts[1]!, 10);
+    if (!isLoggedIn()) {
+      const next = `/watch/series/${seriesSlug}/${seasonNum}/${episodeNum}`;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
 
-  if (!Number.isFinite(seasonNum) || !Number.isFinite(episodeNum)) {
-    notFound();
-  }
+    Promise.all([
+      getSeries(seriesSlug),
+      listEpisodes(seriesSlug),
+      listMySubscriptions().catch(() => []),
+    ])
+      .then(([s, seasonList, subs]) => {
+        setSeries(s);
+        setSeasons(seasonList);
+        setHasSubscription(subs.some((sub) => sub.status === "active"));
+        setLoading(false);
+      })
+      .catch(() => {
+        setNotFound(true);
+        setLoading(false);
+      });
+  }, [seriesSlug]);
 
-  const seasonData = getSeason(series, seasonNum);
-  if (
-    !seasonData ||
-    episodeNum < 1 ||
-    episodeNum > seasonData.episodes.length
-  ) {
-    notFound();
-  }
-
-  // UI-only gate until real subscription state is available.
-  if (!isEpisodeFree(seasonData, episodeNum)) {
-    permanentRedirect(
-      `/pay/subscription?title=${encodeURIComponent(series.title)}&season=${seasonNum}&episode=${episodeNum}`,
+  if (loading) {
+    return (
+      <PageShell wide>
+        <div className="flex h-64 items-center justify-center text-[13px] text-text-muted">
+          Loading…
+        </div>
+      </PageShell>
     );
   }
 
-  const episode = seasonData.episodes[episodeNum - 1]!;
+  if (notFound || !series) {
+    return (
+      <PageShell wide>
+        <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
+          <p className="text-[15px] font-semibold text-text">Series not found</p>
+          <Link href="/series" className="text-[13px] text-brand hover:underline">
+            Browse series
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
+
+  const activeSeason = seasons.find((s) => s.season_number === seasonNum);
+  const episode = activeSeason?.episodes.find((e) => e.episode_number === episodeNum);
+
+  if (!activeSeason || !episode) {
+    return (
+      <PageShell wide>
+        <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
+          <p className="text-[15px] font-semibold text-text">Episode not found</p>
+          <Link
+            href={`/watch/series/${seriesSlug}/1/1`}
+            className="text-[13px] text-brand hover:underline"
+          >
+            Go to episode 1
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
+
+  const isFree = episodeNum <= FREE_EPISODE_COUNT;
+  if (!isFree && !hasSubscription) {
+    router.replace(
+      `/pay/subscription?slug=${series.slug}&title=${encodeURIComponent(series.title)}&season=${seasonNum}&episode=${episodeNum}`,
+    );
+    return null;
+  }
+
+  const hlsSrc = mediaUrl(episode.hls_master_key) ?? SAMPLE_HLS_SRC;
+  const fallbackSrc = SAMPLE_FALLBACK_SRC;
+  const attribution = episode.hls_master_key ? undefined : SAMPLE_VIDEO_ATTRIBUTION;
   const playerTitle = `${series.title}: S${seasonNum} · ${episode.title}`;
-  const freeEpisodeCount = getFreeEpisodeCount(seasonData);
 
   return (
     <PageShell wide>
@@ -79,7 +126,7 @@ export default async function WatchSeriesPlaybackPage({
           </span>
         }
         title={series.title}
-        description={`${episode.title} · Season ${seasonNum}, Episode ${episodeNum} of ${seasonData.episodes.length}`}
+        description={`${episode.title} · Season ${seasonNum}, Episode ${episodeNum} of ${activeSeason.episodes.length}`}
       />
 
       <section className="border-b border-border px-6 pb-8 md:px-8">
@@ -87,20 +134,19 @@ export default async function WatchSeriesPlaybackPage({
           <div className="min-w-0">
             <WatchPlayer
               key={`${seriesSlug}-${seasonNum}-${episodeNum}`}
-              hlsSrc={SAMPLE_HLS_SRC}
-              fallbackSrc={SAMPLE_FALLBACK_SRC}
+              hlsSrc={hlsSrc}
+              fallbackSrc={fallbackSrc}
               title={playerTitle}
-              attribution={SAMPLE_VIDEO_ATTRIBUTION}
+              attribution={attribution}
             />
           </div>
           <WatchSeriesEpisodeSidebar
             seriesSlug={series.slug}
             seriesTitle={series.title}
-            seasons={series.seasons}
+            seasons={seasons}
             activeSeason={seasonNum}
             activeEpisode={episodeNum}
-            episodes={seasonData.episodes}
-            freeEpisodeCount={freeEpisodeCount}
+            freeEpisodeCount={FREE_EPISODE_COUNT}
           />
         </div>
 
@@ -109,63 +155,58 @@ export default async function WatchSeriesPlaybackPage({
             <PlayCircle size={14} className="text-text-muted" aria-hidden />
             S{seasonNum} E{episodeNum}
           </span>
-          <span className="select-none text-border-hover" aria-hidden>
-            ·
-          </span>
-          <span>{episode.duration}</span>
-          <span className="select-none text-border-hover" aria-hidden>
-            ·
-          </span>
-          <span>{series.year}</span>
-          <span className="select-none text-border-hover" aria-hidden>
-            ·
-          </span>
-          <span className="inline-flex items-center gap-1 text-warning">
-            <Star size={14} className="fill-current" aria-hidden />
-            {series.rating}
-          </span>
-          <span className="select-none text-border-hover" aria-hidden>
-            ·
-          </span>
-          <span className="rounded-sm border border-border bg-surface px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-            {series.maturity}
-          </span>
+          {episode.runtime && (
+            <>
+              <span className="select-none text-border-hover" aria-hidden>·</span>
+              <span>{episode.runtime}</span>
+            </>
+          )}
+          {series.release_year && (
+            <>
+              <span className="select-none text-border-hover" aria-hidden>·</span>
+              <span>{series.release_year}</span>
+            </>
+          )}
+          {series.rating && (
+            <>
+              <span className="select-none text-border-hover" aria-hidden>·</span>
+              <span className="inline-flex items-center gap-1 text-warning">
+                <Star size={14} className="fill-current" aria-hidden />
+                {series.rating}
+              </span>
+            </>
+          )}
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          {series.genres.map((g) => (
-            <span
-              key={g}
-              className="rounded-md border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted"
-            >
-              {g}
-            </span>
-          ))}
-        </div>
+        {series.genres.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {series.genres.map((g) => (
+              <span
+                key={g}
+                className="rounded-md border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted"
+              >
+                {g}
+              </span>
+            ))}
+          </div>
+        )}
 
-        <p className="mt-4 max-w-[62ch] text-[13px] leading-relaxed text-text-muted">
-          <span className="font-semibold text-text">{episode.title}</span>
-          {" · "}
-          {series.synopsis}
-        </p>
+        {series.description && (
+          <p className="mt-4 max-w-[62ch] text-[13px] leading-relaxed text-text-muted">
+            <span className="font-semibold text-text">{episode.title}</span>
+            {" · "}
+            {series.description}
+          </p>
+        )}
 
         <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
-          <Link
-            href="/movies"
-            className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-          >
+          <Link href="/movies" className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover">
             Movies
           </Link>
-          <Link
-            href="/series"
-            className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-          >
+          <Link href="/series" className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover">
             Series
           </Link>
-          <Link
-            href="/my-library"
-            className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-          >
+          <Link href="/my-library" className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover">
             My library
           </Link>
         </div>

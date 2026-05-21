@@ -1,134 +1,227 @@
-import { CreditCard, Lock, ShieldCheck } from "lucide-react";
-import { PageHeader } from "../../components/PageHeader";
+"use client";
+
+import { CheckCircle2, CreditCard, Lock, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { TrailerEmbed } from "../../components/TrailerEmbed";
 import { PageShell } from "../../components/PageShell";
+import { getSeries } from "@/lib/api/series";
+import { createSeriesSubscriptionIntent } from "@/lib/api/payments";
+import { posterUrl, isLoggedIn } from "@/lib/api/client";
+import { seriesSubscriptionSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
+import { youtubeEmbedUrl } from "@/lib/youtube";
+import type { SeriesRead } from "@/lib/api/types";
 
-type SearchParams = { title?: string; season?: string; episode?: string };
+function SubscriptionPayInner() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const slug = params.get("slug") ?? "";
+  const lockedSeason = params.get("season");
+  const lockedEpisode = params.get("episode");
 
-function PlanCard({
-  label,
-  price,
-  period,
-  highlight = false,
-}: {
-  label: string;
-  price: string;
-  period: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={[
-        "rounded-[6px] border bg-surface p-4",
-        highlight ? "border-brand" : "border-border",
-      ].join(" ")}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-[12px] font-semibold tracking-[0.12em] text-text-muted">
-            {label.toUpperCase()}
-          </div>
-          <div className="mt-1 text-[18px] font-extrabold text-text">
-            {price}
-            <span className="ml-2 text-[12px] font-semibold text-text-muted">
-              {period}
-            </span>
-          </div>
+  const [series, setSeries] = useState<SeriesRead | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [paying, setPaying] = useState(false);
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      const next = `/pay/subscription?slug=${encodeURIComponent(slug)}`;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
+    if (!slug) { setError("Missing series slug."); setLoading(false); return; }
+    getSeries(slug)
+      .then((s) => { setSeries(s); setLoading(false); })
+      .catch(() => { setError("Series not found."); setLoading(false); });
+  }, [slug, router]);
+
+  async function handleSubscribe() {
+    if (!series) return;
+    setPaying(true);
+    setError("");
+    try {
+      const intent = await createSeriesSubscriptionIntent(
+        series.id,
+        seriesSubscriptionSuccessUrl(series.slug, {
+          season: lockedSeason,
+          episode: lockedEpisode,
+        }),
+      );
+      sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
+      window.location.href = intent.checkout_url;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Payment failed. Please try again.";
+      setError(msg);
+      setPaying(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
         </div>
+      </PageShell>
+    );
+  }
 
-        {highlight ? (
-          <div className="rounded-[3px] bg-brand px-2 py-1 text-[10px] font-bold tracking-[0.12em] text-white">
-            BEST VALUE
-          </div>
-        ) : null}
-      </div>
+  if (!series || error) {
+    return (
+      <PageShell>
+        <div className="flex h-64 flex-col items-center justify-center gap-4">
+          <p className="text-[14px] text-danger">{error || "Something went wrong."}</p>
+          <Link href="/series" className="text-[13px] text-text-muted hover:text-text">
+            ← Back to series
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
 
-      <button
-        type="button"
-        className="mt-4 inline-flex w-full items-center justify-center rounded-[6px] bg-brand px-3 py-[10px] text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
-      >
-        Subscribe
-      </button>
-    </div>
-  );
-}
-
-export default async function SubscriptionPayPage({
-  searchParams,
-}: {
-  searchParams?: Promise<SearchParams>;
-}) {
-  const sp = (await searchParams) ?? {};
-  const title = sp.title;
-  const lockedEpisode =
-    sp.season && sp.episode ? `Season ${sp.season}, Episode ${sp.episode}` : null;
+  const price = series.monthly_price_usd
+    ? `$${parseFloat(series.monthly_price_usd).toFixed(2)}`
+    : "$6.99";
+  const poster = posterUrl(series.poster_key);
+  const trailerEmbed = youtubeEmbedUrl(series.trailer_url);
 
   return (
     <PageShell>
-      <PageHeader
-        kicker={
-          <span className="inline-flex items-center gap-2">
-            <Lock size={14} /> SUBSCRIPTION REQUIRED
-          </span>
-        }
-        title="Subscribe to watch series"
-        description={
-          <>
-            {title ? (
-              <>
-                You tried to watch{" "}
-                <span className="font-semibold text-text">{title}</span>.{" "}
-              </>
-            ) : null}
-            {lockedEpisode ? (
-              <>
-                <span className="font-semibold text-text">{lockedEpisode}</span>{" "}
-                is part of the paid season.{" "}
-              </>
-            ) : null}
-            Choose a plan. This is UI only — connect your payment provider later.
-          </>
-        }
-        action={{ href: "/series", label: "Back to series" }}
-      />
+      {/* Kicker */}
+      <div className="px-6 pt-8 md:px-8">
+        <div className="mb-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted">
+          <Lock size={13} />
+          Subscription required
+        </div>
+        <h1 className="text-[28px] font-extrabold tracking-[-0.02em] text-text md:text-[34px]">
+          Unlock all series
+        </h1>
+        <p className="mt-2 text-[13px] leading-relaxed text-text-muted">
+          One subscription gives you access to{" "}
+          <span className="font-semibold text-text">every series</span> on Reeltime —
+          including <span className="font-semibold text-text">{series.title}</span>.
+          Cancel anytime.
+        </p>
+      </div>
 
-      <section className="px-6 pb-10 pt-2 md:px-8">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <PlanCard label="Weekly" price="$1.99" period="/ week" />
-          <PlanCard label="Monthly" price="$5.99" period="/ month" highlight />
-          <PlanCard label="3 months" price="$14.99" period="/ 3 months" />
+      <section className="px-6 pb-10 pt-6 md:px-8">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+          {/* Main checkout card */}
+          <div className="rounded-md border border-brand bg-surface p-5 md:col-span-2">
+            {/* What you're unlocking */}
+            {poster && (
+              <div className="mb-4 flex gap-3 rounded-sm border border-border bg-bg p-3">
+                <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded-sm border border-border">
+                  <Image src={poster} alt={series.title} fill className="object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">Starting with</div>
+                  <div className="mt-0.5 truncate text-[14px] font-bold text-text">{series.title}</div>
+                  {series.genres.length > 0 && (
+                    <div className="mt-0.5 text-[11px] text-text-muted">{series.genres.join(" · ")}</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-end justify-between gap-2">
+              <div>
+                <div className="text-[12px] font-semibold uppercase tracking-widest text-text-muted">
+                  Reeltime Plus
+                </div>
+                <div className="mt-0.5 text-[11px] text-text-disabled">
+                  All series · new episodes weekly · cancel anytime
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <span className="text-[28px] font-extrabold tracking-[-0.02em] text-text">
+                  {price}
+                </span>
+                <span className="ml-1 text-[12px] text-text-muted">/mo</span>
+              </div>
+            </div>
+
+            {error && (
+              <p className="mt-3 text-[12px] text-danger">{error}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSubscribe}
+              disabled={paying}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-brand px-3 py-3 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover disabled:opacity-60"
+            >
+              {paying ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Redirecting to checkout…
+                </span>
+              ) : (
+                `Subscribe · ${price}/mo`
+              )}
+            </button>
+
+            <p className="mt-3 text-center text-[11px] text-text-disabled">
+              You will be redirected to our secure payment partner to complete the transaction.
+            </p>
+          </div>
+
+          {/* Trust signals + perks */}
+          <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-5">
+            <div className="mb-1 text-[12px] font-bold text-text">What&apos;s included</div>
+            {[
+              "Full access to all series",
+              "New episodes every week",
+              "No per-title fees",
+              "Cancel anytime",
+            ].map((perk) => (
+              <div key={perk} className="flex items-center gap-2 text-[12px] text-text-muted">
+                <CheckCircle2 size={13} className="shrink-0 text-success" />
+                {perk}
+              </div>
+            ))}
+            <div className="mt-2 border-t border-border pt-3 space-y-2">
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-text-muted">
+                <ShieldCheck size={14} className="shrink-0" />
+                Secure checkout via Baray
+              </div>
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-text-muted">
+                <CreditCard size={14} className="shrink-0" />
+                Card · KHQR · ABA Pay
+              </div>
+            </div>
+            <div className="mt-auto border-t border-border pt-3">
+              <Link
+                href="/series"
+                className="text-[12px] text-text-muted transition-colors hover:text-text"
+              >
+                ← Back to series
+              </Link>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div className="rounded-[6px] border border-border bg-surface p-4">
-            <div className="inline-flex items-center gap-2 text-[12px] font-semibold text-text-muted">
-              <ShieldCheck size={14} />
-              Cancel anytime
-            </div>
-            <div className="mt-2 text-[13px] leading-relaxed text-text-muted">
-              Your access remains active until the end of your billing period.
-            </div>
-          </div>
-          <div className="rounded-[6px] border border-border bg-surface p-4">
-            <div className="inline-flex items-center gap-2 text-[12px] font-semibold text-text-muted">
-              <CreditCard size={14} />
-              One checkout
-            </div>
-            <div className="mt-2 text-[13px] leading-relaxed text-text-muted">
-              Set up card payments (or KHQR) when you add backend support.
-            </div>
-          </div>
-          <div className="rounded-[6px] border border-border bg-surface p-4">
-            <div className="inline-flex items-center gap-2 text-[12px] font-semibold text-text-muted">
-              <Lock size={14} />
-              Unlock full seasons
-            </div>
-            <div className="mt-2 text-[13px] leading-relaxed text-text-muted">
-              Subscribe to watch any series on Reeltime.
-            </div>
-          </div>
-        </div>
+        {trailerEmbed && (
+          <TrailerEmbed embedUrl={trailerEmbed} title={series.title} />
+        )}
       </section>
     </PageShell>
   );
 }
 
+export default function SubscriptionPayPage() {
+  return (
+    <Suspense fallback={
+      <PageShell>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
+        </div>
+      </PageShell>
+    }>
+      <SubscriptionPayInner />
+    </Suspense>
+  );
+}

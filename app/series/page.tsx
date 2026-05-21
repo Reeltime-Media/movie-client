@@ -11,9 +11,10 @@ import { PosterScrollRail } from "../components/PosterScrollRail";
 import { SectionHeader } from "../components/SectionHeader";
 import type { TranslationKey } from "@/lib/i18n";
 import { marketingImages } from "@/lib/marketing-images";
-import { seriesPopularPosters, seriesSubscribePosters } from "../mock/posters";
 import { listSeries } from "@/lib/api/series";
+import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { seriesToPoster } from "@/lib/api/to-poster";
+import { isLoggedIn } from "@/lib/api/client";
 import type { PosterCardProps } from "@/app/components/PosterCard";
 
 const SERIES_GENRE_KEYS = [
@@ -31,19 +32,19 @@ type SeriesGenreKey = (typeof SERIES_GENRE_KEYS)[number];
 export default function SeriesPage() {
   const { t } = useI18n();
   const [activeGenre, setActiveGenre] = useState<SeriesGenreKey>("genreAll");
-  const [subscribePosters, setSubscribePosters] = useState<PosterCardProps[]>(seriesSubscribePosters);
-  const [popularPosters, setPopularPosters] = useState<PosterCardProps[]>(seriesPopularPosters);
+  const [subscribePosters, setSubscribePosters] = useState<PosterCardProps[]>([]);
+  const [popularPosters, setPopularPosters] = useState<PosterCardProps[]>([]);
 
   useEffect(() => {
-    listSeries().then((items) => {
+    const subsPromise = isLoggedIn() ? listMySubscriptions().catch(() => []) : Promise.resolve([]);
+    Promise.all([listSeries(), subsPromise]).then(([items, subs]) => {
       if (!items.length) return;
-      const all = items.map((s, i) => seriesToPoster(s, i));
+      const hasSub = subs.some((s) => s.status === "active");
+      const all = items.map((s, i) => seriesToPoster(s, i, hasSub));
       const half = Math.ceil(all.length / 2);
       setSubscribePosters(all.slice(0, half));
       setPopularPosters(all.slice(half));
-    }).catch(() => {
-      // not logged in or API unavailable — keep mock data
-    });
+    }).catch(() => {});
   }, []);
 
   return (

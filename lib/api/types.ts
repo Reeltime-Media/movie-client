@@ -48,6 +48,7 @@ export interface SeriesRead {
   rating: string | null;
   monthly_price_usd: string | null;
   poster_key: string | null;
+  trailer_url: string | null;
   is_published: boolean;
   created_at: string;
   updated_at: string;
@@ -56,4 +57,34 @@ export interface SeriesRead {
 export interface SeasonRead {
   season_number: number;
   episodes: ContentRead[];
+}
+
+export interface PurchaseRead {
+  id: string;
+  user_id: string;
+  content_id: string;
+  intent_id: string;
+  order_id: string;
+  amount_usd: string;
+  created_at: string;
+}
+
+export interface SubscriptionRead {
+  id: string;
+  user_id: string;
+  plan: string;
+  status: string;
+  current_period_start: string;
+  current_period_end: string;
+  reminder_sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WatchProgressRead {
+  user_id: string;
+  content_id: string;
+  position_seconds: number;
+  completed: boolean;
+  last_watched_at: string;
 }

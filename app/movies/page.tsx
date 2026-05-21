@@ -12,9 +12,10 @@ import { SectionHeader } from "../components/SectionHeader";
 import { useI18n } from "../components/LocaleProvider";
 import type { TranslationKey } from "@/lib/i18n";
 import { marketingImages } from "@/lib/marketing-images";
-import { moviesActionPosters, moviesTrendingPosters } from "../mock/posters";
 import { listMovies } from "@/lib/api/movies";
+import { listPurchases } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
+import { isLoggedIn } from "@/lib/api/client";
 import type { PosterCardProps } from "@/app/components/PosterCard";
 
 const MOVIE_GENRE_KEYS = [
@@ -32,20 +33,20 @@ type MovieGenreKey = (typeof MOVIE_GENRE_KEYS)[number];
 export default function MoviesPage() {
   const { t } = useI18n();
   const [activeGenre, setActiveGenre] = useState<MovieGenreKey>("genreAll");
-  const [trendingPosters, setTrendingPosters] = useState<PosterCardProps[]>(moviesTrendingPosters);
-  const [actionPosters, setActionPosters] = useState<PosterCardProps[]>(moviesActionPosters);
+  const [trendingPosters, setTrendingPosters] = useState<PosterCardProps[]>([]);
+  const [actionPosters, setActionPosters] = useState<PosterCardProps[]>([]);
   const [featuredPoster, setFeaturedPoster] = useState<PosterCardProps | null>(null);
 
   useEffect(() => {
-    listMovies().then((movies) => {
+    const purchasesPromise = isLoggedIn() ? listPurchases().catch(() => []) : Promise.resolve([]);
+    Promise.all([listMovies(), purchasesPromise]).then(([movies, purchases]) => {
       if (!movies.length) return;
-      const all = movies.map((m, i) => movieToPoster(m, i));
+      const ownedIds = new Set(purchases.map((p) => p.content_id));
+      const all = movies.map((m, i) => movieToPoster(m, i, ownedIds));
       setTrendingPosters(all);
       setActionPosters(all.slice().reverse());
       setFeaturedPoster(all[0]);
-    }).catch(() => {
-      // not logged in or API unavailable — keep mock data
-    });
+    }).catch(() => {});
   }, []);
 
   const featured = featuredPoster ?? trendingPosters[0];

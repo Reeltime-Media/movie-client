@@ -36,7 +36,7 @@ export function WatchPlayer({
   hlsSrc: string;
   fallbackSrc?: string;
   title: string;
-  attribution: string;
+  attribution?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -434,7 +434,9 @@ export function WatchPlayer({
         </div>
       </div>
 
-      <figcaption className="sr-only">{attribution}</figcaption>
+      {attribution ? (
+        <figcaption className="sr-only">{attribution}</figcaption>
+      ) : null}
     </figure>
   );
 }

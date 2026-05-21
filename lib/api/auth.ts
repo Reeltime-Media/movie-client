@@ -20,3 +20,7 @@ export async function register(
 export async function getMe(): Promise<UserRead> {
   return apiFetch<UserRead>("/users/me");
 }
+
+export async function updateMe(data: { full_name?: string; password?: string }): Promise<UserRead> {
+  return apiFetch<UserRead>("/users/me", { method: "PATCH", body: data });
+}

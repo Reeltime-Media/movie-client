@@ -7,6 +7,7 @@ export const km = {
   navMyLibrary: "បណ្ណាល័យរបស់ខ្ញុំ",
   navProfile: "ប្រវត្តិរូប",
   navSignIn: "ចូលគណនី",
+  navSignOut: "ចេញពីគណនី",
   navCreateAccount: "បង្កើតគណនី",
   navSearch: "ស្វែងរក",
   navNotifications: "ការជូនដំណឹង",
