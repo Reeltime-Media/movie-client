@@ -14,6 +14,7 @@ const navLinks: { labelKey: TranslationKey; href: string }[] = [
   { labelKey: "navHome", href: "/" },
   { labelKey: "navMovies", href: "/movies" },
   { labelKey: "navSeries", href: "/series" },
+  { labelKey: "navPricing", href: "/pricing" },
   { labelKey: "navMyLibrary", href: "/my-library" },
 ];
 

@@ -5,6 +5,7 @@ export const km = {
   navMovies: "ភាពយន្ត",
   navSeries: "ស៊េរី",
   navMyLibrary: "បណ្ណាល័យរបស់ខ្ញុំ",
+  navPricing: "តម្លៃ",
   navProfile: "ប្រវត្តិរូប",
   navSignIn: "ចូលគណនី",
   navSignOut: "ចេញពីគណនី",
@@ -46,7 +47,7 @@ export const km = {
   seriesSort: "តម្រៀប",
   seriesPopularSort: "ពេញនិយម",
   seriesSubscribeTitle: "ស៊េរី · ជាវដើម្បីដោះសោ",
-  seriesSubscribeSub: "វគ្គទី ១–៣ មើលឥតគិតថ្លៃ រដូវពេញដោះសោជាមួយ Reeltime Plus",
+  seriesSubscribeSub: "វគ្គឥតគិតថ្លៃមើលបានដោយមិនចាំបាច់ជាវ រដូវពេញដោះសោជាមួយ Reeltime Plus",
   seriesPopularTitle: "ពេញនិយមឥឡូវនេះ",
   seriesPopularSub: "កំពុងត្រូវបានមើលច្រើននៅកម្ពុជា",
 
@@ -104,4 +105,25 @@ export const km = {
   homeDecorDesc:
     "រឿងចាក់មុន ម៉ារ៉ាតុងយប់ និងរឿងដែលនៅក្នុងចិត្ត — អារម្មណ៍ដូចនៅរោង មើលបានគ្រប់ទីកន្លែង។",
   homeDecorCta: "រកមើលភាពយន្ត",
+
+  pricingBadge: "ការជាវស៊េរី",
+  pricingTitle: "ផែនការសម្រាប់មើលរឿង",
+  pricingDesc:
+    "បើកស៊េរីទាំងអស់នៅ Reeltime ដោយការជាវមួយដង។ វគ្គថ្មីចេញរៀងរាល់សប្តាហ៍ — លុបចោលបានគ្រប់ពេល។",
+  pricingPerksTitle: "ផែនការទាំងអស់មាន",
+  pricingPerk1: "មើលស៊េរីទាំងអស់បាន",
+  pricingPerk2: "វគ្គថ្មីរៀងរាល់សប្តាហ៍",
+  pricingPerk3: "មិនគិតថ្លៃរឿងមួយៗ",
+  pricingPerk4: "លុបចោលបានគ្រប់ពេល",
+  pricingRecommended: "ណែនាំ",
+  pricingCurrentPlan: "ផែនការរបស់អ្នក",
+  pricingSubscribe: "ជាវ",
+  pricingBrowseSeries: "រកមើលស៊េរី",
+  pricingSignIn: "ចូលគណនីដើម្បីជាវ",
+  pricingLoadError: "មិនអាចផ្ទុកផែនការបានទេ។ សូមព្យាយាមម្តងទៀត។",
+  pricingEmpty: "មិនមានផែនការជាវដែលអាចប្រើបានឥឡូវនេះទេ។",
+  pricingBillingMonthly: "/ខែ",
+  pricingBillingYearly: "/ឆ្នាំ",
+  pricingBillingDays: "/{days} ថ្ងៃ",
+  pricingSecureNote: "ទូទាត់សុវត្ថិភាពតាម Baray · Card · KHQR · ABA Pay",
 } satisfies Record<TranslationKey, string>;

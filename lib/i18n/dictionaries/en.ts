@@ -3,6 +3,7 @@ export const en = {
   navMovies: "Movies",
   navSeries: "Series",
   navMyLibrary: "My library",
+  navPricing: "Pricing",
   navProfile: "Profile",
   navSignIn: "Sign in",
   navSignOut: "Sign out",
@@ -44,7 +45,7 @@ export const en = {
   seriesSort: "Sort",
   seriesPopularSort: "Popular",
   seriesSubscribeTitle: "Series · Subscribe to unlock",
-  seriesSubscribeSub: "First 3 episodes are free, full seasons unlock with Reeltime Plus",
+  seriesSubscribeSub: "Free episodes play without a subscription; unlock full seasons with Reeltime Plus",
   seriesPopularTitle: "Popular right now",
   seriesPopularSub: "Trending with viewers in Cambodia",
 
@@ -102,6 +103,27 @@ export const en = {
   homeDecorDesc:
     "Premieres, late-night marathons, and stories that stick — the same mood as the theater, wherever you watch.",
   homeDecorCta: "Browse movies",
+
+  pricingBadge: "Series subscription",
+  pricingTitle: "Plans for every binge",
+  pricingDesc:
+    "Unlock the full Reeltime series catalog with one subscription. New episodes drop weekly—cancel anytime.",
+  pricingPerksTitle: "Every plan includes",
+  pricingPerk1: "Full access to all series",
+  pricingPerk2: "New episodes every week",
+  pricingPerk3: "No per-title fees",
+  pricingPerk4: "Cancel anytime",
+  pricingRecommended: "Recommended",
+  pricingCurrentPlan: "Your plan",
+  pricingSubscribe: "Subscribe",
+  pricingBrowseSeries: "Browse series",
+  pricingSignIn: "Sign in to subscribe",
+  pricingLoadError: "Could not load plans. Please try again later.",
+  pricingEmpty: "No subscription plans are available right now.",
+  pricingBillingMonthly: "/mo",
+  pricingBillingYearly: "/yr",
+  pricingBillingDays: "/{days} days",
+  pricingSecureNote: "Secure checkout via Baray · Card · KHQR · ABA Pay",
 } as const;
 
 export type TranslationKey = keyof typeof en;

@@ -12,8 +12,8 @@ import { SectionHeader } from "../components/SectionHeader";
 import type { TranslationKey } from "@/lib/i18n";
 import { marketingImages } from "@/lib/marketing-images";
 import { listSeries } from "@/lib/api/series";
+import { mapSeriesListToPosters } from "@/lib/api/series-posters";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
-import { seriesToPoster } from "@/lib/api/to-poster";
 import { isLoggedIn } from "@/lib/api/client";
 import type { PosterCardProps } from "@/app/components/PosterCard";
 
@@ -37,14 +37,16 @@ export default function SeriesPage() {
 
   useEffect(() => {
     const subsPromise = isLoggedIn() ? listMySubscriptions().catch(() => []) : Promise.resolve([]);
-    Promise.all([listSeries(), subsPromise]).then(([items, subs]) => {
-      if (!items.length) return;
-      const hasSub = subs.some((s) => s.status === "active");
-      const all = items.map((s, i) => seriesToPoster(s, i, hasSub));
-      const half = Math.ceil(all.length / 2);
-      setSubscribePosters(all.slice(0, half));
-      setPopularPosters(all.slice(half));
-    }).catch(() => {});
+    Promise.all([listSeries(), subsPromise])
+      .then(async ([items, subs]) => {
+        if (!items.length) return;
+        const hasSub = subs.some((s) => s.status === "active");
+        const all = await mapSeriesListToPosters(items, hasSub);
+        const half = Math.ceil(all.length / 2);
+        setSubscribePosters(all.slice(0, half));
+        setPopularPosters(all.slice(half));
+      })
+      .catch(() => {});
   }, []);
 
   return (

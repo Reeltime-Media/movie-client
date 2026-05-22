@@ -1,6 +1,16 @@
 import type { PosterCardProps } from "@/app/components/PosterCard";
 import { posterUrl } from "./client";
-import type { ContentRead, SeriesRead } from "./types";
+import {
+  findFirstFreeEpisode,
+  freeEpisodeWatchHref,
+  seasonsHaveFreeEpisodes,
+} from "./series-free";
+import type { ContentRead, SeasonRead, SeriesRead } from "./types";
+
+export type SeriesPosterOptions = {
+  hasSubscription?: boolean;
+  seasons?: SeasonRead[];
+};
 
 /** Deterministic gradient palette — cycles by index. */
 const GRADIENTS: Array<{ gradient: string; accent: string }> = [
@@ -47,9 +57,26 @@ export function movieToPoster(
 export function seriesToPoster(
   series: SeriesRead,
   index = 0,
-  hasSubscription?: boolean,
+  options?: boolean | SeriesPosterOptions,
 ): PosterCardProps {
   const { gradient, accent } = pick(index);
+  const opts: SeriesPosterOptions =
+    typeof options === "boolean" ? { hasSubscription: options } : (options ?? {});
+  const hasSubscription = Boolean(opts.hasSubscription);
+  const seasons = opts.seasons ?? [];
+  const hasFreeEpisodes = seasonsHaveFreeEpisodes(seasons);
+  const firstFree = hasFreeEpisodes ? findFirstFreeEpisode(seasons) : null;
+
+  let watchLabel = "Subscribe";
+  let watchHref = `/pricing?slug=${encodeURIComponent(series.slug)}`;
+
+  if (hasSubscription) {
+    watchLabel = "Watch";
+    watchHref = `/watch/series/${series.slug}/1/1`;
+  } else if (firstFree) {
+    watchLabel = "Watch now";
+    watchHref = freeEpisodeWatchHref(series.slug, firstFree);
+  }
 
   return {
     imageSrc: posterUrl(series.poster_key),
@@ -59,9 +86,7 @@ export function seriesToPoster(
     accentColor: accent,
     subtitle: { text: "A SERIES", color: accent },
     entitlement: hasSubscription ? { kind: "subscribed", value: "Subscribed" } : { kind: "none" },
-    watchLabel: hasSubscription ? "Watch" : "Subscribe",
-    watchHref: hasSubscription
-      ? `/watch/series/${series.slug}/1/1`
-      : `/pay/subscription?slug=${series.slug}`,
+    watchLabel,
+    watchHref,
   };
 }

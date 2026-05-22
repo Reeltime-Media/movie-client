@@ -8,14 +8,12 @@ export function WatchSeriesEpisodeSidebar({
   seasons,
   activeSeason,
   activeEpisode,
-  freeEpisodeCount,
 }: {
   seriesSlug: string;
   seriesTitle: string;
   seasons: SeasonRead[];
   activeSeason: number;
   activeEpisode: number;
-  freeEpisodeCount: number;
 }) {
   const seasonData = seasons.find((s) => s.season_number === activeSeason);
   const episodes = seasonData?.episodes ?? [];
@@ -68,10 +66,10 @@ export function WatchSeriesEpisodeSidebar({
           {episodes.map((ep) => {
             const epNum = ep.episode_number ?? 0;
             const isActive = epNum === activeEpisode;
-            const isFree = epNum <= freeEpisodeCount;
+            const isFree = ep.is_free === true;
             const href = isFree
               ? `/watch/series/${seriesSlug}/${activeSeason}/${epNum}`
-              : `/pay/subscription?title=${encodeURIComponent(seriesTitle)}&season=${activeSeason}&episode=${epNum}`;
+              : `/pay/subscription?slug=${encodeURIComponent(seriesSlug)}&title=${encodeURIComponent(seriesTitle)}&season=${activeSeason}&episode=${epNum}`;
             return (
               <li key={epNum}>
                 <Link

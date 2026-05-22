@@ -6,7 +6,8 @@ import { SectionHeader } from "./SectionHeader";
 import { useI18n } from "./LocaleProvider";
 import { listMovies } from "@/lib/api/movies";
 import { listSeries } from "@/lib/api/series";
-import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
+import { mapSeriesListToPosters } from "@/lib/api/series-posters";
+import { movieToPoster } from "@/lib/api/to-poster";
 import type { PosterCardProps } from "./PosterCard";
 
 export function WatchDiscoveryRails() {
@@ -25,8 +26,8 @@ export function WatchDiscoveryRails() {
       .catch(() => {});
 
     listSeries()
-      .then((series) => {
-        setSeriesPicks(series.map((s, i) => seriesToPoster(s, i)));
+      .then(async (series) => {
+        setSeriesPicks(await mapSeriesListToPosters(series, false));
       })
       .catch(() => {});
   }, []);

@@ -15,8 +15,6 @@ import { mediaUrl, isLoggedIn } from "@/lib/api/client";
 import type { SeriesRead, SeasonRead } from "@/lib/api/types";
 import { SAMPLE_HLS_SRC, SAMPLE_FALLBACK_SRC, SAMPLE_VIDEO_ATTRIBUTION } from "@/lib/sample-video-sources";
 
-const FREE_EPISODE_COUNT = 3;
-
 export default function WatchSeriesPlaybackPage() {
   const params = useParams<{ seriesSlug: string; playback?: string[] }>();
   const router = useRouter();
@@ -104,7 +102,7 @@ export default function WatchSeriesPlaybackPage() {
     );
   }
 
-  const isFree = episodeNum <= FREE_EPISODE_COUNT;
+  const isFree = episode.is_free === true;
   if (!isFree && !hasSubscription) {
     router.replace(
       `/pay/subscription?slug=${series.slug}&title=${encodeURIComponent(series.title)}&season=${seasonNum}&episode=${episodeNum}`,
@@ -146,7 +144,6 @@ export default function WatchSeriesPlaybackPage() {
             seasons={seasons}
             activeSeason={seasonNum}
             activeEpisode={episodeNum}
-            freeEpisodeCount={FREE_EPISODE_COUNT}
           />
         </div>
 

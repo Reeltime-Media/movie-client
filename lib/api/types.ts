@@ -33,6 +33,7 @@ export interface ContentRead {
   price_usd: string | null;
   status: string;
   is_published: boolean;
+  is_free: boolean;
   transcode_status: string;
   created_at: string;
   updated_at: string;
@@ -77,6 +78,19 @@ export interface SubscriptionRead {
   current_period_start: string;
   current_period_end: string;
   reminder_sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionPlanRead {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  price_usd: string;
+  billing_interval_days: number;
+  is_active: boolean;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }

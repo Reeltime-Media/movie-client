@@ -23,7 +23,8 @@ import { listMovies } from "@/lib/api/movies";
 import { listSeries } from "@/lib/api/series";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
-import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
+import { mapSeriesListToPosters } from "@/lib/api/series-posters";
+import { movieToPoster } from "@/lib/api/to-poster";
 import { isLoggedIn } from "@/lib/api/client";
 import type { PosterCardProps } from "@/app/components/PosterCard";
 
@@ -89,20 +90,22 @@ export default function Home() {
     const loggedIn = isLoggedIn();
     const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
     const subsPromise = loggedIn ? listMySubscriptions().catch(() => []) : Promise.resolve([]);
-    Promise.all([listMovies(), listSeries(), purchasesPromise, subsPromise]).then(([movies, seriesList, purchases, subs]) => {
-      const ownedIds = new Set(purchases.map((p) => p.content_id));
-      const hasSub = subs.some((s) => s.status === "active");
-      if (movies.length) {
-        const moviePosters = movies.map((m, i) => movieToPoster(m, i, ownedIds));
-        setTrendingPosters(moviePosters);
-        setThrillerPosters([...moviePosters].reverse());
-        setLibraryPosters(moviePosters.slice(0, 8));
-        setContinuePosters(moviePosters.slice(0, 6));
-      }
-      if (seriesList.length) {
-        setSubscribePosters(seriesList.map((s, i) => seriesToPoster(s, i, hasSub)));
-      }
-    }).catch(() => {});
+    Promise.all([listMovies(), listSeries(), purchasesPromise, subsPromise])
+      .then(async ([movies, seriesList, purchases, subs]) => {
+        const ownedIds = new Set(purchases.map((p) => p.content_id));
+        const hasSub = subs.some((s) => s.status === "active");
+        if (movies.length) {
+          const moviePosters = movies.map((m, i) => movieToPoster(m, i, ownedIds));
+          setTrendingPosters(moviePosters);
+          setThrillerPosters([...moviePosters].reverse());
+          setLibraryPosters(moviePosters.slice(0, 8));
+          setContinuePosters(moviePosters.slice(0, 6));
+        }
+        if (seriesList.length) {
+          setSubscribePosters(await mapSeriesListToPosters(seriesList, hasSub));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
