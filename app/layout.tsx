@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { Inter, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
+import { GoogleAuthProvider } from "./components/GoogleAuthProvider";
 import { LocaleProvider } from "./components/LocaleProvider";
 import { ThemeInit } from "./components/ThemeInit";
 
@@ -37,7 +38,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-bg text-text font-sans">
         <ThemeInit />
-        <LocaleProvider>{children}</LocaleProvider>
+        <GoogleAuthProvider>
+          <LocaleProvider>{children}</LocaleProvider>
+        </GoogleAuthProvider>
       </body>
     </html>
   );

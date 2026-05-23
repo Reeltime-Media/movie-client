@@ -7,8 +7,10 @@ export interface UserRead {
   id: string;
   email: string;
   full_name: string | null;
+  avatar_url: string | null;
   role: string;
   is_active: boolean;
+  has_password: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -14,6 +14,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useWatchProgressSync } from "@/lib/useWatchProgressSync";
 
 type QualityLevel = { height: number; bitrate: number; index: number };
 
@@ -28,11 +29,14 @@ function formatTime(s: number) {
 }
 
 export function WatchPlayer({
+  contentId,
   hlsSrc,
   fallbackSrc,
   title,
   attribution,
 }: {
+  /** When set, saves resume progress for logged-in users (≥30s or 10% watched). */
+  contentId?: string;
   hlsSrc: string;
   fallbackSrc?: string;
   title: string;
@@ -57,6 +61,12 @@ export function WatchPlayer({
   const [showQuality, setShowQuality] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { markCompleted, flushProgress } = useWatchProgressSync({
+    contentId,
+    currentTime,
+    duration,
+  });
 
   // ── Init HLS ──────────────────────────────────────────────────
   useEffect(() => {
@@ -112,7 +122,14 @@ export function WatchPlayer({
     if (!video) return;
 
     const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
+    const onPause = () => {
+      setPlaying(false);
+      flushProgress();
+    };
+    const onEnded = () => {
+      setPlaying(false);
+      markCompleted();
+    };
     const onWaiting = () => setBuffering(true);
     const onCanPlay = () => setBuffering(false);
     const onDurationChange = () => setDuration(video.duration);
@@ -129,6 +146,7 @@ export function WatchPlayer({
 
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
+    video.addEventListener("ended", onEnded);
     video.addEventListener("waiting", onWaiting);
     video.addEventListener("canplay", onCanPlay);
     video.addEventListener("durationchange", onDurationChange);
@@ -138,13 +156,14 @@ export function WatchPlayer({
     return () => {
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
+      video.removeEventListener("ended", onEnded);
       video.removeEventListener("waiting", onWaiting);
       video.removeEventListener("canplay", onCanPlay);
       video.removeEventListener("durationchange", onDurationChange);
       video.removeEventListener("volumechange", onVolumeChange);
       video.removeEventListener("timeupdate", onTimeUpdate);
     };
-  }, []);
+  }, [flushProgress, markCompleted]);
 
   // ── Fullscreen listener ────────────────────────────────────────
   useEffect(() => {

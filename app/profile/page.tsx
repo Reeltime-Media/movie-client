@@ -20,7 +20,9 @@ import { PageShell } from "../components/PageShell";
 import { SectionHeader } from "../components/SectionHeader";
 import { PosterScrollRail } from "../components/PosterScrollRail";
 import { useI18n } from "../components/LocaleProvider";
+import { UserAvatar } from "../components/UserAvatar";
 import { getMe, updateMe } from "@/lib/api/auth";
+import { saveUserSnapshot } from "@/lib/user-session";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { listWatchProgress } from "@/lib/api/watch-progress";
@@ -113,6 +115,7 @@ export default function ProfilePage() {
       listWatchProgress().catch(() => [] as WatchProgressRead[]),
     ]).then(([me, subs, purch, progress]) => {
       setUser(me);
+      saveUserSnapshot(me);
       setSubscriptions(subs);
       setPurchases(purch);
       setWatchProgress(progress);
@@ -131,8 +134,6 @@ export default function ProfilePage() {
   const hoursWatched = Math.round(
     watchProgress.reduce((sum, p) => sum + p.position_seconds, 0) / 3600
   );
-  const initial = (user?.full_name ?? user?.email ?? "?")[0]?.toUpperCase() ?? "?";
-
   async function handleSaveName() {
     if (!nameInput.trim() || !user) return;
     setNameSaving(true);
@@ -193,9 +194,13 @@ export default function ProfilePage() {
           }}
         />
         <div className="absolute bottom-0 left-6 translate-y-1/2 md:left-8">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-bg bg-brand text-[22px] font-black text-white sm:h-20 sm:w-20">
-            {initial}
-          </div>
+          <UserAvatar
+            name={user.full_name}
+            email={user.email}
+            avatarUrl={user.avatar_url}
+            size="lg"
+            className="border-4 border-bg ring-0"
+          />
         </div>
       </div>
 
@@ -346,32 +351,34 @@ export default function ProfilePage() {
         </SectionCard>
       </div>
 
-      {/* ── Change password ── */}
+      {/* ── Password ── */}
       <div className="mt-4 px-6 md:px-8">
-        <SectionCard title="Change password">
+        <SectionCard title={user.has_password ? "Change password" : "Set a password"}>
           <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleChangePassword}>
-            <label className="block">
-              <div className="mb-1.5 text-[12px] font-semibold text-text-muted">Current password</div>
-              <div className="relative">
-                <input
-                  type={showCurrentPw ? "text" : "password"}
-                  autoComplete="current-password"
-                  placeholder="Enter current password"
-                  value={currentPw}
-                  onChange={(e) => setCurrentPw(e.target.value)}
-                  className="w-full rounded-md border border-border bg-bg px-3 py-2.5 pr-10 text-[13px] text-text outline-none transition-colors placeholder:text-text-disabled focus:border-border-hover focus:bg-surface-elevated"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPw((v) => !v)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text"
-                  aria-label={showCurrentPw ? "Hide" : "Show"}
-                >
-                  {showCurrentPw ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
-              </div>
-            </label>
-            <label className="block">
+            {user.has_password && (
+              <label className="block">
+                <div className="mb-1.5 text-[12px] font-semibold text-text-muted">Current password</div>
+                <div className="relative">
+                  <input
+                    type={showCurrentPw ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="Enter current password"
+                    value={currentPw}
+                    onChange={(e) => setCurrentPw(e.target.value)}
+                    className="w-full rounded-md border border-border bg-bg px-3 py-2.5 pr-10 text-[13px] text-text outline-none transition-colors placeholder:text-text-disabled focus:border-border-hover focus:bg-surface-elevated"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPw((v) => !v)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text"
+                    aria-label={showCurrentPw ? "Hide" : "Show"}
+                  >
+                    {showCurrentPw ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </label>
+            )}
+            <label className={`block ${user.has_password ? "" : "sm:col-span-2"}`}>
               <div className="mb-1.5 text-[12px] font-semibold text-text-muted">New password</div>
               <div className="relative">
                 <input

@@ -124,6 +124,23 @@ export const en = {
   pricingBillingYearly: "/yr",
   pricingBillingDays: "/{days} days",
   pricingSecureNote: "Secure checkout via Baray · Card · KHQR · ABA Pay",
+
+  commentsTitle: "Comments",
+  commentsPlaceholder: "Share your thoughts about this movie…",
+  commentsPost: "Post comment",
+  commentsPosting: "Posting…",
+  commentsEmpty: "No comments yet. Be the first to share your thoughts.",
+  commentsLoadError: "Could not load comments. Please try again.",
+  commentsPostError: "Could not post your comment. Please try again.",
+  commentsLoadMore: "Load more comments",
+  commentsLoadingMore: "Loading…",
+  commentsReply: "Reply",
+  commentsReport: "Report",
+  commentsReported: "Reported",
+  commentsVoteUp: "Upvote",
+  commentsVoteDown: "Downvote",
+  commentsCancelReply: "Cancel",
+  commentsReplyPlaceholder: "Write a reply…",
 } as const;
 
 export type TranslationKey = keyof typeof en;

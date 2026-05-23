@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { PageShell } from "../components/PageShell";
+import { MovieComments } from "../components/MovieComments";
 import { WatchDiscoveryRails } from "../components/WatchDiscoveryRails";
 import { WatchPlayer } from "../components/WatchPlayer";
 import { getMovie } from "@/lib/api/movies";
@@ -80,6 +81,7 @@ function WatchPageInner() {
 
       <section className="border-b border-border px-6 pb-8 md:px-8">
         <WatchPlayer
+          contentId={movie.id}
           hlsSrc={hlsSrc}
           fallbackSrc={fallbackSrc}
           title={title}
@@ -135,6 +137,8 @@ function WatchPageInner() {
             {movie.description}
           </p>
         )}
+
+        <MovieComments contentId={movie.id} movieTitle={title} />
 
         <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
           <Link href="/movies" className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover">

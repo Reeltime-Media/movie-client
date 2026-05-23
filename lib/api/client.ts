@@ -1,3 +1,5 @@
+import { clearUserSnapshot } from "../user-session";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export const R2_PUBLIC_URL =
@@ -48,6 +50,7 @@ export function saveToken(token: string): void {
 
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
+  clearUserSnapshot();
   notifyAuthSubscribers();
 }
 

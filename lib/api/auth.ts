@@ -1,9 +1,26 @@
 import { apiFetch, apiFormPost, saveToken } from "./client";
 import type { TokenResponse, UserRead } from "./types";
+import { saveUserSnapshot } from "../user-session";
+
+export async function refreshUserSession(): Promise<UserRead> {
+  const user = await getMe();
+  saveUserSnapshot(user);
+  return user;
+}
 
 export async function login(email: string, password: string): Promise<void> {
   const data = await apiFormPost<TokenResponse>("/auth/login", { email, password });
   saveToken(data.access_token);
+  await refreshUserSession();
+}
+
+export async function loginWithGoogle(idToken: string): Promise<void> {
+  const data = await apiFetch<TokenResponse>("/auth/google", {
+    method: "POST",
+    body: { id_token: idToken },
+  });
+  saveToken(data.access_token);
+  await refreshUserSession();
 }
 
 export async function register(
@@ -21,6 +38,11 @@ export async function getMe(): Promise<UserRead> {
   return apiFetch<UserRead>("/users/me");
 }
 
-export async function updateMe(data: { full_name?: string; password?: string }): Promise<UserRead> {
-  return apiFetch<UserRead>("/users/me", { method: "PATCH", body: data });
+export async function updateMe(data: {
+  full_name?: string;
+  password?: string;
+}): Promise<UserRead> {
+  const user = await apiFetch<UserRead>("/users/me", { method: "PATCH", body: data });
+  saveUserSnapshot(user);
+  return user;
 }

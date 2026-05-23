@@ -132,6 +132,7 @@ export default function WatchSeriesPlaybackPage() {
           <div className="min-w-0">
             <WatchPlayer
               key={`${seriesSlug}-${seasonNum}-${episodeNum}`}
+              contentId={episode.id}
               hlsSrc={hlsSrc}
               fallbackSrc={fallbackSrc}
               title={playerTitle}

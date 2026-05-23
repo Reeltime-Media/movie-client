@@ -198,3 +198,39 @@ html[lang="km"] body {
     transform: none !important;
   }
 }
+
+/* Scroll-triggered reveal (home and other pages) */
+.rt-scroll-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--rt-scroll-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.rt-scroll-reveal--fade-in {
+  transform: none;
+}
+
+.rt-scroll-reveal--fade-up-scale {
+  transform: translateY(18px) scale(0.985);
+}
+
+.rt-scroll-reveal--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.rt-scroll-reveal--fade-in.rt-scroll-reveal--visible {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rt-scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

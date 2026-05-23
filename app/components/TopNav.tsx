@@ -3,12 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Bell, Moon, Search, Sun } from "lucide-react";
 
+import { refreshUserSession } from "@/lib/api/auth";
 import { clearToken, getAuthSnapshot, subscribeAuth } from "@/lib/api/client";
+import { getUserSnapshot, subscribeUser } from "@/lib/user-session";
 import type { Locale, TranslationKey } from "@/lib/i18n";
 import { useI18n } from "./LocaleProvider";
+import { UserAvatar } from "./UserAvatar";
 
 const navLinks: { labelKey: TranslationKey; href: string }[] = [
   { labelKey: "navHome", href: "/" },
@@ -60,7 +63,14 @@ export function TopNav() {
   const router = useRouter();
   const theme = useSyncExternalStore(subscribeTheme, resolveTheme, () => "dark");
   const loggedIn = useSyncExternalStore(subscribeAuth, getAuthSnapshot, () => false);
+  const user = useSyncExternalStore(subscribeUser, getUserSnapshot, () => null);
   const { locale, setLocale, t } = useI18n();
+
+  useEffect(() => {
+    if (loggedIn && !user) {
+      void refreshUserSession().catch(() => clearToken());
+    }
+  }, [loggedIn, user]);
 
   function toggleTheme() {
     applyTheme(resolveTheme() === "dark" ? "light" : "dark");
@@ -192,11 +202,17 @@ export function TopNav() {
               </button>
               <Link
                 href="/profile"
-                className="grid h-6.5 w-6.5 cursor-pointer place-items-center rounded-full bg-surface-elevated text-[12px] font-bold text-text ring-1 ring-border transition-all hover:ring-2 hover:ring-brand"
+                className="cursor-pointer transition-opacity hover:opacity-90"
                 aria-label={t("navProfile")}
                 title={t("navProfile")}
               >
-                B
+                <UserAvatar
+                  name={user?.full_name}
+                  email={user?.email}
+                  avatarUrl={user?.avatar_url}
+                  size="sm"
+                  className="hover:ring-2 hover:ring-brand"
+                />
               </Link>
             </>
           ) : isAuthPage ? (
