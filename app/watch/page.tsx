@@ -77,6 +77,7 @@ function WatchPageInner() {
           </span>
         }
         title={title}
+        description={movie.description ?? undefined}
       />
 
       <section className="border-b border-border px-6 pb-8 md:px-8">
@@ -130,12 +131,6 @@ function WatchPageInner() {
               </span>
             ))}
           </div>
-        )}
-
-        {movie.description && (
-          <p className="mt-4 max-w-[62ch] text-[13px] leading-relaxed text-text-muted">
-            {movie.description}
-          </p>
         )}
 
         <MovieComments contentId={movie.id} movieTitle={title} />

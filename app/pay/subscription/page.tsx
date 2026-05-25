@@ -11,6 +11,7 @@ import { getSeries } from "@/lib/api/series";
 import { createSeriesSubscriptionIntent } from "@/lib/api/payments";
 import { posterUrl, isLoggedIn } from "@/lib/api/client";
 import { seriesSubscriptionSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
+import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import type { SeriesRead } from "@/lib/api/types";
 
@@ -50,7 +51,7 @@ function SubscriptionPayInner() {
         }),
       );
       sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
-      window.location.href = intent.checkout_url;
+      window.location.href = safeCheckoutUrl(intent.checkout_url);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Payment failed. Please try again.";
       setError(msg);

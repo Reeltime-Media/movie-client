@@ -17,6 +17,7 @@ import { listPurchases } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
 import { isLoggedIn } from "@/lib/api/client";
 import type { PosterCardProps } from "@/app/components/PosterCard";
+import type { ContentRead } from "@/lib/api/types";
 
 const MOVIE_GENRE_KEYS = [
   "genreAll",
@@ -36,6 +37,7 @@ export default function MoviesPage() {
   const [trendingPosters, setTrendingPosters] = useState<PosterCardProps[]>([]);
   const [actionPosters, setActionPosters] = useState<PosterCardProps[]>([]);
   const [featuredPoster, setFeaturedPoster] = useState<PosterCardProps | null>(null);
+  const [featuredMovie, setFeaturedMovie] = useState<ContentRead | null>(null);
 
   useEffect(() => {
     const purchasesPromise = isLoggedIn() ? listPurchases().catch(() => []) : Promise.resolve([]);
@@ -46,6 +48,7 @@ export default function MoviesPage() {
       setTrendingPosters(all);
       setActionPosters(all.slice().reverse());
       setFeaturedPoster(all[0]);
+      setFeaturedMovie(movies[0] ?? null);
     }).catch(() => {});
   }, []);
 
@@ -172,6 +175,11 @@ export default function MoviesPage() {
                     <Star size={11} className="fill-warning text-warning" aria-hidden />
                     <span>{t("moviesStaffPick")}</span>
                   </div>
+                  {featuredMovie?.description ? (
+                    <p className="mt-2 line-clamp-3 max-w-[52ch] text-[12px] leading-relaxed text-text-muted">
+                      {featuredMovie.description}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-3">
                   <a

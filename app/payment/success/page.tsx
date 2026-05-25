@@ -3,13 +3,14 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { PageShell } from "../../components/PageShell";
-import { completePaymentIntent } from "@/lib/api/payments";
+import { waitForPaymentSucceeded } from "@/lib/api/payments";
 import { PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 function PaymentSuccessInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") ?? "/";
+  const next = safeRedirectPath(params.get("next"), "/");
   const [error, setError] = useState("");
   const ran = useRef(false);
 
@@ -23,7 +24,7 @@ function PaymentSuccessInner() {
       return;
     }
 
-    completePaymentIntent(intentId)
+    waitForPaymentSucceeded(intentId)
       .then(() => {
         sessionStorage.removeItem(PENDING_INTENT_KEY);
         router.replace(next);
@@ -37,14 +38,14 @@ function PaymentSuccessInner() {
   if (error) {
     return (
       <PageShell>
-        <div className="flex h-64 flex-col items-center justify-center gap-4">
+        <div className="flex h-64 flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-[14px] text-danger">{error}</p>
           <button
             type="button"
-            onClick={() => router.replace(next)}
+            onClick={() => router.replace("/")}
             className="text-[13px] text-text-muted hover:text-text"
           >
-            Continue anyway →
+            Back to home
           </button>
         </div>
       </PageShell>

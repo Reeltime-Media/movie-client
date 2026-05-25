@@ -8,7 +8,11 @@ import { Bell, Moon, Search, Sun } from "lucide-react";
 
 import { refreshUserSession } from "@/lib/api/auth";
 import { clearToken, getAuthSnapshot, subscribeAuth } from "@/lib/api/client";
-import { getUserSnapshot, subscribeUser } from "@/lib/user-session";
+import {
+  getServerUserSnapshot,
+  getUserSnapshot,
+  subscribeUser,
+} from "@/lib/user-session";
 import type { Locale, TranslationKey } from "@/lib/i18n";
 import { useI18n } from "./LocaleProvider";
 import { UserAvatar } from "./UserAvatar";
@@ -63,7 +67,11 @@ export function TopNav() {
   const router = useRouter();
   const theme = useSyncExternalStore(subscribeTheme, resolveTheme, () => "dark");
   const loggedIn = useSyncExternalStore(subscribeAuth, getAuthSnapshot, () => false);
-  const user = useSyncExternalStore(subscribeUser, getUserSnapshot, () => null);
+  const user = useSyncExternalStore(
+    subscribeUser,
+    getUserSnapshot,
+    getServerUserSnapshot,
+  );
   const { locale, setLocale, t } = useI18n();
 
   useEffect(() => {

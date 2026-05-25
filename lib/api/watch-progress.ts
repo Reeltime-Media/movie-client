@@ -1,4 +1,4 @@
-import { apiFetch, isLoggedIn } from "./client";
+import { apiFetch, getToken, isLoggedIn } from "./client";
 import type { WatchProgressRead } from "./types";
 
 export type WatchProgressUpdate = {
@@ -18,8 +18,7 @@ export function upsertWatchProgress(
   if (!isLoggedIn()) return Promise.resolve();
 
   const url = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/watch-progress/${contentId}`;
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("rt_token") : null;
+  const token = getToken();
 
   if (options?.keepalive && typeof fetch !== "undefined") {
     return fetch(url, {

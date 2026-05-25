@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { GoogleSignInButton } from "../components/GoogleSignInButton";
 import { login } from "@/lib/api/auth";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = safeRedirectPath(searchParams.get("next"), "/");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +26,7 @@ export default function LoginPage() {
     const password = form.get("password") as string;
     try {
       await login(email, password);
-      router.push("/");
+      router.push(nextPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed.");
     } finally {
@@ -81,7 +85,7 @@ export default function LoginPage() {
 
           <GoogleSignInButton
             disabled={loading}
-            onSuccess={() => router.push("/")}
+            onSuccess={() => router.push(nextPath)}
             onError={setError}
           />
 
@@ -158,5 +162,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-bg text-text-muted">
+          Loading…
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

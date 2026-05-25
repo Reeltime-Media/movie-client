@@ -18,7 +18,7 @@ export function mediaUrl(key: string | null | undefined): string | undefined {
 const TOKEN_KEY = "rt_token";
 const authSubscribers = new Set<() => void>();
 
-function getToken(): string | null {
+export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
 }

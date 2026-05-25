@@ -11,6 +11,7 @@ import { getMovie } from "@/lib/api/movies";
 import { createMoviePaymentIntent } from "@/lib/api/payments";
 import { posterUrl, isLoggedIn } from "@/lib/api/client";
 import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
+import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import type { ContentRead } from "@/lib/api/types";
 
@@ -44,7 +45,7 @@ function MoviePayInner() {
         moviePaymentSuccessUrl(movie.slug),
       );
       sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
-      window.location.href = intent.checkout_url;
+      window.location.href = safeCheckoutUrl(intent.checkout_url);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Payment failed. Please try again.";
       setError(msg);
@@ -131,6 +132,11 @@ function MoviePayInner() {
                     {movie.genres.join(" · ")}
                   </div>
                 )}
+                {movie.description ? (
+                  <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+                    {movie.description}
+                  </p>
+                ) : null}
               </div>
             </div>
 

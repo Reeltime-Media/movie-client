@@ -33,8 +33,24 @@ export function createSeriesSubscriptionIntent(
   });
 }
 
-export function completePaymentIntent(intentId: string): Promise<PaymentIntentRead> {
-  return apiFetch<PaymentIntentRead>(`/payments/intents/${intentId}/complete`, {
-    method: "POST",
-  });
+export function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
+  return apiFetch<PaymentIntentRead>(`/payments/intents/${intentId}`);
+}
+
+const POLL_MS = 1500;
+const MAX_POLL_ATTEMPTS = 40;
+
+/** Wait for Baray webhook to mark the intent succeeded (no client-side fulfillment). */
+export async function waitForPaymentSucceeded(intentId: string): Promise<PaymentIntentRead> {
+  for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt += 1) {
+    const intent = await getPaymentIntent(intentId);
+    if (intent.status === "succeeded") {
+      return intent;
+    }
+    if (intent.status === "failed" || intent.status === "cancelled") {
+      throw new Error("Payment was not completed.");
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  }
+  throw new Error("Payment confirmation timed out. If you were charged, contact support.");
 }
