@@ -3,23 +3,24 @@
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { PageSearchBar } from "../components/PageSearchBar";
-import { PageShell } from "../components/PageShell";
-import { PosterScrollRail } from "../components/PosterScrollRail";
-import { SectionHeader } from "../components/SectionHeader";
-import { useI18n } from "../components/LocaleProvider";
+import { PageSearchBar } from "@/components/catalog/PageSearchBar";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 import { listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
 import { listSeries } from "@/lib/api/series";
 import { mapSeriesListToPosters } from "@/lib/api/series-posters";
 import { movieToPoster } from "@/lib/api/to-poster";
-import { isLoggedIn } from "@/lib/api/client";
-import type { PosterCardProps } from "@/app/components/PosterCard";
+import { useAuth } from "@/hooks/auth/use-auth";
+import type { PosterCardProps } from "@/types/poster-card";
 
 function SearchPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const { t } = useI18n();
+  const { loggedIn } = useAuth();
   const urlQuery = params.get("q") ?? "";
   const [input, setInput] = useState(urlQuery);
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ function SearchPageInner() {
     let cancelled = false;
     setLoading(true);
 
-    const purchasesPromise = isLoggedIn() ? listPurchases().catch(() => []) : Promise.resolve([]);
+    const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
 
     Promise.all([
       listMovies({ search: q }),
@@ -68,7 +69,7 @@ function SearchPageInner() {
     return () => {
       cancelled = true;
     };
-  }, [urlQuery]);
+  }, [urlQuery, loggedIn]);
 
   const hasQuery = urlQuery.trim().length > 0;
   const totalResults = moviePosters.length + seriesPosters.length;

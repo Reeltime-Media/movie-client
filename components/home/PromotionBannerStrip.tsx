@@ -8,8 +8,8 @@ import { useCallback, useEffect, useState } from "react";
 import { posterUrl } from "@/lib/api/client";
 import type { PromotionBannerRead } from "@/lib/api/promotion-banners";
 import { safeRedirectPath } from "@/lib/safe-redirect";
-import { HeroBackground } from "./HeroBackground";
-import { useI18n } from "./LocaleProvider";
+import { HeroBackground } from "@/components/home/HeroBackground";
+import { useI18n } from "@/components/providers/LocaleProvider";
 
 const AUTO_MS = 6500;
 
@@ -112,16 +112,9 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
             const posterHref = activeBanner.cta_href
               ? safeRedirectPath(activeBanner.cta_href, "/pricing")
               : null;
-            const PosterWrap = posterHref ? Link : "div";
-            const posterProps = posterHref
-              ? { href: posterHref, "aria-label": activeBanner.title }
-              : { "aria-hidden": true as const };
-
-            return (
-              <PosterWrap
-                {...posterProps}
-                className="group/pstr relative hidden shrink-0 md:block"
-              >
+            const posterClassName = "group/pstr relative hidden shrink-0 md:block";
+            const posterInner = (
+              <>
                 <div className="relative aspect-[2/3] w-[200px] overflow-hidden rounded-[4px] border border-border bg-surface transition-colors duration-200 group-hover/pstr:border-border-hover lg:w-[248px]">
                   {banners.map((banner, i) => {
                     const imageSrc = posterUrl(banner.image_key);
@@ -162,7 +155,17 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
                   style={{ backgroundColor: activeAccent }}
                   aria-hidden="true"
                 />
-              </PosterWrap>
+              </>
+            );
+
+            return posterHref ? (
+              <Link href={posterHref} aria-label={activeBanner.title} className={posterClassName}>
+                {posterInner}
+              </Link>
+            ) : (
+              <div aria-hidden className={posterClassName}>
+                {posterInner}
+              </div>
             );
           })() : null}
         </div>

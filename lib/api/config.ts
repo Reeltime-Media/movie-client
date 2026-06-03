@@ -1,0 +1,28 @@
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export const R2_PUBLIC_URL =
+  (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? "").replace(/\/$/, "");
+
+/**
+ * How long (seconds) Server Components may cache the public catalog before
+ * revalidating. The catalog changes rarely, so a few minutes is plenty and
+ * makes navigation feel instant. No effect on client-side fetches.
+ */
+export const CATALOG_REVALIDATE_SECONDS = 300;
+
+/** Fetch init that enables Next.js catalog caching/ISR (server-side only). */
+export const catalogCache: RequestInit = {
+  next: { revalidate: CATALOG_REVALIDATE_SECONDS },
+} as RequestInit;
+
+export function posterUrl(posterKey: string | null | undefined): string | undefined {
+  if (!posterKey) return undefined;
+  if (/^https?:\/\//i.test(posterKey)) return posterKey;
+  if (!R2_PUBLIC_URL) return undefined;
+  return `${R2_PUBLIC_URL}/${posterKey.replace(/^\//, "")}`;
+}
+
+export function mediaUrl(key: string | null | undefined): string | undefined {
+  if (!key || !R2_PUBLIC_URL) return undefined;
+  return `${R2_PUBLIC_URL}/${key}`;
+}

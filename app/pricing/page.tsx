@@ -5,10 +5,10 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { CinematicDecor } from "../components/CinematicDecor";
-import { useI18n } from "../components/LocaleProvider";
-import { PageShell } from "../components/PageShell";
-import { isLoggedIn } from "@/lib/api/client";
+import { CinematicDecor } from "@/components/home/CinematicDecor";
+import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { useAuth } from "@/hooks/auth/use-auth";
 import { listSeries } from "@/lib/api/series";
 import { listSubscriptionPlans } from "@/lib/api/subscription-plans";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
@@ -39,6 +39,7 @@ function billingSuffix(
 
 function PricingPageInner() {
   const { t } = useI18n();
+  const { loggedIn } = useAuth();
   const params = useSearchParams();
   const seriesSlug = params.get("slug");
   const [plans, setPlans] = useState<SubscriptionPlanRead[]>([]);
@@ -48,7 +49,7 @@ function PricingPageInner() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const subsPromise = isLoggedIn()
+    const subsPromise = loggedIn
       ? listMySubscriptions().catch(() => [])
       : Promise.resolve([]);
 
@@ -63,7 +64,7 @@ function PricingPageInner() {
       })
       .catch(() => setError(t("pricingLoadError")))
       .finally(() => setLoading(false));
-  }, [t, seriesSlug]);
+  }, [t, seriesSlug, loggedIn]);
 
   const recommendedCode = useMemo(
     () => (plans.length ? plans[0].code : null),
@@ -74,7 +75,7 @@ function PricingPageInner() {
     const pricingReturn = seriesSlug
       ? `/pricing?slug=${encodeURIComponent(seriesSlug)}`
       : "/pricing";
-    if (!isLoggedIn()) {
+    if (!loggedIn) {
       return `/login?next=${encodeURIComponent(pricingReturn)}`;
     }
     if (!checkoutSlug) return "/series";
@@ -197,7 +198,7 @@ function PricingPageInner() {
                       href={subscribeHref(plan.name)}
                       className="mt-auto inline-flex w-full items-center justify-center rounded-md bg-brand py-3 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
                     >
-                      {isLoggedIn() ? t("pricingSubscribe") : t("pricingSignIn")}
+                      {loggedIn ? t("pricingSubscribe") : t("pricingSignIn")}
                     </Link>
                   )}
                 </article>

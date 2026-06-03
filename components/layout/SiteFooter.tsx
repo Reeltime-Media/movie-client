@@ -3,10 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { getAuthSnapshot, subscribeAuth } from "@/lib/api/client";
+import { useAuth } from "@/hooks/auth/use-auth";
 import type { TranslationKey } from "@/lib/i18n";
-import { useSyncExternalStore } from "react";
-import { useI18n } from "./LocaleProvider";
+import { useI18n } from "@/components/providers/LocaleProvider";
 
 const footerNav: { href: string; labelKey: TranslationKey; requiresAuth?: boolean }[] = [
   { href: "/", labelKey: "navHome" },
@@ -18,7 +17,7 @@ const footerNav: { href: string; labelKey: TranslationKey; requiresAuth?: boolea
 
 export function SiteFooter() {
   const { t } = useI18n();
-  const loggedIn = useSyncExternalStore(subscribeAuth, getAuthSnapshot, () => false);
+  const { loggedIn } = useAuth();
   const year = new Date().getFullYear();
 
   return (

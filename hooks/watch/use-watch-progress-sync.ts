@@ -1,25 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+
 import { upsertWatchProgress } from "@/lib/api/watch-progress";
 import { isLoggedIn } from "@/lib/api/client";
+import {
+  isWatchCompleted,
+  qualifiesAsWatch,
+  WATCH_PROGRESS_SAVE_INTERVAL_MS,
+} from "@/lib/watch/progress";
 
-const MIN_WATCH_SECONDS = 30;
-const MIN_WATCH_RATIO = 0.1;
-const SAVE_INTERVAL_MS = 20_000;
-
-export function qualifiesAsWatch(positionSeconds: number, durationSeconds: number): boolean {
-  if (positionSeconds >= MIN_WATCH_SECONDS) return true;
-  if (durationSeconds > 0 && positionSeconds / durationSeconds >= MIN_WATCH_RATIO) {
-    return true;
-  }
-  return false;
-}
-
-function isCompleted(positionSeconds: number, durationSeconds: number): boolean {
-  if (durationSeconds <= 0) return false;
-  return positionSeconds / durationSeconds >= 0.9;
-}
+export { qualifiesAsWatch } from "@/lib/watch/progress";
 
 export function useWatchProgressSync({
   contentId,
@@ -67,9 +58,9 @@ export function useWatchProgressSync({
     if (!qualifiesAsWatch(currentTime, duration)) return;
 
     const now = Date.now();
-    if (now - lastSavedAtRef.current < SAVE_INTERVAL_MS) return;
+    if (now - lastSavedAtRef.current < WATCH_PROGRESS_SAVE_INTERVAL_MS) return;
 
-    save(currentTime, isCompleted(currentTime, duration));
+    save(currentTime, isWatchCompleted(currentTime, duration));
   }, [contentId, currentTime, duration, save]);
 
   useEffect(() => {
@@ -78,7 +69,7 @@ export function useWatchProgressSync({
     const flush = () => {
       const position = lastPositionRef.current;
       if (!hasQualifiedRef.current && !qualifiesAsWatch(position, duration)) return;
-      save(position, isCompleted(position, duration), true);
+      save(position, isWatchCompleted(position, duration), true);
     };
 
     const onVisibility = () => {
@@ -102,7 +93,7 @@ export function useWatchProgressSync({
   const flushProgress = useCallback(() => {
     const position = lastPositionRef.current;
     const dur = durationRef.current;
-    save(position, isCompleted(position, dur), true);
+    save(position, isWatchCompleted(position, dur), true);
   }, [save]);
 
   return { markCompleted, flushProgress };

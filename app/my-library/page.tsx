@@ -3,16 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Bookmark, CheckCircle2, Clock3, Heart, ShoppingBag } from "lucide-react";
-import { PageShell } from "../components/PageShell";
-import { PosterScrollRail } from "../components/PosterScrollRail";
-import { SectionHeader } from "../components/SectionHeader";
-import { useI18n } from "../components/LocaleProvider";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 import { listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
-import { isLoggedIn } from "@/lib/api/client";
+import { useAuth } from "@/hooks/auth/use-auth";
 import type { TranslationKey } from "@/lib/i18n";
-import type { PosterCardProps } from "@/app/components/PosterCard";
+import type { PosterCardProps } from "@/types/poster-card";
 
 const filterKeys: TranslationKey[] = [
   "genreAll",
@@ -25,13 +25,14 @@ const filterKeys: TranslationKey[] = [
 export default function MyLibraryPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { loggedIn } = useAuth();
   const [activeFilter, setActiveFilter] = useState(0);
   const [ownedPosters, setOwnedPosters] = useState<PosterCardProps[]>([]);
   const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>([]);
   const [ownedCount, setOwnedCount] = useState(0);
 
   useEffect(() => {
-    if (!isLoggedIn()) {
+    if (!loggedIn) {
       router.replace(`/login?next=${encodeURIComponent("/my-library")}`);
       return;
     }
@@ -45,7 +46,7 @@ export default function MyLibraryPage() {
         setContinuePosters(owned.slice(0, 6));
       })
       .catch(() => {});
-  }, [router]);
+  }, [router, loggedIn]);
 
   const stat = (key: TranslationKey, count: number) =>
     t(key).replace("{count}", String(count));

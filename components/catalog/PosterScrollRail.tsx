@@ -1,5 +1,5 @@
-import type { PosterCardProps } from "./PosterCard";
-import { PosterCard } from "./PosterCard";
+import { PosterCard } from "@/components/catalog/PosterCard";
+import type { PosterCardProps } from "@/types/poster-card";
 
 export function PosterScrollRail({
   posters,

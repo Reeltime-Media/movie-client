@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GoogleSignInButton } from "../components/GoogleSignInButton";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { login, register } from "@/lib/api/auth";
 
 const perks = [

@@ -3,19 +3,19 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Hero } from "./Hero";
-import { PromotionBannerStrip } from "./PromotionBannerStrip";
-import { useI18n } from "./LocaleProvider";
-import { PageShell } from "./PageShell";
-import { PosterScrollRail } from "./PosterScrollRail";
-import { ScrollReveal } from "./ScrollReveal";
-import { SectionHeader } from "./SectionHeader";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { Hero } from "@/components/home/Hero";
+import { PromotionBannerStrip } from "@/components/home/PromotionBannerStrip";
+import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 import type { TranslationKey } from "@/lib/i18n";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { seriesToPoster, movieToPoster } from "@/lib/api/to-poster";
-import { isLoggedIn } from "@/lib/api/client";
-import type { PosterCardProps } from "@/app/components/PosterCard";
+import { useAuth } from "@/hooks/auth/use-auth";
+import type { PosterCardProps } from "@/types/poster-card";
 import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
 import type { PromotionBannerRead } from "@/lib/api/promotion-banners";
 import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
@@ -49,6 +49,7 @@ export function HomeView({
   heroFeatured,
 }: HomeViewProps) {
   const { t } = useI18n();
+  const { loggedIn } = useAuth();
 
   // Seeded from server-rendered posters so the first paint already has the
   // catalog — no client fetch waterfall. We only re-derive once we know the
@@ -66,7 +67,7 @@ export function HomeView({
   );
 
   useEffect(() => {
-    if (!isLoggedIn()) return;
+    if (!loggedIn) return;
     let cancelled = false;
     Promise.all([
       listPurchases().catch(() => []),
@@ -93,7 +94,7 @@ export function HomeView({
     return () => {
       cancelled = true;
     };
-  }, [movies, seriesList, seasons]);
+  }, [loggedIn, movies, seriesList, seasons]);
 
   const displayBanners = useMemo((): PromotionBannerRead[] => {
     if (promotionBanners.length > 0) return promotionBanners;

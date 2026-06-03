@@ -3,19 +3,19 @@
 import { Layers, ListVideo, Sparkles } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { CinematicDecor } from "./CinematicDecor";
-import { useI18n } from "./LocaleProvider";
-import { PageSearchBar } from "./PageSearchBar";
-import { PageShell } from "./PageShell";
-import { PosterScrollRail } from "./PosterScrollRail";
-import { SectionHeader } from "./SectionHeader";
+import { PageSearchBar } from "@/components/catalog/PageSearchBar";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { CinematicDecor } from "@/components/home/CinematicDecor";
+import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 import type { TranslationKey } from "@/lib/i18n";
 import { marketingImages } from "@/lib/marketing-images";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { seriesToPoster } from "@/lib/api/to-poster";
-import { isLoggedIn } from "@/lib/api/client";
+import { useAuth } from "@/hooks/auth/use-auth";
 import { matchesGenre, matchesSearch } from "@/lib/catalog-filter";
-import type { PosterCardProps } from "@/app/components/PosterCard";
+import type { PosterCardProps } from "@/types/poster-card";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 
 const SERIES_GENRE_KEYS = [
@@ -44,6 +44,7 @@ export function SeriesView({
   initialPopular,
 }: SeriesViewProps) {
   const { t } = useI18n();
+  const { loggedIn } = useAuth();
   const [activeGenre, setActiveGenre] = useState<SeriesGenreKey>("genreAll");
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSubscription, setHasSubscription] = useState(false);
@@ -82,7 +83,7 @@ export function SeriesView({
     searchQuery.trim().length > 0 || activeGenre !== "genreAll";
 
   useEffect(() => {
-    if (!isLoggedIn() || !seriesList.length) return;
+    if (!loggedIn || !seriesList.length) return;
     let cancelled = false;
     listMySubscriptions()
       .catch(() => [])
@@ -93,7 +94,7 @@ export function SeriesView({
     return () => {
       cancelled = true;
     };
-  }, [seriesList]);
+  }, [seriesList, loggedIn]);
 
   return (
     <PageShell wide>

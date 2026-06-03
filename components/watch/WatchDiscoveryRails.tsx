@@ -1,23 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PosterScrollRail } from "./PosterScrollRail";
-import { SectionHeader } from "./SectionHeader";
-import { WatchDetailBody } from "./WatchPageSection";
-import { useI18n } from "./LocaleProvider";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { WatchDetailBody } from "@/components/watch/WatchPageSection";
 import { listMovies } from "@/lib/api/movies";
 import { listSeries } from "@/lib/api/series";
-import { mapSeriesListToPosters } from "@/lib/api/series-posters";
-import { movieToPoster } from "@/lib/api/to-poster";
-import type { PosterCardProps } from "./PosterCard";
+import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
+import type { PosterCardProps } from "@/types/poster-card";
+
+/** Defer discovery rails so they do not compete with watch page / player requests. */
+const DEFER_MS = 1500;
 
 export function WatchDiscoveryRails() {
   const { t } = useI18n();
+  const [enabled, setEnabled] = useState(false);
   const [moreLikeThis, setMoreLikeThis] = useState<PosterCardProps[]>([]);
   const [trending, setTrending] = useState<PosterCardProps[]>([]);
   const [seriesPicks, setSeriesPicks] = useState<PosterCardProps[]>([]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setEnabled(true), DEFER_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
     listMovies()
       .then((movies) => {
         const posters = movies.map((m, i) => movieToPoster(m, i));
@@ -27,11 +37,14 @@ export function WatchDiscoveryRails() {
       .catch(() => {});
 
     listSeries()
-      .then(async (series) => {
-        setSeriesPicks(await mapSeriesListToPosters(series, false));
+      .then((series) => {
+        // Skip per-series episode fetches here — saves N API round-trips on watch page.
+        setSeriesPicks(series.map((s, i) => seriesToPoster(s, i, { hasSubscription: false })));
       })
       .catch(() => {});
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>

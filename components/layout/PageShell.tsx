@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { SiteFooter } from "./SiteFooter";
-import { TopNav } from "./TopNav";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { TopNav } from "@/components/layout/top-nav";
 
 export function PageShell({
   children,

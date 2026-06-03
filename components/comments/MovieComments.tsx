@@ -10,7 +10,7 @@ import {
   type CommentRead,
   type CommentThreadRead,
 } from "@/lib/api/comments";
-import { useI18n } from "./LocaleProvider";
+import { useI18n } from "@/components/providers/LocaleProvider";
 
 function formatRelativeTime(iso: string, locale: string): string {
   const date = new Date(iso);

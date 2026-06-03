@@ -1,10 +1,13 @@
-import { HomeView } from "./components/HomeView";
+import { HomeView } from "@/components/home/HomeView";
 import { listHeroFeatured } from "@/lib/api/hero-featured";
 import { listMovies } from "@/lib/api/movies";
 import { listPromotionBanners } from "@/lib/api/promotion-banners";
 import { listSeries, listEpisodes } from "@/lib/api/series";
 import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
 import type { SeasonRead } from "@/lib/api/types";
+
+/** Cap episode prefetch — each series was a separate API + DB round-trip. */
+const SERIES_EPISODE_PREFETCH_LIMIT = 12;
 
 // Public catalog is cached/revalidated on the server (ISR). Must be a literal —
 // Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
@@ -22,7 +25,11 @@ export default async function Home() {
   ]);
 
   const seasons = await Promise.all(
-    seriesList.map((s) => listEpisodes(s.slug).catch(() => [] as SeasonRead[])),
+    seriesList.map((s, index) =>
+      index < SERIES_EPISODE_PREFETCH_LIMIT
+        ? listEpisodes(s.slug).catch(() => [] as SeasonRead[])
+        : Promise.resolve([] as SeasonRead[]),
+    ),
   );
 
   // Public (signed-out) posters, rendered into the initial HTML for a fast LCP.

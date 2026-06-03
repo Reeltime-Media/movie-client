@@ -8,8 +8,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { posterUrl } from "@/lib/api/client";
 import { listHeroFeatured, type HeroFeaturedSlide } from "@/lib/api/hero-featured";
 import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
-import { useI18n } from "./LocaleProvider";
-import { HeroBackground } from "./HeroBackground";
+import { HeroBackground } from "@/components/home/HeroBackground";
+import { useI18n } from "@/components/providers/LocaleProvider";
 
 const AUTO_MS = 6500;
 const HERO_DESC_MAX_WORDS = 25;
@@ -103,11 +103,12 @@ export function Hero({
     setFeaturedSlides(initialFeaturedSlides);
   }, [initialFeaturedSlides]);
 
-  // Always refresh from API on the client so admin picks appear without waiting
-  // for the home page ISR cache (catalog can stay cached for minutes).
+  // Refresh hero when server had no slides; uses short revalidate (not no-store)
+  // so we do not add a blocking client fetch on every home visit.
   useEffect(() => {
+    if (initialFeaturedSlides.length > 0) return;
     let cancelled = false;
-    listHeroFeatured("home", { cache: "no-store" })
+    listHeroFeatured("home")
       .then((slides) => {
         if (!cancelled && slides.length > 0) {
           setFeaturedSlides(slides);
@@ -119,7 +120,7 @@ export function Hero({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialFeaturedSlides.length]);
 
   const slides = useMemo(() => {
     if (featuredSlides.length > 0) {

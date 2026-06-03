@@ -1,5 +1,5 @@
-import type { PosterCardProps } from "@/app/components/PosterCard";
-import { posterUrl } from "./client";
+import type { PosterCardProps } from "@/types/poster-card";
+import { posterUrl } from "./config";
 import {
   findFirstFreeEpisode,
   freeEpisodeWatchHref,

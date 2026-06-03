@@ -1,4 +1,4 @@
-import type { PosterCardProps } from "@/app/components/PosterCard";
+import type { PosterCardProps } from "@/types/poster-card";
 import { listEpisodes } from "./series";
 import { seriesToPoster } from "./to-poster";
 import type { SeasonRead, SeriesRead } from "./types";

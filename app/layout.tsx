@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
-import { GoogleAuthProvider } from "./components/GoogleAuthProvider";
-import { LocaleProvider } from "./components/LocaleProvider";
-import { ThemeInit } from "./components/ThemeInit";
+import { GoogleAuthProvider } from "@/components/providers/GoogleAuthProvider";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
+import { ThemeInit } from "@/components/providers/ThemeInit";
 
 // Both are variable fonts — omitting `weight` ships a single variable file per
 // family that covers the full weight range (incl. 500), instead of one static

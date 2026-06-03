@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { PageShell } from "../../components/PageShell";
+import { PageShell } from "@/components/layout/PageShell";
 import { waitForPaymentSucceeded } from "@/lib/api/payments";
 import { PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeRedirectPath } from "@/lib/safe-redirect";

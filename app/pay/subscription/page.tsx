@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { TrailerEmbed } from "../../components/TrailerEmbed";
-import { PageShell } from "../../components/PageShell";
+import { PageShell } from "@/components/layout/PageShell";
+import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { getSeries } from "@/lib/api/series";
 import { createSeriesSubscriptionIntent } from "@/lib/api/payments";
-import { posterUrl, isLoggedIn } from "@/lib/api/client";
+import { posterUrl } from "@/lib/api/client";
+import { useAuth } from "@/hooks/auth/use-auth";
 import { seriesSubscriptionSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { youtubeEmbedUrl } from "@/lib/youtube";
@@ -17,6 +18,7 @@ import type { SeriesRead } from "@/lib/api/types";
 
 function SubscriptionPayInner() {
   const router = useRouter();
+  const { loggedIn } = useAuth();
   const params = useSearchParams();
   const slug = params.get("slug") ?? "";
   const lockedSeason = params.get("season");
@@ -45,7 +47,7 @@ function SubscriptionPayInner() {
 
   async function handleSubscribe() {
     if (!series) return;
-    if (!isLoggedIn()) {
+    if (!loggedIn) {
       const next = `/pay/subscription?slug=${encodeURIComponent(series.slug)}`;
       router.push(`/login?next=${encodeURIComponent(next)}`);
       return;

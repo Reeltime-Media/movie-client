@@ -1,4 +1,5 @@
-import { apiFetch, apiFormPost, saveToken } from "./client";
+import { saveToken } from "@/lib/auth/token";
+import { apiFetch, apiFormPost } from "./client";
 import type { TokenResponse, UserRead } from "./types";
 import { saveUserSnapshot } from "../user-session";
 

@@ -14,7 +14,8 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useWatchProgressSync } from "@/lib/useWatchProgressSync";
+import { useWatchProgressSync } from "@/hooks/watch/use-watch-progress-sync";
+import { safePlay } from "@/lib/video/safe-play";
 
 type QualityLevel = { height: number; bitrate: number; index: number };
 
@@ -75,6 +76,14 @@ export function WatchPlayer({
     const video = videoRef.current;
     if (!video) return;
 
+    video.pause();
+    setPlaying(false);
+    setBuffering(true);
+    setError(null);
+    setLevels([]);
+    setSelectedLevel(-1);
+    setAutoLevel(-1);
+
     if (Hls.isSupported()) {
       const hls = new Hls({ startLevel: -1, capLevelToPlayerSize: true });
       hlsRef.current = hls;
@@ -101,6 +110,7 @@ export function WatchPlayer({
       });
 
       return () => {
+        video.pause();
         hls.destroy();
         hlsRef.current = null;
       };
@@ -109,12 +119,21 @@ export function WatchPlayer({
     // Native HLS (Safari)
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = hlsSrc;
-      return;
+      return () => {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      };
     }
 
     // MP4 fallback
     if (fallbackSrc) {
       video.src = fallbackSrc;
+      return () => {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      };
     }
   }, [hlsSrc, fallbackSrc]);
 
@@ -187,7 +206,11 @@ export function WatchPlayer({
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.paused ? v.play() : v.pause();
+    if (v.paused) {
+      void safePlay(v);
+    } else {
+      v.pause();
+    }
   }, []);
 
   const toggleMute = useCallback(() => {

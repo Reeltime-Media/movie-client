@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { TrailerEmbed } from "../../components/TrailerEmbed";
-import { PageShell } from "../../components/PageShell";
+import { PageShell } from "@/components/layout/PageShell";
+import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { getMovie } from "@/lib/api/movies";
 import { createMoviePaymentIntent } from "@/lib/api/payments";
-import { posterUrl, isLoggedIn } from "@/lib/api/client";
+import { posterUrl } from "@/lib/api/client";
+import { useAuth } from "@/hooks/auth/use-auth";
 import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { youtubeEmbedUrl } from "@/lib/youtube";
@@ -17,6 +18,7 @@ import type { ContentRead } from "@/lib/api/types";
 
 function MoviePayInner() {
   const router = useRouter();
+  const { loggedIn } = useAuth();
   const params = useSearchParams();
   const slug = params.get("slug") ?? "";
 
@@ -43,7 +45,7 @@ function MoviePayInner() {
 
   async function handlePay() {
     if (!movie) return;
-    if (!isLoggedIn()) {
+    if (!loggedIn) {
       router.push(`/login?next=${encodeURIComponent(`/pay/movie?slug=${movie.slug}`)}`);
       return;
     }

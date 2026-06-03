@@ -1,34 +1,9 @@
 import { CheckCircle2, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import type { PosterCardProps } from "@/types/poster-card";
 
-type Badge =
-  | { kind: "hd"; label: "HD" }
-  | { kind: "owned"; label: "OWNED" }
-  | { kind: "none" };
-
-type Entitlement =
-  | { kind: "price"; value: string }
-  | { kind: "subscribed"; value: string }
-  | { kind: "continue"; value: string }
-  | { kind: "none" };
-
-export type PosterCardProps = {
-  imageSrc?: string;
-  imageAlt?: string;
-  imagePriority?: boolean;
-  posterTitle: string;
-  titleBelow: string;
-  posterGradient: string;
-  accentColor: string;
-  badge?: Badge;
-  subtitle?: { text: string; color: string };
-  entitlement?: Entitlement;
-  /** 0–100. Shows a progress bar at the bottom of the poster when set. */
-  progressPct?: number;
-  watchHref?: string;
-  watchLabel?: string;
-};
+export type { PosterCardProps } from "@/types/poster-card";
 
 export function PosterCard({
   imageSrc,

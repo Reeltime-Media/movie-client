@@ -1,4 +1,4 @@
-import { MoviesView } from "../components/MoviesView";
+import { MoviesView } from "@/components/catalog/MoviesView";
 import { listMovies } from "@/lib/api/movies";
 import { movieToPoster } from "@/lib/api/to-poster";
 

@@ -4,20 +4,20 @@ import { Film, PlayCircle, Sparkles, Star, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { CinematicDecor } from "./CinematicDecor";
-import { GenreFilterSelect } from "./GenreFilterSelect";
-import { PageSearchBar } from "./PageSearchBar";
-import { PageShell } from "./PageShell";
-import { PosterScrollRail } from "./PosterScrollRail";
-import { SectionHeader } from "./SectionHeader";
-import { useI18n } from "./LocaleProvider";
+import { GenreFilterSelect } from "@/components/catalog/GenreFilterSelect";
+import { PageSearchBar } from "@/components/catalog/PageSearchBar";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { CinematicDecor } from "@/components/home/CinematicDecor";
+import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 import type { TranslationKey } from "@/lib/i18n";
 import { marketingImages } from "@/lib/marketing-images";
 import { listPurchases } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
-import { isLoggedIn } from "@/lib/api/client";
+import { useAuth } from "@/hooks/auth/use-auth";
 import { matchesGenre, matchesSearch } from "@/lib/catalog-filter";
-import type { PosterCardProps } from "@/app/components/PosterCard";
+import type { PosterCardProps } from "@/types/poster-card";
 import type { ContentListItemRead } from "@/lib/api/types";
 
 const MOVIE_GENRE_KEYS = [
@@ -39,6 +39,7 @@ type MoviesViewProps = {
 
 export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
   const { t } = useI18n();
+  const { loggedIn } = useAuth();
   const [activeGenre, setActiveGenre] = useState<MovieGenreKey>("genreAll");
   const [searchQuery, setSearchQuery] = useState("");
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
@@ -70,7 +71,7 @@ export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
     searchQuery.trim().length > 0 || activeGenre !== "genreAll";
 
   useEffect(() => {
-    if (!isLoggedIn() || !movies.length) return;
+    if (!loggedIn || !movies.length) return;
     let cancelled = false;
     listPurchases()
       .catch(() => [])
@@ -81,7 +82,7 @@ export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
     return () => {
       cancelled = true;
     };
-  }, [movies]);
+  }, [movies, loggedIn]);
 
   return (
     <PageShell wide>

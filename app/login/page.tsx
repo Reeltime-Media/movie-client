@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { GoogleSignInButton } from "../components/GoogleSignInButton";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { login } from "@/lib/api/auth";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 

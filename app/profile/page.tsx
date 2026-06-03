@@ -16,17 +16,18 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { PageShell } from "../components/PageShell";
-import { SectionHeader } from "../components/SectionHeader";
-import { PosterScrollRail } from "../components/PosterScrollRail";
-import { useI18n } from "../components/LocaleProvider";
-import { UserAvatar } from "../components/UserAvatar";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { UserAvatar } from "@/components/auth/UserAvatar";
+import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 import { getMe, updateMe } from "@/lib/api/auth";
 import { saveUserSnapshot } from "@/lib/user-session";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { listWatchProgress } from "@/lib/api/watch-progress";
-import { clearToken, isLoggedIn } from "@/lib/api/client";
+import { useAuth } from "@/hooks/auth/use-auth";
+import { clearToken } from "@/lib/auth/token";
 import type { UserRead, SubscriptionRead, PurchaseRead, WatchProgressRead } from "@/lib/api/types";
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -81,6 +82,7 @@ function formatRenewalDate(iso: string): string {
 export default function ProfilePage() {
   const { t } = useI18n();
   const router = useRouter();
+  const { loggedIn } = useAuth();
 
   const [user, setUser] = useState<UserRead | null>(null);
   const [subscriptions, setSubscriptions] = useState<SubscriptionRead[]>([]);
@@ -104,7 +106,7 @@ export default function ProfilePage() {
   const [pwSuccess, setPwSuccess] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn()) {
+    if (!loggedIn) {
       router.replace("/login");
       return;
     }
@@ -124,7 +126,7 @@ export default function ProfilePage() {
       clearToken();
       router.replace("/login");
     });
-  }, [router]);
+  }, [router, loggedIn]);
 
   useEffect(() => {
     if (editingName && nameRef.current) nameRef.current.focus();
