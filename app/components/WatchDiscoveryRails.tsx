@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PosterScrollRail } from "./PosterScrollRail";
 import { SectionHeader } from "./SectionHeader";
+import { WatchDetailBody } from "./WatchPageSection";
 import { useI18n } from "./LocaleProvider";
 import { listMovies } from "@/lib/api/movies";
 import { listSeries } from "@/lib/api/series";
@@ -35,39 +36,39 @@ export function WatchDiscoveryRails() {
   return (
     <>
       <section className="pb-8 pt-8">
-        <div className="px-6 md:px-8">
+        <WatchDetailBody>
           <SectionHeader
             title={t("watchMoreLikeThis")}
             showSeeAll
             seeAllHref="/movies"
             seeAllLabel={t("sectionSeeAll")}
           />
-        </div>
-        <PosterScrollRail posters={moreLikeThis} />
+          <PosterScrollRail posters={moreLikeThis} />
+        </WatchDetailBody>
       </section>
 
       <section className="pb-8">
-        <div className="px-6 md:px-8">
+        <WatchDetailBody>
           <SectionHeader
             title={t("moviesTrendingTitle")}
             showSeeAll
             seeAllHref="/movies"
             seeAllLabel={t("sectionSeeAll")}
           />
-        </div>
-        <PosterScrollRail posters={trending} />
+          <PosterScrollRail posters={trending} />
+        </WatchDetailBody>
       </section>
 
       <section className="pb-12">
-        <div className="px-6 md:px-8">
+        <WatchDetailBody>
           <SectionHeader
             title={t("watchSeriesPicks")}
             showSeeAll
             seeAllHref="/series"
             seeAllLabel={t("sectionSeeAll")}
           />
-        </div>
-        <PosterScrollRail posters={seriesPicks} />
+          <PosterScrollRail posters={seriesPicks} />
+        </WatchDetailBody>
       </section>
     </>
   );

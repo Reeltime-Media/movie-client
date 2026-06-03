@@ -5,6 +5,7 @@ const ALLOWED_PATH_PREFIXES = [
   "/series",
   "/my-library",
   "/pricing",
+  "/pay",
   "/profile",
   "/payment/success",
 ] as const;

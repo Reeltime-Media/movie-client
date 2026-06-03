@@ -34,6 +34,7 @@ export function WatchPlayer({
   fallbackSrc,
   title,
   attribution,
+  bleed = false,
 }: {
   /** When set, saves resume progress for logged-in users (≥30s or 10% watched). */
   contentId?: string;
@@ -41,6 +42,7 @@ export function WatchPlayer({
   fallbackSrc?: string;
   title: string;
   attribution?: string;
+  bleed?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -256,7 +258,10 @@ export function WatchPlayer({
     <figure className="m-0">
       <div
         ref={containerRef}
-        className="relative aspect-video w-full overflow-hidden rounded-md bg-black"
+        className={[
+          "relative aspect-video w-full overflow-hidden bg-black",
+          bleed ? "" : "rounded-md",
+        ].join(" ")}
         onMouseMove={resetHideTimer}
         onMouseLeave={() => { if (playing) setShowControls(false); }}
         onClick={togglePlay}

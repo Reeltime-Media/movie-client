@@ -25,18 +25,28 @@ function MoviePayInner() {
   const [error, setError] = useState("");
   const [paying, setPaying] = useState(false);
   useEffect(() => {
-    if (!isLoggedIn()) {
-      router.replace(`/login?next=/pay/movie?slug=${encodeURIComponent(slug)}`);
+    if (!slug) {
+      setError("Missing movie slug.");
+      setLoading(false);
       return;
     }
-    if (!slug) { setError("Missing movie slug."); setLoading(false); return; }
     getMovie(slug)
-      .then((m) => { setMovie(m); setLoading(false); })
-      .catch(() => { setError("Movie not found."); setLoading(false); });
-  }, [slug, router]);
+      .then((m) => {
+        setMovie(m);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Movie not found.");
+        setLoading(false);
+      });
+  }, [slug]);
 
   async function handlePay() {
     if (!movie) return;
+    if (!isLoggedIn()) {
+      router.push(`/login?next=${encodeURIComponent(`/pay/movie?slug=${movie.slug}`)}`);
+      return;
+    }
     setPaying(true);
     setError("");
     try {
@@ -55,7 +65,7 @@ function MoviePayInner() {
 
   if (loading) {
     return (
-      <PageShell>
+      <PageShell fullWidth>
         <div className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
         </div>
@@ -65,7 +75,7 @@ function MoviePayInner() {
 
   if (!movie || error) {
     return (
-      <PageShell>
+      <PageShell fullWidth>
         <div className="flex h-64 flex-col items-center justify-center gap-4">
           <p className="text-[14px] text-danger">{error || "Something went wrong."}</p>
           <Link href="/movies" className="text-[13px] text-text-muted hover:text-text">
@@ -83,9 +93,9 @@ function MoviePayInner() {
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
 
   return (
-    <PageShell>
+    <PageShell fullWidth>
       {/* Kicker */}
-      <div className="px-6 pt-8 md:px-8">
+      <div className="box-border ml-[calc(50%-50vw)] w-screen max-w-none px-6 pt-8 md:px-10 lg:px-12">
         <div className="mb-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted">
           <Film size={13} />
           One-off purchase
@@ -100,7 +110,7 @@ function MoviePayInner() {
         </p>
       </div>
 
-      <section className="px-6 pb-10 pt-6 md:px-8">
+      <section className="box-border ml-[calc(50%-50vw)] w-screen max-w-none px-6 pb-10 pt-6 md:px-10 lg:px-12">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
           {/* Main checkout card */}
@@ -212,7 +222,7 @@ function MoviePayInner() {
 export default function MoviePayPage() {
   return (
     <Suspense fallback={
-      <PageShell>
+      <PageShell fullWidth>
         <div className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
         </div>

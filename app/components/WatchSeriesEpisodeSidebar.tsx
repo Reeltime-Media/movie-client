@@ -20,9 +20,9 @@ export function WatchSeriesEpisodeSidebar({
   const showSeasonTabs = seasons.length > 1;
 
   return (
-    <aside className="flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-[6px] border border-border bg-surface lg:h-full lg:max-w-[300px] lg:shrink-0">
+    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       {showSeasonTabs ? (
-        <div className="shrink-0 border-b border-border px-2 py-2">
+        <div className="shrink-0 border-b border-border px-3 py-2">
           <div className="flex flex-wrap gap-1" role="tablist" aria-label="Seasons">
             {seasons.map((s) => {
               const isSeasonActive = s.season_number === activeSeason;
@@ -33,7 +33,7 @@ export function WatchSeriesEpisodeSidebar({
                   aria-selected={isSeasonActive}
                   href={`/watch/series/${seriesSlug}/${s.season_number}/1`}
                   className={[
-                    "rounded-[6px] px-3 py-1.5 text-[12px] font-semibold transition-colors",
+                    "rounded-md px-3 py-1.5 text-[12px] font-semibold transition-colors",
                     isSeasonActive
                       ? "bg-surface-elevated text-text"
                       : "text-text-muted hover:bg-surface-elevated/70 hover:text-text",
@@ -51,15 +51,16 @@ export function WatchSeriesEpisodeSidebar({
         <h2 className="text-[13px] font-bold tracking-[-0.01em] text-text">
           Episodes
           {showSeasonTabs ? (
-            <span className="ml-1.5 font-medium text-text-muted">
-              · S{activeSeason}
-            </span>
+            <span className="ml-1.5 font-medium text-text-muted">· S{activeSeason}</span>
           ) : null}
         </h2>
+        <p className="mt-0.5 text-[11px] text-text-muted">
+          {episodes.length} episode{episodes.length === 1 ? "" : "s"}
+        </p>
       </div>
 
       <nav
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:max-h-none"
         aria-label={`Season ${activeSeason} episodes`}
       >
         <ul className="m-0 list-none divide-y divide-border p-0">
@@ -74,8 +75,9 @@ export function WatchSeriesEpisodeSidebar({
               <li key={epNum}>
                 <Link
                   href={href}
+                  aria-current={isActive ? "true" : undefined}
                   className={[
-                    "flex min-h-[52px] items-stretch outline-none transition-colors",
+                    "flex min-h-[56px] items-stretch outline-none transition-colors",
                     isActive ? "bg-surface-elevated" : "hover:bg-surface-elevated/70",
                     "focus-visible:bg-surface-elevated/80",
                   ].join(" ")}
@@ -87,20 +89,20 @@ export function WatchSeriesEpisodeSidebar({
                     ].join(" ")}
                     aria-hidden
                   />
-                  <span className="flex min-w-0 flex-1 items-baseline gap-3 px-3 py-3 pr-4">
-                    <span className="shrink-0 text-[14px] font-bold tabular-nums text-brand">
+                  <span className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-bg text-[13px] font-bold tabular-nums text-brand">
                       {epNum}
                     </span>
-                    <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="min-w-0 flex-1">
                       <span
                         className={[
-                          "min-w-0 text-[13px] font-medium leading-snug text-text",
-                          isActive ? "font-semibold" : "",
+                          "block truncate text-[13px] leading-snug text-text",
+                          isActive ? "font-semibold" : "font-medium",
                         ].join(" ")}
                       >
-                        {ep.title}
+                        {ep.title || `Episode ${epNum}`}
                       </span>
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest">
+                      <span className="mt-0.5 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
                         {isFree ? (
                           <>
                             <PlayCircle size={11} className="text-success" aria-hidden />
@@ -112,11 +114,18 @@ export function WatchSeriesEpisodeSidebar({
                             <span className="text-text-muted">Subscribe</span>
                           </>
                         )}
+                        {ep.runtime ? (
+                          <>
+                            <span className="text-text-disabled" aria-hidden>
+                              ·
+                            </span>
+                            <span className="normal-case tracking-normal text-text-disabled">
+                              {ep.runtime}
+                            </span>
+                          </>
+                        ) : null}
                       </span>
                     </span>
-                    {ep.runtime && (
-                      <span className="shrink-0 text-[11px] text-text-disabled">{ep.runtime}</span>
-                    )}
                   </span>
                 </Link>
               </li>

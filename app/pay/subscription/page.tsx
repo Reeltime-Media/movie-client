@@ -27,19 +27,29 @@ function SubscriptionPayInner() {
   const [error, setError] = useState("");
   const [paying, setPaying] = useState(false);
   useEffect(() => {
-    if (!isLoggedIn()) {
-      const next = `/pay/subscription?slug=${encodeURIComponent(slug)}`;
-      router.replace(`/login?next=${encodeURIComponent(next)}`);
+    if (!slug) {
+      setError("Missing series slug.");
+      setLoading(false);
       return;
     }
-    if (!slug) { setError("Missing series slug."); setLoading(false); return; }
     getSeries(slug)
-      .then((s) => { setSeries(s); setLoading(false); })
-      .catch(() => { setError("Series not found."); setLoading(false); });
-  }, [slug, router]);
+      .then((s) => {
+        setSeries(s);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Series not found.");
+        setLoading(false);
+      });
+  }, [slug]);
 
   async function handleSubscribe() {
     if (!series) return;
+    if (!isLoggedIn()) {
+      const next = `/pay/subscription?slug=${encodeURIComponent(series.slug)}`;
+      router.push(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
     setPaying(true);
     setError("");
     try {

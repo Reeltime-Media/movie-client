@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Serve modern, smaller formats; the browser picks the best it supports.
+    formats: ["image/avif", "image/webp"],
     qualities: [70, 75, 88],
     remotePatterns: [
       {
@@ -10,7 +12,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "lh3.googleusercontent.com",
+        hostname: "images.unsplash.com",
       },
       {
         protocol: "https",

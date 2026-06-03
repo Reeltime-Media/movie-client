@@ -125,16 +125,21 @@
   --font-sans: var(--font-inter);
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
 }
 
-/* Khmer UI stack: Kantumruy for script, Geist Sans for Latin fallback (see app/layout.tsx). */
+/* Khmer UI stack: Kantumruy for script, Inter for Latin fallback (see app/layout.tsx). */
 html[lang="km"] body {
   font-family:
     var(--font-khmer),
-    var(--font-geist-sans),
+    var(--font-inter),
     system-ui,
     -apple-system,
     sans-serif;
@@ -233,4 +238,20 @@ html[lang="km"] body {
     transform: none !important;
     transition: none !important;
   }
+}
+
+/* Custom clear control only — hide browser default on search fields */
+.rt-search-input::-webkit-search-cancel-button,
+.rt-search-input::-webkit-search-decoration,
+.rt-search-input::-webkit-search-results-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.rt-search-input::-ms-clear,
+.rt-search-input::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
 }

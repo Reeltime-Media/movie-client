@@ -5,7 +5,7 @@ import {
   freeEpisodeWatchHref,
   seasonsHaveFreeEpisodes,
 } from "./series-free";
-import type { ContentRead, SeasonRead, SeriesRead } from "./types";
+import type { ContentListItemRead, SeasonRead, SeriesRead } from "./types";
 
 export type SeriesPosterOptions = {
   hasSubscription?: boolean;
@@ -31,14 +31,17 @@ function pick(index: number) {
 }
 
 export function movieToPoster(
-  movie: ContentRead,
+  movie: ContentListItemRead,
   index = 0,
   ownedIds?: Set<string>,
 ): PosterCardProps {
   const { gradient, accent } = pick(index);
   const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
   const isOwned = isFree || ownedIds?.has(movie.id);
-  const price = !isFree ? `$${parseFloat(movie.price_usd!).toFixed(2)}` : null;
+  const price =
+    !isFree && movie.price_usd
+      ? `$${parseFloat(movie.price_usd).toFixed(2)}`
+      : null;
 
   return {
     imageSrc: posterUrl(movie.poster_key),
@@ -48,9 +51,7 @@ export function movieToPoster(
     accentColor: accent,
     badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
     entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
-    watchHref: isOwned
-      ? `/watch?slug=${movie.slug}`
-      : `/pay/movie?slug=${movie.slug}&title=${encodeURIComponent(movie.title)}`,
+    watchHref: `/watch?slug=${movie.slug}`,
   };
 }
 
@@ -67,15 +68,16 @@ export function seriesToPoster(
   const hasFreeEpisodes = seasonsHaveFreeEpisodes(seasons);
   const firstFree = hasFreeEpisodes ? findFirstFreeEpisode(seasons) : null;
 
-  let watchLabel = "Subscribe";
-  let watchHref = `/pricing?slug=${encodeURIComponent(series.slug)}`;
+  let watchLabel = "View series";
+  let watchHref = `/watch/series/${series.slug}/1/1`;
 
   if (hasSubscription) {
     watchLabel = "Watch";
-    watchHref = `/watch/series/${series.slug}/1/1`;
   } else if (firstFree) {
     watchLabel = "Watch now";
     watchHref = freeEpisodeWatchHref(series.slug, firstFree);
+  } else {
+    watchLabel = "View series";
   }
 
   return {

@@ -1,10 +1,26 @@
-import { apiFetch } from "./client";
-import type { ContentRead } from "./types";
+import { fetchAllPages } from "./pagination";
+import { apiFetch, catalogCache } from "./client";
+import type { ContentListItemRead, ContentRead } from "./types";
 
-export async function listMovies(): Promise<ContentRead[]> {
-  return apiFetch<ContentRead[]>("/movies/");
+export type CatalogListParams = {
+  search?: string;
+  genre?: string;
+};
+
+function moviesListPath(params?: CatalogListParams): string {
+  const qs = new URLSearchParams();
+  const search = params?.search?.trim();
+  const genre = params?.genre?.trim();
+  if (search) qs.set("search", search);
+  if (genre) qs.set("genre", genre);
+  const query = qs.toString();
+  return query ? `/movies/?${query}` : "/movies/";
+}
+
+export async function listMovies(params?: CatalogListParams): Promise<ContentListItemRead[]> {
+  return fetchAllPages<ContentListItemRead>(moviesListPath(params), 100, catalogCache);
 }
 
 export async function getMovie(slug: string): Promise<ContentRead> {
-  return apiFetch<ContentRead>(`/movies/${slug}`);
+  return apiFetch<ContentRead>(`/movies/${slug}`, catalogCache);
 }

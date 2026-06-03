@@ -1,20 +1,24 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
+import { getAuthSnapshot, subscribeAuth } from "@/lib/api/client";
 import type { TranslationKey } from "@/lib/i18n";
+import { useSyncExternalStore } from "react";
 import { useI18n } from "./LocaleProvider";
 
-const footerNav: { href: string; labelKey: TranslationKey }[] = [
+const footerNav: { href: string; labelKey: TranslationKey; requiresAuth?: boolean }[] = [
   { href: "/", labelKey: "navHome" },
   { href: "/movies", labelKey: "navMovies" },
   { href: "/series", labelKey: "navSeries" },
-  { href: "/my-library", labelKey: "navMyLibrary" },
+  { href: "/my-library", labelKey: "navMyLibrary", requiresAuth: true },
   { href: "/profile", labelKey: "navProfile" },
 ];
 
 export function SiteFooter() {
   const { t } = useI18n();
+  const loggedIn = useSyncExternalStore(subscribeAuth, getAuthSnapshot, () => false);
   const year = new Date().getFullYear();
 
   return (
@@ -22,21 +26,27 @@ export function SiteFooter() {
       <div className="mx-auto w-full max-w-6xl px-6 py-8 md:px-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-6.5 w-6.5 items-center justify-center rounded-sm bg-brand text-[13px] font-black text-white">
-                R
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="h-6.5 w-6.5 overflow-hidden rounded-sm bg-brand">
+                <Image
+                  src="/logo_r.jpeg"
+                  alt="Reeltime logo"
+                  width={26}
+                  height={26}
+                  className="h-full w-full object-cover object-top"
+                />
               </div>
-              <span className="text-[13px] font-black tracking-[0.06em] text-text">
+              <span className="text-[13px] font-extrabold tracking-[0.06em] text-text">
                 REELTIME
               </span>
-            </div>
+            </Link>
             <p className="mt-2 text-[11px] leading-relaxed text-text-disabled">
               {t("footerTagline")}
             </p>
           </div>
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
-            {footerNav.map((l) => (
+            {footerNav.filter((l) => !l.requiresAuth || loggedIn).map((l) => (
               <Link
                 key={l.href}
                 href={l.href}

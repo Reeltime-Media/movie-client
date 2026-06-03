@@ -3,14 +3,22 @@
 import { Info, PlayCircle, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useI18n } from "./LocaleProvider";
-import { listMovies } from "@/lib/api/movies";
-import { listSeries } from "@/lib/api/series";
 import { posterUrl } from "@/lib/api/client";
+import { listHeroFeatured, type HeroFeaturedSlide } from "@/lib/api/hero-featured";
+import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
+import { useI18n } from "./LocaleProvider";
+import { HeroBackground } from "./HeroBackground";
 
 const AUTO_MS = 6500;
+const HERO_DESC_MAX_WORDS = 25;
+
+function truncateWords(text: string, maxWords: number): string {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return text.trim();
+  return `${words.slice(0, maxWords).join(" ")}...`;
+}
 
 const ACCENT_PALETTE = [
   "#E50914", "#b08fd9", "#d4a04a", "#ed7aa6",
@@ -30,106 +38,108 @@ type HeroSlide = {
   accentColor: string;
 };
 
-function HeroBackground() {
-  return (
-    <>
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 1440 340"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <radialGradient id="rt-hero-spot" cx="68%" cy="38%" r="58%">
-            <stop offset="0%" stopColor="#7A1A20" stopOpacity="1" />
-            <stop offset="30%" stopColor="#3D0C12" stopOpacity="1" />
-            <stop offset="70%" stopColor="#0A0A0A" stopOpacity="1" />
-            <stop offset="100%" stopColor="#000000" stopOpacity="1" />
-          </radialGradient>
-
-          <radialGradient id="rt-hero-haze" cx="68%" cy="38%" r="40%">
-            <stop offset="0%" stopColor="#E50914" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#E50914" stopOpacity="0" />
-          </radialGradient>
-
-          <filter id="rt-hero-grain">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.9"
-              numOctaves="2"
-              stitchTiles="stitch"
-            />
-            <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0" />
-          </filter>
-        </defs>
-
-        <rect width="1440" height="340" fill="url(#rt-hero-spot)" />
-        <rect width="1440" height="340" fill="url(#rt-hero-haze)" />
-
-        <g opacity="0.06" transform="translate(980, 120)">
-          <circle cx="0" cy="0" r="120" fill="none" stroke="#FAFAFA" strokeWidth="1" />
-          <circle cx="0" cy="0" r="80" fill="none" stroke="#FAFAFA" strokeWidth="1" />
-          <circle cx="0" cy="0" r="40" fill="none" stroke="#FAFAFA" strokeWidth="1" />
-        </g>
-
-        <rect width="1440" height="340" filter="url(#rt-hero-grain)" />
-      </svg>
-
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)",
-        }}
-      />
-    </>
-  );
+function slideFromFeatured(slide: HeroFeaturedSlide, index: number): HeroSlide {
+  return {
+    id: slide.id,
+    title: slide.title,
+    year: slide.release_year?.toString() ?? "",
+    duration: slide.runtime ?? (slide.content_type === "series" ? "Series" : ""),
+    rating: slide.rating != null ? String(slide.rating) : "",
+    genres: (slide.genres ?? []).join(" · "),
+    description: slide.description ?? "",
+    imageSrc: posterUrl(slide.poster_key) ?? "",
+    watchHref: slide.watch_href,
+    accentColor: ACCENT_PALETTE[index % ACCENT_PALETTE.length]!,
+  };
 }
 
-export function Hero() {
+function buildFallbackSlides(
+  movies: ContentListItemRead[],
+  seriesList: SeriesRead[],
+): HeroSlide[] {
+  const movieSlides = movies.slice(0, 3).map((m, i) => ({
+    id: m.id,
+    title: m.title,
+    year: m.release_year?.toString() ?? "",
+    duration: m.runtime ?? "",
+    rating: m.rating != null ? String(m.rating) : "",
+    genres: (m.genres ?? []).join(" · "),
+    description: m.description ?? "",
+    imageSrc: posterUrl(m.poster_key) ?? "",
+    watchHref: `/watch?slug=${m.slug}`,
+    accentColor: ACCENT_PALETTE[i % ACCENT_PALETTE.length]!,
+  }));
+  const seriesSlides = seriesList.slice(0, 2).map((s, i) => ({
+    id: s.id,
+    title: s.title,
+    year: s.release_year?.toString() ?? "",
+    duration: "Series",
+    rating: s.rating != null ? String(s.rating) : "",
+    genres: (s.genres ?? []).join(" · "),
+    description: s.description ?? "",
+    imageSrc: posterUrl(s.poster_key) ?? "",
+    watchHref: `/watch/series/${s.slug}/1/1`,
+    accentColor: ACCENT_PALETTE[(movieSlides.length + i) % ACCENT_PALETTE.length]!,
+  }));
+  return [...movieSlides, ...seriesSlides];
+}
+
+type HeroProps = {
+  featuredSlides?: HeroFeaturedSlide[];
+  fallbackMovies?: ContentListItemRead[];
+  fallbackSeries?: SeriesRead[];
+};
+
+export function Hero({
+  featuredSlides: initialFeaturedSlides = [],
+  fallbackMovies = [],
+  fallbackSeries = [],
+}: HeroProps) {
   const { t } = useI18n();
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [active, setActive] = useState(0);
+  const [featuredSlides, setFeaturedSlides] = useState(initialFeaturedSlides);
+
+  useEffect(() => {
+    setFeaturedSlides(initialFeaturedSlides);
+  }, [initialFeaturedSlides]);
+
+  // Always refresh from API on the client so admin picks appear without waiting
+  // for the home page ISR cache (catalog can stay cached for minutes).
+  useEffect(() => {
+    let cancelled = false;
+    listHeroFeatured("home", { cache: "no-store" })
+      .then((slides) => {
+        if (!cancelled && slides.length > 0) {
+          setFeaturedSlides(slides);
+        }
+      })
+      .catch((err) => {
+        console.error("Hero featured refresh failed:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const slides = useMemo(() => {
+    if (featuredSlides.length > 0) {
+      return featuredSlides.map(slideFromFeatured);
+    }
+    return buildFallbackSlides(fallbackMovies, fallbackSeries);
+  }, [featuredSlides, fallbackMovies, fallbackSeries]);
+
   const total = slides.length;
 
   useEffect(() => {
-    Promise.all([listMovies(), listSeries()])
-      .then(([movies, seriesList]) => {
-        const movieSlides: HeroSlide[] = movies.slice(0, 3).map((m, i) => ({
-          id: m.id,
-          title: m.title,
-          year: m.release_year?.toString() ?? "",
-          duration: m.runtime ?? "",
-          rating: m.rating ?? "",
-          genres: m.genres.join(" · "),
-          description: m.description ?? "",
-          imageSrc: posterUrl(m.poster_key) ?? "",
-          watchHref: `/watch?slug=${m.slug}`,
-          accentColor: ACCENT_PALETTE[i % ACCENT_PALETTE.length]!,
-        }));
-        const seriesSlides: HeroSlide[] = seriesList.slice(0, 2).map((s, i) => ({
-          id: s.id,
-          title: s.title,
-          year: s.release_year?.toString() ?? "",
-          duration: "Series",
-          rating: s.rating ?? "",
-          genres: s.genres.join(" · "),
-          description: s.description ?? "",
-          imageSrc: posterUrl(s.poster_key) ?? "",
-          watchHref: `/watch/series/${s.slug}/1/1`,
-          accentColor: ACCENT_PALETTE[(movieSlides.length + i) % ACCENT_PALETTE.length]!,
-        }));
-        setSlides([...movieSlides, ...seriesSlides]);
-      })
-      .catch(() => {});
-  }, []);
+    setActive(0);
+  }, [slides]);
 
   const goNext = useCallback(() => {
     setActive((i) => (i + 1) % Math.max(total, 1));
   }, [total]);
 
   useEffect(() => {
-    if (total === 0) return;
+    if (total <= 1) return;
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -185,18 +195,26 @@ export function Hero() {
                     {s.year && <span className="text-text/90">{s.year}</span>}
                     {s.year && s.duration && <span className="text-border">·</span>}
                     {s.duration && <span>{s.duration}</span>}
-                    {s.rating && <><span className="text-border">·</span>
-                    <span className="inline-flex items-center gap-1">
-                      <Star size={12} className="fill-warning text-warning" />
-                      <span className="text-text/90">{s.rating}</span>
-                    </span></>}
-                    {s.genres && <><span className="text-border">·</span>
-                    <span>{s.genres}</span></>}
+                    {s.rating && (
+                      <>
+                        <span className="text-border">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Star size={12} className="fill-warning text-warning" />
+                          <span className="text-text/90">{s.rating}</span>
+                        </span>
+                      </>
+                    )}
+                    {s.genres && (
+                      <>
+                        <span className="text-border">·</span>
+                        <span>{s.genres}</span>
+                      </>
+                    )}
                   </div>
 
                   {s.description && (
                     <p className="mt-5 max-w-[440px] text-[14px] leading-[1.65] text-text/80">
-                      {s.description}
+                      {truncateWords(s.description, HERO_DESC_MAX_WORDS)}
                     </p>
                   )}
 
@@ -269,7 +287,7 @@ export function Hero() {
           )}
         </div>
 
-        {slides.length > 0 && (
+        {slides.length > 1 && (
           <div className="absolute bottom-8 right-12 z-[3] flex items-center gap-3">
             <span className="text-[11px] font-medium tabular-nums text-text-muted">
               {indexLabel}

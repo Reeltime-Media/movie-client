@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
 import { Inter, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
 import { GoogleAuthProvider } from "./components/GoogleAuthProvider";
 import { LocaleProvider } from "./components/LocaleProvider";
 import { ThemeInit } from "./components/ThemeInit";
 
+// Both are variable fonts — omitting `weight` ships a single variable file per
+// family that covers the full weight range (incl. 500), instead of one static
+// file per weight.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
-/** Kantumruy Pro — primary Khmer script (Google Fonts). Latin fallback in `globals.css` uses Geist Sans. */
+/** Kantumruy Pro — primary Khmer script (Google Fonts). Latin fallback uses Inter. */
 const kantumruy = Kantumruy_Pro({
   variable: "--font-khmer",
   subsets: ["khmer", "latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -33,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${kantumruy.variable} ${GeistSans.variable} h-full antialiased`}
+      className={`${inter.variable} ${kantumruy.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg text-text font-sans">
