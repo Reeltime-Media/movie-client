@@ -21,6 +21,7 @@ import { UserAvatar } from "@/components/auth/UserAvatar";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { pageTitleClassName } from "@/lib/ui/page-title";
 import { getMe, updateMe } from "@/lib/api/auth";
 import { saveUserSnapshot } from "@/lib/user-session";
 import { listPurchases } from "@/lib/api/purchases";
@@ -209,7 +210,7 @@ export default function ProfilePage() {
       {/* Name + meta row */}
       <div className="flex flex-wrap items-end justify-between gap-4 px-6 pb-5 pt-12 md:px-8 sm:pt-14">
         <div>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.02em]">
+          <h1 className={pageTitleClassName}>
             {user.full_name ?? user.email}
           </h1>
           <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-text-muted">

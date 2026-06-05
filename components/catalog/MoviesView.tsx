@@ -11,26 +11,19 @@ import { CinematicDecor } from "@/components/home/CinematicDecor";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import type { TranslationKey } from "@/lib/i18n";
 import { marketingImages } from "@/lib/marketing-images";
+import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listPurchases } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
-import { matchesGenre, matchesSearch } from "@/lib/catalog-filter";
+import {
+  CATALOG_GENRE_KEYS,
+  type CatalogGenreKey,
+  matchesGenre,
+  matchesSearch,
+} from "@/lib/catalog-filter";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { ContentListItemRead } from "@/lib/api/types";
-
-const MOVIE_GENRE_KEYS = [
-  "genreAll",
-  "genreAction",
-  "genreThriller",
-  "genreDrama",
-  "genreSciFi",
-  "genreHorror",
-  "genreComedy",
-] as const satisfies readonly TranslationKey[];
-
-type MovieGenreKey = (typeof MOVIE_GENRE_KEYS)[number];
 
 type MoviesViewProps = {
   movies: ContentListItemRead[];
@@ -40,7 +33,7 @@ type MoviesViewProps = {
 export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
-  const [activeGenre, setActiveGenre] = useState<MovieGenreKey>("genreAll");
+  const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>("genreAll");
   const [searchQuery, setSearchQuery] = useState("");
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
 
@@ -101,7 +94,7 @@ export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
               <Film size={13} className="text-white/90" aria-hidden /> {t("moviesBadge")}
             </div>
             <h1
-              className="rt-page-fade-up max-w-[18ch] text-[28px] font-extrabold tracking-[-0.02em] text-white md:text-[32px]"
+              className={["rt-page-fade-up max-w-[18ch]", pageTitleOnHeroClassName].join(" ")}
               style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
             >
               {t("moviesTitle")}
@@ -143,7 +136,7 @@ export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
             label={t("moviesFilterGenre")}
             value={activeGenre}
             onChange={setActiveGenre}
-            options={MOVIE_GENRE_KEYS.map((key) => ({
+            options={CATALOG_GENRE_KEYS.map((key) => ({
               value: key,
               label: t(key),
             }))}

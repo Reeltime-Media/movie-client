@@ -10,6 +10,8 @@ export type PosterEntitlement =
   | { kind: "none" };
 
 export type PosterCardProps = {
+  /** Published movie id — enables favourite button when set. */
+  contentId?: string;
   imageSrc?: string;
   imageAlt?: string;
   imagePriority?: boolean;

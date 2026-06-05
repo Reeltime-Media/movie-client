@@ -1,4 +1,5 @@
 import { apiFetch, getToken, isLoggedIn } from "./client";
+import { resolveApiUrl } from "./resolve-api-url";
 import type { WatchProgressRead } from "./types";
 
 export type WatchProgressUpdate = {
@@ -17,7 +18,7 @@ export function upsertWatchProgress(
 ): Promise<WatchProgressRead | void> {
   if (!isLoggedIn()) return Promise.resolve();
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/watch-progress/${contentId}`;
+  const url = `${resolveApiUrl()}/watch-progress/${contentId}`;
   const token = getToken();
 
   if (options?.keepalive && typeof fetch !== "undefined") {

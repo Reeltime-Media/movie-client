@@ -1,3 +1,4 @@
+import { movieCardHref } from "@/lib/movie-routes";
 import type { PosterCardProps } from "@/types/poster-card";
 import { posterUrl } from "./config";
 import {
@@ -44,6 +45,7 @@ export function movieToPoster(
       : null;
 
   return {
+    contentId: movie.id,
     imageSrc: posterUrl(movie.poster_key),
     posterTitle: movie.title.toUpperCase(),
     titleBelow: movie.title,
@@ -51,7 +53,7 @@ export function movieToPoster(
     accentColor: accent,
     badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
     entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
-    watchHref: `/watch?slug=${movie.slug}`,
+    watchHref: movieCardHref(movie, Boolean(isOwned)),
   };
 }
 

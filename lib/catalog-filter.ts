@@ -1,5 +1,18 @@
 import type { TranslationKey } from "@/lib/i18n";
 
+/** Shared genre filter options for movies and series catalog pages. */
+export const CATALOG_GENRE_KEYS = [
+  "genreAll",
+  "genreAction",
+  "genreThriller",
+  "genreDrama",
+  "genreSciFi",
+  "genreHorror",
+  "genreComedy",
+] as const satisfies readonly TranslationKey[];
+
+export type CatalogGenreKey = (typeof CATALOG_GENRE_KEYS)[number];
+
 /** English genre labels stored in the API (matches en dictionary). */
 export const GENRE_KEY_TO_LABEL: Partial<Record<TranslationKey, string>> = {
   genreAction: "Action",

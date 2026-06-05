@@ -5,6 +5,7 @@ import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { pageTitleClassName } from "@/lib/ui/page-title";
 import { login, register } from "@/lib/api/auth";
 
 const perks = [
@@ -98,7 +99,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="w-full max-w-95">
-          <h1 className="text-[24px] font-extrabold tracking-[-0.02em]">Create your account</h1>
+          <h1 className={pageTitleClassName}>Create your account</h1>
           <p className="mt-1.5 text-[13px] text-text-muted">
             Free to join. Rent, own, or subscribe at your pace.
           </p>

@@ -1,8 +1,10 @@
 "use client";
 
-import { Clock, Film, PlayCircle, Star } from "lucide-react";
+import { CheckCircle2, ChevronRight, Clock, Film, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import type { ReactNode } from "react";
+import { FavoriteButton } from "@/components/catalog/FavoriteButton";
 import { MovieComments } from "@/components/comments/MovieComments";
 import { PageShell } from "@/components/layout/PageShell";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
@@ -24,6 +26,15 @@ type WatchPageClientProps = {
   initialMovie?: ContentRead | null;
 };
 
+function DetailRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-b-0">
+      <dt className="shrink-0 text-[12px] font-medium text-text-muted">{label}</dt>
+      <dd className="text-right text-[12px] font-semibold text-text">{children}</dd>
+    </div>
+  );
+}
+
 export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientProps) {
   const {
     movie,
@@ -41,8 +52,9 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   if (loading) {
     return (
       <PageShell fullWidth>
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
+        <div className="flex h-64 items-center justify-center gap-3 text-[13px] text-text-muted">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-brand" />
+          Loading…
         </div>
       </PageShell>
     );
@@ -53,6 +65,9 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
       <PageShell fullWidth>
         <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
           <p className="text-[15px] font-semibold text-text">Movie not found</p>
+          <p className="max-w-sm text-[13px] text-text-muted">
+            This title may have been removed or the link is incorrect.
+          </p>
           <Link href="/movies" className="text-[13px] font-semibold text-brand hover:underline">
             Browse movies
           </Link>
@@ -67,28 +82,33 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   const attribution = playbackUrl ? undefined : SAMPLE_VIDEO_ATTRIBUTION;
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
 
-  const detailActions = canPlay ? (
-    <span className="inline-flex items-center gap-2 rounded-md border border-border bg-surface/80 px-3 py-2 text-[12px] font-semibold text-text backdrop-blur-sm">
-      <PlayCircle size={14} className="text-brand" aria-hidden />
-      Ready to play
-    </span>
-  ) : (
+  const detailActions = (
     <>
-      <Link
-        href={loggedIn ? payHref : `/login?next=${encodeURIComponent(loginNext)}`}
-        className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
-      >
-        <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
-        {loggedIn ? (priceLabel ? `Buy · ${priceLabel}` : "Buy to watch") : "Sign in"}
-      </Link>
-      {!loggedIn ? (
-        <Link
-          href={payHref}
-          className="inline-flex items-center rounded-md border border-border bg-surface/80 px-5 py-2.5 text-[13px] font-semibold text-text backdrop-blur-sm transition-colors hover:border-border-hover"
-        >
-          {priceLabel ? `Buy · ${priceLabel}` : "Buy to watch"}
-        </Link>
-      ) : null}
+      {canPlay ? (
+        <span className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-[12px] font-semibold text-success">
+          <CheckCircle2 size={14} aria-hidden />
+          Ready to watch
+        </span>
+      ) : (
+        <>
+          <Link
+            href={loggedIn ? payHref : `/login?next=${encodeURIComponent(loginNext)}`}
+            className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+          >
+            <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
+            {loggedIn ? (priceLabel ? `Buy · ${priceLabel}` : "Buy to watch") : "Sign in to watch"}
+          </Link>
+          {!loggedIn ? (
+            <Link
+              href={payHref}
+              className="inline-flex items-center rounded-md border border-border bg-surface/80 px-5 py-2.5 text-[13px] font-semibold text-text backdrop-blur-sm transition-colors hover:border-border-hover"
+            >
+              {priceLabel ? `Buy · ${priceLabel}` : "View purchase"}
+            </Link>
+          ) : null}
+        </>
+      )}
+      <FavoriteButton contentId={movie.id} variant="inline" />
     </>
   );
 
@@ -97,8 +117,9 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
       <ContentDetailHero
         posterKey={movie.poster_key}
         kicker={
-          <span className="inline-flex items-center gap-2">
-            <PlayCircle size={14} /> {canPlay ? "NOW PLAYING" : "MOVIE"}
+          <span className="inline-flex items-center gap-2 uppercase">
+            <Film size={13} aria-hidden />
+            {canPlay ? "Now playing" : "Feature film"}
           </span>
         }
         title={title}
@@ -119,99 +140,109 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
         </WatchMovieTheater>
       ) : null}
 
-      <section className="border-b border-border pb-8 pt-6">
+      <section className="border-b border-border py-8 md:py-10">
         <WatchDetailBody>
-          {!canPlay && trailerEmbed ? <TrailerEmbed embedUrl={trailerEmbed} title={title} /> : null}
+          <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
+            <div className="min-w-0">
+              {!canPlay && trailerEmbed ? (
+                <TrailerEmbed embedUrl={trailerEmbed} title={title} />
+              ) : null}
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] font-medium text-text-muted">
-            <span className="inline-flex items-center gap-1.5 text-text">
-              <Film size={14} className="text-text-muted" aria-hidden />
-              Feature
-            </span>
-            {movie.release_year && (
-              <>
-                <span className="select-none text-border-hover" aria-hidden>
-                  ·
-                </span>
-                <span>{movie.release_year}</span>
-              </>
-            )}
-            {movie.runtime && (
-              <>
-                <span className="select-none text-border-hover" aria-hidden>
-                  ·
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Clock size={14} aria-hidden />
-                  {movie.runtime}
-                </span>
-              </>
-            )}
-            {movie.rating && (
-              <>
-                <span className="select-none text-border-hover" aria-hidden>
-                  ·
-                </span>
-                <span className="inline-flex items-center gap-1 text-warning">
-                  <Star size={14} className="fill-current" aria-hidden />
-                  {movie.rating}
-                </span>
-              </>
-            )}
-            {!isFree && priceLabel && !canPlay ? (
-              <>
-                <span className="select-none text-border-hover" aria-hidden>
-                  ·
-                </span>
-                <span>{priceLabel}</span>
-              </>
-            ) : null}
+              {loggedIn ? (
+                <div className={!canPlay && trailerEmbed ? "mt-8" : ""}>
+                  <MovieComments contentId={movie.id} movieTitle={title} />
+                </div>
+              ) : (
+                <div
+                  className={[
+                    "rounded-lg border border-border bg-surface p-5",
+                    !canPlay && trailerEmbed ? "mt-8" : "",
+                  ].join(" ")}
+                >
+                  <p className="text-[13px] leading-relaxed text-text-muted">
+                    Sign in to join the discussion and share your thoughts on this film.
+                  </p>
+                  <Link
+                    href={`/login?next=${encodeURIComponent(loginNext)}`}
+                    className="mt-4 inline-flex rounded-md bg-brand px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
+                  >
+                    Sign in
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <aside className="h-fit rounded-lg border border-border bg-surface p-5 lg:sticky lg:top-6">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+                Details
+              </h2>
+
+              <dl className="mt-4">
+                <DetailRow label="Type">Feature film</DetailRow>
+                {movie.release_year ? <DetailRow label="Year">{movie.release_year}</DetailRow> : null}
+                {movie.runtime ? (
+                  <DetailRow label="Runtime">
+                    <span className="inline-flex items-center justify-end gap-1">
+                      <Clock size={13} className="text-text-muted" aria-hidden />
+                      {movie.runtime}
+                    </span>
+                  </DetailRow>
+                ) : null}
+                {movie.rating ? (
+                  <DetailRow label="Rating">
+                    <span className="inline-flex items-center justify-end gap-1 text-warning">
+                      <Star size={13} className="fill-current" aria-hidden />
+                      {movie.rating}
+                    </span>
+                  </DetailRow>
+                ) : null}
+                {!isFree && priceLabel ? (
+                  <DetailRow label="Price">{priceLabel}</DetailRow>
+                ) : isFree ? (
+                  <DetailRow label="Access">Free</DetailRow>
+                ) : null}
+              </dl>
+
+              {movie.genres.length > 0 ? (
+                <div className="mt-4 border-t border-border pt-4">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+                    Genres
+                  </h3>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {movie.genres.map((g) => (
+                      <span
+                        key={g}
+                        className="rounded-md border border-border bg-surface-elevated px-2.5 py-1 text-[11px] font-semibold text-text-muted"
+                      >
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </aside>
           </div>
 
-          {movie.genres.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {movie.genres.map((g) => (
-                <span
-                  key={g}
-                  className="rounded-md border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted"
-                >
-                  {g}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {loggedIn ? <MovieComments contentId={movie.id} movieTitle={title} /> : null}
-
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5 pb-0">
-            <Link
-              href="/movies"
-              className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-            >
+          <nav
+            aria-label="Breadcrumb"
+            className="mx-auto mt-8 flex max-w-6xl flex-wrap items-center gap-1 border-t border-border pt-6 text-[12px] text-text-muted"
+          >
+            <Link href="/movies" className="font-medium transition-colors hover:text-text">
               Movies
             </Link>
-            <Link
-              href="/series"
-              className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-            >
-              Series
-            </Link>
+            <ChevronRight size={14} className="text-border-hover" aria-hidden />
+            <span className="truncate font-semibold text-text">{title}</span>
             {loggedIn ? (
-              <Link
-                href="/my-library"
-                className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-              >
-                My library
-              </Link>
-            ) : (
-              <Link
-                href={`/login?next=${encodeURIComponent(loginNext)}`}
-                className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-              >
-                Sign in
-              </Link>
-            )}
-          </div>
+              <>
+                <span className="mx-1 text-border-hover" aria-hidden>
+                  ·
+                </span>
+                <Link href="/my-library" className="font-medium transition-colors hover:text-text">
+                  My library
+                </Link>
+              </>
+            ) : null}
+          </nav>
         </WatchDetailBody>
       </section>
 

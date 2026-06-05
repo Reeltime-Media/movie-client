@@ -1,4 +1,6 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import { resolveApiUrl } from "./resolve-api-url";
+
+export const API_URL = resolveApiUrl();
 
 export const R2_PUBLIC_URL =
   (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? "").replace(/\/$/, "");

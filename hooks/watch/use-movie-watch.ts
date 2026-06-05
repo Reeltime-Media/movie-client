@@ -8,6 +8,7 @@ import { getMovie } from "@/lib/api/movies";
 import { getPlaybackUrl } from "@/lib/api/playback";
 import { listPurchases } from "@/lib/api/purchases";
 import type { ContentRead } from "@/lib/api/types";
+import { moviePayHref, movieWatchHref } from "@/lib/movie-routes";
 
 function isMovieFree(movie: ContentRead) {
   return !movie.price_usd || parseFloat(movie.price_usd) === 0;
@@ -107,8 +108,8 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     return {
       isFree,
       priceLabel,
-      loginNext: `/watch?slug=${encodeURIComponent(movie.slug)}`,
-      payHref: `/pay/movie?slug=${movie.slug}&title=${encodeURIComponent(movie.title)}`,
+      loginNext: movieWatchHref(movie.slug),
+      payHref: moviePayHref(movie.slug, movie.title),
     };
   }, [movie]);
 

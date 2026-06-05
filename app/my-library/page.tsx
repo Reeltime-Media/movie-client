@@ -2,51 +2,78 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bookmark, CheckCircle2, Clock3, Heart, ShoppingBag } from "lucide-react";
+import { Bookmark, CheckCircle2, Heart, ShoppingBag } from "lucide-react";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { PageShell } from "@/components/layout/PageShell";
+import { useFavorites } from "@/components/providers/FavoritesProvider";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { pageTitleClassName } from "@/lib/ui/page-title";
+import { listFavorites } from "@/lib/api/favorites";
 import { listMovies } from "@/lib/api/movies";
-import { listPurchases } from "@/lib/api/purchases";
+import { listOwnedMovies } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
 import type { TranslationKey } from "@/lib/i18n";
 import type { PosterCardProps } from "@/types/poster-card";
 
-const filterKeys: TranslationKey[] = [
-  "genreAll",
-  "homeContinueWatching",
-  "libraryOwned",
-  "librarySubscribed",
-  "libraryWatchlist",
+type LibraryTab = "owned" | "favourites";
+
+const tabs: { id: LibraryTab; key: TranslationKey }[] = [
+  { id: "owned", key: "libraryOwned" },
+  { id: "favourites", key: "libraryFavourites" },
 ];
 
 export default function MyLibraryPage() {
   const router = useRouter();
   const { t } = useI18n();
   const { loggedIn } = useAuth();
-  const [activeFilter, setActiveFilter] = useState(0);
+  const { favoriteIds } = useFavorites();
+  const [activeTab, setActiveTab] = useState<LibraryTab>("owned");
   const [ownedPosters, setOwnedPosters] = useState<PosterCardProps[]>([]);
-  const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>([]);
+  const [favoritePosters, setFavoritePosters] = useState<PosterCardProps[]>([]);
   const [ownedCount, setOwnedCount] = useState(0);
+  const [favoriteCount, setFavoriteCount] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loggedIn) {
       router.replace(`/login?next=${encodeURIComponent("/my-library")}`);
       return;
     }
-    Promise.all([listMovies(), listPurchases()])
-      .then(([movies, purchases]) => {
-        const purchasedIds = new Set(purchases.map((p) => p.content_id));
-        const purchasedMovies = movies.filter((m) => purchasedIds.has(m.id));
-        setOwnedCount(purchasedMovies.length);
-        const owned = purchasedMovies.map((m, i) => movieToPoster(m, i, purchasedIds));
-        setOwnedPosters(owned);
-        setContinuePosters(owned.slice(0, 6));
-      })
-      .catch(() => {});
-  }, [router, loggedIn]);
+
+    let cancelled = false;
+    setLoadError(null);
+
+    (async () => {
+      const [ownedMovies, catalogMovies, favorites] = await Promise.all([
+        listOwnedMovies().catch(() => []),
+        listMovies().catch(() => []),
+        listFavorites().catch(() => []),
+      ]);
+
+      if (cancelled) return;
+
+      const purchasedIds = new Set(ownedMovies.map((m) => m.id));
+      setOwnedCount(ownedMovies.length);
+      setOwnedPosters(ownedMovies.map((m, i) => movieToPoster(m, i, purchasedIds)));
+
+      const favIds = new Set(favorites.map((f) => f.content_id));
+      setFavoriteCount(favIds.size);
+      const favMovies = catalogMovies.filter((m) => favIds.has(m.id));
+      setFavoritePosters(favMovies.map((m, i) => movieToPoster(m, i, purchasedIds)));
+
+      if (ownedMovies.length === 0 && favorites.length === 0) {
+        setLoadError(null);
+      }
+    })().catch(() => {
+      if (!cancelled) setLoadError("Could not load your library. Please try again.");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, loggedIn, favoriteIds]);
 
   const stat = (key: TranslationKey, count: number) =>
     t(key).replace("{count}", String(count));
@@ -57,8 +84,14 @@ export default function MyLibraryPage() {
         <div className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-muted">
           <Bookmark size={13} /> {t("libraryBadge")}
         </div>
-        <h1 className="text-[28px] font-extrabold tracking-[-0.02em]">{t("libraryTitle")}</h1>
+        <h1 className={pageTitleClassName}>{t("libraryTitle")}</h1>
       </div>
+
+      {loadError ? (
+        <div className="mx-6 mb-4 rounded-md border border-warning/30 bg-warning/10 px-4 py-3 text-[13px] text-warning md:mx-8">
+          {loadError}
+        </div>
+      ) : null}
 
       <div className="border-b border-border px-6 pb-5 md:px-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -73,30 +106,27 @@ export default function MyLibraryPage() {
           </div>
           <div className="h-3 w-px bg-border" />
           <div className="flex items-center gap-1.5 text-[12px] font-medium">
-            <Clock3 size={13} className="text-text-muted" />
-            <span className="text-text-muted">
-              {stat("libraryStatInProgress", continuePosters.length)}
-            </span>
-          </div>
-          <div className="h-3 w-px bg-border" />
-          <div className="flex items-center gap-1.5 text-[12px] font-medium">
             <Heart size={13} className="text-brand" />
-            <span className="text-text-muted">{stat("libraryStatWatchlist", 0)}</span>
+            <span className="text-text-muted">{stat("libraryStatFavourites", favoriteCount)}</span>
           </div>
         </div>
 
         <div
           className="-mx-1 mt-4 flex items-center gap-1 overflow-x-auto"
           style={{ scrollbarWidth: "none" }}
+          role="tablist"
+          aria-label={t("libraryTitle")}
         >
-          {filterKeys.map((key, i) => (
+          {tabs.map(({ id, key }) => (
             <button
-              key={key}
+              key={id}
               type="button"
-              onClick={() => setActiveFilter(i)}
+              role="tab"
+              aria-selected={activeTab === id}
+              onClick={() => setActiveTab(id)}
               className={[
-                "shrink-0 rounded-md px-3 py-1.5 text-[12px] font-semibold transition-colors",
-                i === activeFilter
+                "shrink-0 cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-semibold transition-colors",
+                activeTab === id
                   ? "bg-surface-elevated text-text"
                   : "text-text-muted hover:bg-surface-elevated hover:text-text",
               ].join(" ")}
@@ -107,24 +137,45 @@ export default function MyLibraryPage() {
         </div>
       </div>
 
-      {continuePosters.length > 0 && (
-        <section className="pt-6 pb-8">
-          <div className="px-6 md:px-8">
-            <SectionHeader title={t("homeContinueWatching")} />
-          </div>
-          <PosterScrollRail posters={continuePosters} imagePriorityCount={2} />
-        </section>
-      )}
-
-      {ownedPosters.length > 0 ? (
-        <section className="pt-2 pb-8">
+      {activeTab === "favourites" ? (
+        favoritePosters.length > 0 ? (
+          <section className="pt-6 pb-12">
+            <div className="px-6 md:px-8">
+              <SectionHeader title={t("libraryFavourites")} />
+            </div>
+            <PosterScrollRail posters={favoritePosters} imagePriorityCount={2} />
+          </section>
+        ) : (
+          <section className="pt-6 pb-12">
+            <div className="px-6 md:px-8">
+              <SectionHeader title={t("libraryFavourites")} />
+              <div className="mt-4 flex flex-col items-center justify-center rounded-md border border-dashed border-border py-10 text-center">
+                <Heart size={24} className="text-border-hover" />
+                <div className="mt-3 text-[13px] font-semibold text-text-muted">
+                  {t("libraryEmptyFavouritesTitle")}
+                </div>
+                <div className="mt-1 text-[12px] text-text-disabled">
+                  {t("libraryEmptyFavouritesDesc")}
+                </div>
+                <a
+                  href="/movies"
+                  className="mt-4 inline-flex rounded-md border border-border px-4 py-2 text-[12px] font-semibold text-text-muted transition-colors hover:border-border-hover hover:text-text"
+                >
+                  {t("libraryBrowseMovies")}
+                </a>
+              </div>
+            </div>
+          </section>
+        )
+      ) : ownedPosters.length > 0 ? (
+        <section className="pt-6 pb-12">
           <div className="px-6 md:px-8">
             <SectionHeader title={t("libraryOwned")} showSeeAll />
           </div>
           <PosterScrollRail posters={ownedPosters} />
         </section>
       ) : (
-        <section className="pt-6 pb-8">
+        <section className="pt-6 pb-12">
           <div className="px-6 md:px-8">
             <SectionHeader title={t("libraryOwned")} />
             <div className="mt-4 flex flex-col items-center justify-center rounded-md border border-dashed border-border py-10 text-center">
@@ -143,27 +194,6 @@ export default function MyLibraryPage() {
           </div>
         </section>
       )}
-
-      <section className="pt-2 pb-12">
-        <div className="px-6 md:px-8">
-          <SectionHeader title={t("libraryWatchlist")} />
-          <div className="mt-4 flex flex-col items-center justify-center rounded-md border border-dashed border-border py-10 text-center">
-            <Heart size={24} className="text-border-hover" />
-            <div className="mt-3 text-[13px] font-semibold text-text-muted">
-              {t("libraryEmptyWatchlistTitle")}
-            </div>
-            <div className="mt-1 text-[12px] text-text-disabled">
-              {t("libraryEmptyWatchlistDesc")}
-            </div>
-            <a
-              href="/"
-              className="mt-4 inline-flex rounded-md border border-border px-4 py-2 text-[12px] font-semibold text-text-muted transition-colors hover:border-border-hover hover:text-text"
-            >
-              {t("libraryBrowseTitles")}
-            </a>
-          </div>
-        </div>
-      </section>
     </PageShell>
   );
 }

@@ -14,6 +14,8 @@ import { listSubscriptionPlans } from "@/lib/api/subscription-plans";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { SubscriptionPlanRead } from "@/lib/api/types";
 import { marketingImages } from "@/lib/marketing-images";
+import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
+import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
 
 const PERK_KEYS = [
   "pricingPerk1",
@@ -104,7 +106,7 @@ function PricingPageInner() {
             {t("pricingBadge")}
           </div>
           <h1
-            className="rt-page-fade-up text-balance text-[clamp(1.625rem,3.5vw,2.125rem)] font-extrabold leading-[1.08] tracking-tight text-white"
+            className={["rt-page-fade-up", pageTitleOnHeroClassName].join(" ")}
             style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
           >
             {t("pricingTitle")}
@@ -146,10 +148,8 @@ function PricingPageInner() {
                 <article
                   key={plan.id}
                   className={[
-                    "relative flex flex-col rounded-md border bg-surface p-5 transition-colors",
-                    isRecommended
-                      ? "border-brand shadow-[0_0_0_1px_var(--color-brand)]"
-                      : "border-border",
+                    "relative flex flex-col p-5 transition-colors duration-200",
+                    isRecommended ? cardHighlightClassName : cardClassName,
                   ].join(" ")}
                   style={{ "--rt-enter-delay": `${220 + index * 60}ms` } as CSSProperties}
                 >
@@ -196,7 +196,7 @@ function PricingPageInner() {
                   ) : (
                     <Link
                       href={subscribeHref(plan.name)}
-                      className="mt-auto inline-flex w-full items-center justify-center rounded-md bg-brand py-3 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+                      className={[primaryButtonClassName, "mt-auto"].join(" ")}
                     >
                       {loggedIn ? t("pricingSubscribe") : t("pricingSignIn")}
                     </Link>

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { pageTitleClassName } from "@/lib/ui/page-title";
 import { login } from "@/lib/api/auth";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 
@@ -78,7 +79,7 @@ function LoginForm() {
         </div>
 
         <div className="w-full max-w-95">
-          <h1 className="text-[24px] font-extrabold tracking-[-0.02em]">Welcome back</h1>
+          <h1 className={pageTitleClassName}>Welcome back</h1>
           <p className="mt-1.5 text-[13px] text-text-muted">
             Sign in to your Reeltime account to continue.
           </p>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { cspConnectSrc } from "./lib/csp-connect-src";
 
 export function middleware(_request: NextRequest) {
   const response = NextResponse.next();
@@ -14,7 +15,7 @@ export function middleware(_request: NextRequest) {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https: http://localhost:* http://127.0.0.1:*",
+      `connect-src ${cspConnectSrc()}`,
       "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
       "media-src 'self' https: blob:",
     ].join("; "),

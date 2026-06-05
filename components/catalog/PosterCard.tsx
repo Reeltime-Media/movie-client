@@ -35,8 +35,14 @@ export function PosterCard({
       ? "bg-surface-elevated border border-border hover:border-border-hover text-text"
       : "bg-brand hover:bg-brand-hover text-white";
 
+  const cardLabel = `${computedWatchLabel} — ${titleBelow}`;
+
   return (
-    <div className="group">
+    <Link
+      href={watchHref}
+      aria-label={cardLabel}
+      className="group block cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    >
       {/* Poster image area */}
       <div
         className={[
@@ -127,16 +133,15 @@ export function PosterCard({
           ) : null}
         </div>
 
-        <Link
-          href={watchHref}
+        <span
           className={[
             "inline-flex w-full items-center justify-center rounded-md px-3 py-2 text-[12px] font-bold transition-colors",
             buttonStyle,
           ].join(" ")}
         >
           {computedWatchLabel}
-        </Link>
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }

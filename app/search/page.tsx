@@ -8,6 +8,7 @@ import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { pageTitleClassName } from "@/lib/ui/page-title";
 import { listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
 import { listSeries } from "@/lib/api/series";
@@ -86,7 +87,7 @@ function SearchPageInner() {
           <Search size={13} aria-hidden />
           {t("searchPageTitle")}
         </div>
-        <h1 className="text-[28px] font-extrabold tracking-[-0.02em]">{t("searchPageTitle")}</h1>
+        <h1 className={pageTitleClassName}>{t("searchPageTitle")}</h1>
         <div className="mt-4 max-w-2xl">
           <PageSearchBar
             label={t("searchPageTitle")}

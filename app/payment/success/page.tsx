@@ -1,11 +1,14 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 import { PageShell } from "@/components/layout/PageShell";
 import { waitForPaymentSucceeded } from "@/lib/api/payments";
 import { PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import { cardClassName, secondaryButtonClassName } from "@/lib/ui/surfaces";
 
 function PaymentSuccessInner() {
   const router = useRouter();
@@ -37,26 +40,36 @@ function PaymentSuccessInner() {
 
   if (error) {
     return (
-      <PageShell>
-        <div className="flex h-64 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="text-[14px] text-danger">{error}</p>
-          <button
-            type="button"
-            onClick={() => router.replace("/")}
-            className="text-[13px] text-text-muted hover:text-text"
-          >
-            Back to home
-          </button>
+      <PageShell wide>
+        <div className="flex min-h-[50vh] items-center justify-center px-6 py-12">
+          <div className={["max-w-md p-8 text-center", cardClassName].join(" ")}>
+            <p className="text-[15px] font-medium text-danger">{error}</p>
+            <button
+              type="button"
+              onClick={() => router.replace("/")}
+              className={[secondaryButtonClassName, "mt-6 w-full"].join(" ")}
+            >
+              Back to home
+            </button>
+          </div>
         </div>
       </PageShell>
     );
   }
 
   return (
-    <PageShell>
-      <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-        <p className="text-[13px] text-text-muted">Confirming your payment…</p>
+    <PageShell wide>
+      <div className="flex min-h-[50vh] items-center justify-center px-6 py-12">
+        <div className={["max-w-md p-8 text-center", cardClassName].join(" ")}>
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-success/30 bg-success/10 text-success">
+            <CheckCircle2 size={28} aria-hidden />
+          </div>
+          <h1 className="mt-5 text-[20px] font-bold text-text">Confirming your payment</h1>
+          <p className="mt-2 text-[14px] leading-relaxed text-text-muted">
+            Hang tight — we&apos;re verifying your transaction and unlocking your content.
+          </p>
+          <div className="mx-auto mt-6 h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
+        </div>
       </div>
     </PageShell>
   );
@@ -64,15 +77,7 @@ function PaymentSuccessInner() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense
-      fallback={
-        <PageShell>
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-          </div>
-        </PageShell>
-      }
-    >
+    <Suspense fallback={<CheckoutSpinner />}>
       <PaymentSuccessInner />
     </Suspense>
   );

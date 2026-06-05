@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
+import { FavoritesProvider } from "@/components/providers/FavoritesProvider";
 import { GoogleAuthProvider } from "@/components/providers/GoogleAuthProvider";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { ThemeInit } from "@/components/providers/ThemeInit";
@@ -40,7 +41,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-bg text-text font-sans">
         <ThemeInit />
         <GoogleAuthProvider>
-          <LocaleProvider>{children}</LocaleProvider>
+          <LocaleProvider>
+            <FavoritesProvider>{children}</FavoritesProvider>
+          </LocaleProvider>
         </GoogleAuthProvider>
       </body>
     </html>

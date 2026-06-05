@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ReactNode } from "react";
+import { pageTitleClassName } from "@/lib/ui/page-title";
 
 export function PageHeader({
   kicker,
@@ -21,7 +22,7 @@ export function PageHeader({
               {kicker}
             </div>
           ) : null}
-          <h1 className="mt-2 text-[28px] font-extrabold tracking-[-0.02em]">
+          <h1 className={["mt-2", pageTitleClassName].join(" ")}>
             {title}
           </h1>
           {description ? (

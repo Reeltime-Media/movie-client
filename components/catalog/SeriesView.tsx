@@ -3,32 +3,26 @@
 import { Layers, ListVideo, Sparkles } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { GenreFilterSelect } from "@/components/catalog/GenreFilterSelect";
 import { PageSearchBar } from "@/components/catalog/PageSearchBar";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { CinematicDecor } from "@/components/home/CinematicDecor";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import type { TranslationKey } from "@/lib/i18n";
 import { marketingImages } from "@/lib/marketing-images";
+import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { seriesToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
-import { matchesGenre, matchesSearch } from "@/lib/catalog-filter";
+import {
+  CATALOG_GENRE_KEYS,
+  type CatalogGenreKey,
+  matchesGenre,
+  matchesSearch,
+} from "@/lib/catalog-filter";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
-
-const SERIES_GENRE_KEYS = [
-  "genreAll",
-  "genreDrama",
-  "genreThriller",
-  "genreSciFi",
-  "genreComedy",
-  "genreCrime",
-  "genreAction",
-] as const satisfies readonly TranslationKey[];
-
-type SeriesGenreKey = (typeof SERIES_GENRE_KEYS)[number];
 
 type SeriesViewProps = {
   seriesList: SeriesRead[];
@@ -45,7 +39,7 @@ export function SeriesView({
 }: SeriesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
-  const [activeGenre, setActiveGenre] = useState<SeriesGenreKey>("genreAll");
+  const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>("genreAll");
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSubscription, setHasSubscription] = useState(false);
 
@@ -115,7 +109,7 @@ export function SeriesView({
               {t("seriesBadge")}
             </div>
             <h1
-              className="rt-page-fade-up text-balance text-[clamp(1.625rem,3.5vw,2.125rem)] font-extrabold leading-[1.08] tracking-tight text-white"
+              className={["rt-page-fade-up", pageTitleOnHeroClassName].join(" ")}
               style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
             >
               {t("seriesHeroTitle")}
@@ -149,55 +143,27 @@ export function SeriesView({
       </CinematicDecor>
 
       <div
-        className="rt-page-fade-in border-b border-border bg-bg px-6 py-3 md:px-8"
+        className="rt-page-fade-up border-b border-border px-6 py-4 md:px-8"
         style={{ "--rt-enter-delay": "240ms" } as CSSProperties}
       >
-        <div
-          className="flex max-w-full items-center gap-1 overflow-x-auto rounded-md border border-border bg-surface p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          role="tablist"
-          aria-label={t("seriesFilterAria")}
-        >
-          {SERIES_GENRE_KEYS.map((g, i) => {
-            const selected = g === activeGenre;
-            return (
-              <button
-                key={g}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setActiveGenre(g)}
-                className={[
-                  "rt-page-fade-up shrink-0 cursor-pointer rounded-sm px-3.5 py-2 text-[12px] font-semibold transition-[transform,colors,background-color] duration-200 ease-out",
-                  selected
-                    ? "bg-brand text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
-                    : "text-text-muted hover:bg-surface-elevated hover:text-text active:scale-[0.98]",
-                ].join(" ")}
-                style={{ "--rt-enter-delay": `${280 + i * 40}ms` } as CSSProperties}
-              >
-                {t(g)}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div
-        className="rt-page-fade-up border-b border-border px-6 py-4 md:px-8"
-        style={{ "--rt-enter-delay": "320ms" } as CSSProperties}
-      >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <PageSearchBar
+            className="max-w-none min-w-0 flex-1"
             label={t("seriesSearchLabel")}
             placeholder={t("seriesSearchPlaceholder")}
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
-          <div className="flex shrink-0 items-center gap-2 text-[12px] text-text-muted">
-            <span className="hidden sm:inline">{t("seriesSort")}</span>
-            <span className="rounded-md border border-border bg-surface px-2.5 py-1.5 font-medium text-text transition-colors duration-200">
-              {t("seriesPopularSort")}
-            </span>
-          </div>
+          <GenreFilterSelect
+            className="w-full sm:w-44"
+            label={t("moviesFilterGenre")}
+            value={activeGenre}
+            onChange={setActiveGenre}
+            options={CATALOG_GENRE_KEYS.map((key) => ({
+              value: key,
+              label: t(key),
+            }))}
+          />
         </div>
       </div>
 
