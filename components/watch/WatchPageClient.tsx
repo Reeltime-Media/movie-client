@@ -148,28 +148,9 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                 <TrailerEmbed embedUrl={trailerEmbed} title={title} />
               ) : null}
 
-              {loggedIn ? (
-                <div className={!canPlay && trailerEmbed ? "mt-8" : ""}>
-                  <MovieComments contentId={movie.id} movieTitle={title} />
-                </div>
-              ) : (
-                <div
-                  className={[
-                    "rounded-lg border border-border bg-surface p-5",
-                    !canPlay && trailerEmbed ? "mt-8" : "",
-                  ].join(" ")}
-                >
-                  <p className="text-[13px] leading-relaxed text-text-muted">
-                    Sign in to join the discussion and share your thoughts on this film.
-                  </p>
-                  <Link
-                    href={`/login?next=${encodeURIComponent(loginNext)}`}
-                    className="mt-4 inline-flex rounded-md bg-brand px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
-                  >
-                    Sign in
-                  </Link>
-                </div>
-              )}
+              <div className={!canPlay && trailerEmbed ? "mt-8" : ""}>
+                <MovieComments contentId={movie.id} movieTitle={title} />
+              </div>
             </div>
 
             <aside className="h-fit rounded-lg border border-border bg-surface p-5 lg:sticky lg:top-6">

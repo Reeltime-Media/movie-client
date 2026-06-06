@@ -36,6 +36,7 @@ export interface ContentRead extends ContentListItemRead {
   season_number: number | null;
   episode_number: number | null;
   duration_seconds: number | null;
+  banner_key: string | null;
   trailer_url: string | null;
   hls_master_key: string | null;
   status: string;
@@ -55,6 +56,7 @@ export interface SeriesRead {
   rating: string | null;
   monthly_price_usd: string | null;
   poster_key: string | null;
+  banner_key: string | null;
   trailer_url: string | null;
   is_published: boolean;
   created_at: string;

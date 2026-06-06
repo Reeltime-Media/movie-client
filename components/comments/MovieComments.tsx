@@ -1,6 +1,8 @@
 "use client";
 
 import { MessageSquare, User } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   COMMENTS_PAGE_SIZE,
@@ -11,6 +13,8 @@ import {
   type CommentThreadRead,
 } from "@/lib/api/comments";
 import { useI18n } from "@/components/providers/LocaleProvider";
+import { useAuth } from "@/hooks/auth/use-auth";
+import { loginPathWithNext } from "@/lib/auth-redirect";
 
 function formatRelativeTime(iso: string, locale: string): string {
   const date = new Date(iso);
@@ -87,6 +91,9 @@ type MovieCommentsProps = {
 
 export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
   const { t, locale } = useI18n();
+  const { loggedIn } = useAuth();
+  const pathname = usePathname();
+  const loginHref = loginPathWithNext(pathname || "/");
   const [comments, setComments] = useState<CommentThreadRead[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -113,8 +120,12 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
         setTotal(res.total);
         setPage(res.page);
         setPages(res.pages);
-      } catch {
-        setError(t("commentsLoadError"));
+      } catch (err) {
+        setError(
+          err instanceof Error && err.message
+            ? err.message
+            : t("commentsLoadError"),
+        );
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -139,8 +150,12 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
       setBody("");
       setComments((prev) => [toThread(created), ...prev]);
       setTotal((n) => n + 1);
-    } catch {
-      setSubmitError(t("commentsPostError"));
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : t("commentsPostError"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -157,8 +172,12 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
       setReplyBody("");
       setReplyingTo(null);
       setComments((prev) => insertReply(prev, parentId, toThread(created)));
-    } catch {
-      setSubmitError(t("commentsPostError"));
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : t("commentsPostError"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -196,37 +215,46 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
       </p>
 
       <div className="rounded-xl border border-border bg-surface p-4 sm:p-5">
-        <form onSubmit={handleTopLevelSubmit} className="mb-6 flex gap-3">
-          <div
-            className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-bg text-text-muted"
-            aria-hidden
-          >
-            <User size={16} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <label htmlFor="comment-body" className="sr-only">
-              {t("commentsPlaceholder")}
-            </label>
-            <textarea
-              id="comment-body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder={t("commentsPlaceholder")}
-              maxLength={2000}
-              rows={2}
-              className="w-full resize-none rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text outline-none transition-colors placeholder:text-text-disabled focus:border-border-hover"
-            />
-            <div className="mt-2 flex justify-end">
-              <button
-                type="submit"
-                disabled={submitting || !body.trim()}
-                className="rounded-md bg-brand px-4 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {submitting ? t("commentsPosting") : t("commentsPost")}
-              </button>
+        {loggedIn ? (
+          <form onSubmit={handleTopLevelSubmit} className="mb-6 flex gap-3">
+            <div
+              className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-bg text-text-muted"
+              aria-hidden
+            >
+              <User size={16} />
             </div>
-          </div>
-        </form>
+            <div className="min-w-0 flex-1">
+              <label htmlFor="comment-body" className="sr-only">
+                {t("commentsPlaceholder")}
+              </label>
+              <textarea
+                id="comment-body"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder={t("commentsPlaceholder")}
+                maxLength={2000}
+                rows={2}
+                className="w-full resize-none rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text outline-none transition-colors placeholder:text-text-disabled focus:border-border-hover"
+              />
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={submitting || !body.trim()}
+                  className="rounded-md bg-brand px-4 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {submitting ? t("commentsPosting") : t("commentsPost")}
+                </button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <p className="mb-6 text-[13px] text-text-muted">
+            {t("commentsSignInToPost")}{" "}
+            <Link href={loginHref} className="font-semibold text-brand hover:underline">
+              Sign in
+            </Link>
+          </p>
+        )}
         {submitError && (
           <p className="mb-4 text-[12px] text-warning" role="alert">
             {submitError}

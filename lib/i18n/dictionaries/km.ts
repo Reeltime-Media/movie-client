@@ -179,4 +179,6 @@ export const km = {
   commentsVoteDown: "ចុះ",
   commentsCancelReply: "បោះបង់",
   commentsReplyPlaceholder: "សរសេរការឆ្លើយតប…",
+  commentsSignInToPost: "សូមចូលគណនីដើម្បីបង្ហោះមតិ។",
+  commentsSessionExpired: "សម័យរបស់អ្នកផុតកំណត់ហើយ។ សូមចូលគណនីម្តងទៀតដើម្បីបង្ហោះមតិ។",
 } satisfies Record<TranslationKey, string>;

@@ -13,17 +13,6 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 
 const AUTO_MS = 6500;
 
-const ACCENT_PALETTE = [
-  "#E50914",
-  "#b08fd9",
-  "#d4a04a",
-  "#ed7aa6",
-  "#5cb8d4",
-  "#d4cc5c",
-  "#5cd49a",
-  "#e8965c",
-];
-
 export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead[] }) {
   const { t } = useI18n();
   const [active, setActive] = useState(0);
@@ -45,21 +34,51 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
 
   if (!banners.length) return null;
 
-  const activeBanner = banners[active];
   const indexLabel = String(active + 1).padStart(2, "0");
   const totalLabel = String(Math.max(total, 1)).padStart(2, "0");
-  const activeAccent = ACCENT_PALETTE[active % ACCENT_PALETTE.length]!;
+  const hasImageBackground = banners.some((banner) => Boolean(posterUrl(banner.image_key)));
 
   return (
     <section className="hero-featured relative ml-[calc(50%-50vw)] h-[460px] w-screen max-w-none shrink-0 overflow-hidden">
-      <HeroBackground idPrefix="rt-hero-promo" />
+      {hasImageBackground ? (
+        banners.map((banner, i) => {
+          const imageSrc = posterUrl(banner.image_key);
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-bg via-bg/90 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-[58%] max-w-[900px] bg-gradient-to-r from-bg/92 via-bg/45 to-transparent" />
+          return (
+            <div
+              key={banner.id}
+              className={[
+                "absolute inset-0 transition-opacity duration-700 ease-out",
+                i === active ? "z-0 opacity-100" : "z-0 opacity-0",
+              ].join(" ")}
+              aria-hidden={i !== active}
+            >
+              {imageSrc ? (
+                <Image
+                  src={imageSrc}
+                  alt=""
+                  fill
+                  priority={i === 0}
+                  sizes="100vw"
+                  quality={90}
+                  className="object-cover object-center"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-surface-elevated" />
+              )}
+            </div>
+          );
+        })
+      ) : (
+        <HeroBackground idPrefix="rt-hero-promo" />
+      )}
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[60%] bg-gradient-to-t from-bg via-bg/90 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[58%] max-w-[900px] bg-gradient-to-r from-bg/92 via-bg/45 to-transparent" />
 
       <div className="relative z-[2] h-full">
-        <div className="flex h-full w-full items-end justify-between gap-8 px-6 pb-12 md:gap-12 md:px-12 md:pb-16">
-          <div className="relative min-w-0 max-w-[520px]">
+        <div className="flex h-full w-full items-end px-6 pb-12 md:px-12 md:pb-16">
+          <div className="relative min-w-0 max-w-[640px]">
             {banners.map((banner, i) => {
               const ctaHref = banner.cta_href
                 ? safeRedirectPath(banner.cta_href, "/pricing")
@@ -107,67 +126,6 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
               );
             })}
           </div>
-
-          {activeBanner ? (() => {
-            const posterHref = activeBanner.cta_href
-              ? safeRedirectPath(activeBanner.cta_href, "/pricing")
-              : null;
-            const posterClassName = "group/pstr relative hidden shrink-0 md:block";
-            const posterInner = (
-              <>
-                <div className="relative aspect-[2/3] w-[200px] overflow-hidden rounded-[4px] border border-border bg-surface transition-colors duration-200 group-hover/pstr:border-border-hover lg:w-[248px]">
-                  {banners.map((banner, i) => {
-                    const imageSrc = posterUrl(banner.image_key);
-
-                    return (
-                      <div
-                        key={banner.id}
-                        className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-                          i === active ? "z-[1] opacity-100" : "z-0 opacity-0"
-                        }`}
-                      >
-                        {imageSrc ? (
-                          <Image
-                            src={imageSrc}
-                            alt={banner.title}
-                            fill
-                            sizes="(max-width: 1024px) 200px, 248px"
-                            quality={88}
-                            className="object-cover object-[center_12%] transition-transform duration-500 ease-out group-hover/pstr:scale-[1.02]"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 bg-surface-elevated" />
-                        )}
-                        <div
-                          className="pointer-events-none absolute inset-0 rounded-[4px] bg-gradient-to-t from-black/45 via-transparent to-black/20"
-                          aria-hidden="true"
-                        />
-                        <div
-                          className="pointer-events-none absolute inset-0 rounded-[4px] ring-1 ring-inset ring-white/[0.06]"
-                          aria-hidden="true"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                <div
-                  className="mx-auto mt-2 h-[2px] w-[72px] max-w-full rounded-full transition-colors duration-500 ease-out"
-                  style={{ backgroundColor: activeAccent }}
-                  aria-hidden="true"
-                />
-              </>
-            );
-
-            return posterHref ? (
-              <Link href={posterHref} aria-label={activeBanner.title} className={posterClassName}>
-                {posterInner}
-              </Link>
-            ) : (
-              <div aria-hidden className={posterClassName}>
-                {posterInner}
-              </div>
-            );
-          })() : null}
         </div>
 
         {total > 1 ? (

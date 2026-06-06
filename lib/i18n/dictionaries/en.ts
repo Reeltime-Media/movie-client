@@ -177,6 +177,8 @@ export const en = {
   commentsVoteDown: "Downvote",
   commentsCancelReply: "Cancel",
   commentsReplyPlaceholder: "Write a reply…",
+  commentsSignInToPost: "Sign in to post a comment.",
+  commentsSessionExpired: "Your session expired. Please sign in again to comment.",
 } as const;
 
 export type TranslationKey = keyof typeof en;

@@ -8,7 +8,9 @@ export {
   subscribeAuth,
 } from "@/lib/auth/token";
 
+import { handleUnauthorizedApiResponse } from "@/lib/auth-redirect";
 import { API_URL } from "./config";
+import { parseApiErrorMessage } from "./errors";
 import { getToken } from "@/lib/auth/token";
 
 type FetchOptions = Omit<RequestInit, "body"> & { body?: unknown };
@@ -34,9 +36,14 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw Object.assign(new Error(err.detail ?? "Request failed"), {
-      status: res.status,
-    });
+    const error = Object.assign(
+      new Error(parseApiErrorMessage(err.detail, res.statusText)),
+      { status: res.status },
+    );
+    if (res.status === 401) {
+      handleUnauthorizedApiResponse(path);
+    }
+    throw error;
   }
 
   if (res.status === 204) return undefined as T;
@@ -57,7 +64,7 @@ export async function apiFormPost<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw Object.assign(new Error(err.detail ?? "Request failed"), {
+    throw Object.assign(new Error(parseApiErrorMessage(err.detail, res.statusText)), {
       status: res.status,
     });
   }

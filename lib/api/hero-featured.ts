@@ -11,6 +11,7 @@ export type HeroFeaturedSlide = {
   rating: string | null;
   runtime: string | null;
   poster_key: string | null;
+  banner_key: string | null;
   watch_href: string;
   sort_order: number;
 };

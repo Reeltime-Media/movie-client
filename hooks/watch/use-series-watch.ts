@@ -67,10 +67,7 @@ export function useSeriesWatch({ seriesSlug, playback }: UseSeriesWatchParams) {
     let cancelled = false;
     setPlaybackUrl(null);
     setPlaybackLoading(true);
-    getPlaybackUrl(
-      episode.id,
-      `/watch/series/${seriesSlug}/${seasonNum}/${episodeNum}`,
-    )
+    getPlaybackUrl(episode.id)
       .then((url) => !cancelled && setPlaybackUrl(url))
       .catch(() => !cancelled && setPlaybackUrl(null))
       .finally(() => !cancelled && setPlaybackLoading(false));

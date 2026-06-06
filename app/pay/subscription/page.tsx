@@ -139,9 +139,10 @@ function SubscriptionPayInner() {
             ) : null}
 
             <div>
-              <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+              <h2 className="mb-3 flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-text-muted">
+                <span className="h-3.5 w-1 rounded-full bg-brand" aria-hidden />
                 About this series
-              </p>
+              </h2>
               <p className="max-w-3xl text-[15px] leading-[1.7] text-text-muted">
                 {description}
               </p>

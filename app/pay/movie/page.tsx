@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Film, Infinity, ShieldCheck, Star } from "lucide-react";
+import { CreditCard, Infinity, ShieldCheck, Star } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
@@ -126,8 +126,6 @@ function MoviePayInner() {
   return (
     <PageShell fullWidth>
       <PayPageHero
-        badgeIcon={Film}
-        badgeLabel="One-off purchase"
         title="Buy once, watch forever"
         subtitle={
           <>
@@ -136,6 +134,7 @@ function MoviePayInner() {
           </>
         }
         posterKey={movie.poster_key}
+        bannerKey={movie.banner_key}
         meta={
           <>
             {movie.release_year ? (
@@ -168,30 +167,17 @@ function MoviePayInner() {
 
             {movie.description ? (
               <div>
-                <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+                <h2 className="mb-3 flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-text-muted">
+                  <span className="h-3.5 w-1 rounded-full bg-brand" aria-hidden />
                   About this film
-                </p>
+                </h2>
                 <p className="max-w-3xl text-[15px] leading-[1.7] text-text-muted">
                   {movie.description}
                 </p>
               </div>
             ) : null}
 
-            {loggedIn ? (
-              <MovieComments contentId={movie.id} movieTitle={movie.title} />
-            ) : (
-              <div className="rounded-xl border border-border bg-surface p-5">
-                <p className="text-[13px] leading-relaxed text-text-muted">
-                  Sign in to join the discussion and share your thoughts on this film.
-                </p>
-                <Link
-                  href={`/login?next=${encodeURIComponent(`/pay/movie?slug=${movie.slug}`)}`}
-                  className="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
-                >
-                  Sign in
-                </Link>
-              </div>
-            )}
+            <MovieComments contentId={movie.id} movieTitle={movie.title} />
           </div>
 
           <div className="flex flex-col gap-4 lg:sticky lg:top-20">
@@ -201,17 +187,27 @@ function MoviePayInner() {
       </section>
 
       {/* Mobile sticky pay bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 p-4 backdrop-blur-md lg:hidden">
-        <button
-          type="button"
-          onClick={handlePay}
-          disabled={paying}
-          className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white shadow-[0_8px_24px_-8px_rgba(229,9,20,0.55)] disabled:opacity-60"
-        >
-          {paying ? "Redirecting…" : `Pay ${price}`}
-        </button>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur-md lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center gap-3">
+          <div className="min-w-0 shrink-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+              Total
+            </p>
+            <p className="text-[19px] font-extrabold leading-none tracking-tight text-text">
+              {price}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handlePay}
+            disabled={paying}
+            className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white shadow-[0_8px_24px_-8px_rgba(229,9,20,0.55)] transition-colors duration-200 hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {paying ? "Redirecting…" : "Buy now"}
+          </button>
+        </div>
       </div>
-      <div className="h-20 lg:hidden" aria-hidden />
+      <div className="h-24 lg:hidden" aria-hidden />
     </PageShell>
   );
 }

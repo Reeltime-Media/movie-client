@@ -47,7 +47,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       const entitled = isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
       setCanPlay(loggedIn && entitled);
       if (loggedIn && entitled) {
-        getPlaybackUrl(m.id, `/watch?slug=${encodeURIComponent(m.slug)}`)
+        getPlaybackUrl(m.id)
           .then((url) => !cancelled && setPlaybackUrl(url))
           .catch(() => !cancelled && setPlaybackUrl(null));
       } else {
@@ -79,7 +79,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
         const entitled = isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
         setCanPlay(loggedIn && entitled);
         if (loggedIn && entitled) {
-          getPlaybackUrl(m.id, `/watch?slug=${encodeURIComponent(m.slug)}`)
+          getPlaybackUrl(m.id)
             .then((url) => !cancelled && setPlaybackUrl(url))
             .catch(() => !cancelled && setPlaybackUrl(null));
         }
