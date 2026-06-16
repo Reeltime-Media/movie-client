@@ -9,7 +9,7 @@ interface TrailerEmbedProps {
 
 export function TrailerEmbed({ embedUrl, title, variant = "bare" }: TrailerEmbedProps) {
   const player = (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
+    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black ring-1 ring-white/10">
       <iframe
         src={embedUrl}
         title={`${title} trailer`}

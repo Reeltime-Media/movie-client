@@ -39,7 +39,7 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
   const hasImageBackground = banners.some((banner) => Boolean(posterUrl(banner.image_key)));
 
   return (
-    <section className="hero-featured relative ml-[calc(50%-50vw)] h-[460px] w-screen max-w-none shrink-0 overflow-hidden">
+    <section className="hero-featured relative ml-[calc(50%-50vw)] aspect-video sm:aspect-auto sm:h-115 w-screen max-w-none shrink-0 overflow-hidden bg-black">
       {hasImageBackground ? (
         banners.map((banner, i) => {
           const imageSrc = posterUrl(banner.image_key);
@@ -61,7 +61,7 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
                   priority={i === 0}
                   sizes="100vw"
                   quality={90}
-                  className="object-cover object-center"
+                  className="object-contain sm:object-cover object-center sm:object-[center_15%]"
                 />
               ) : (
                 <div className="absolute inset-0 bg-surface-elevated" />
@@ -73,11 +73,11 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
         <HeroBackground idPrefix="rt-hero-promo" />
       )}
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[60%] bg-gradient-to-t from-bg via-bg/90 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[58%] max-w-[900px] bg-gradient-to-r from-bg/92 via-bg/45 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[60%] bg-linear-to-t from-black/90 via-black/50 to-transparent sm:from-bg sm:via-bg/90" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-1 hidden w-[58%] max-w-225 bg-linear-to-r from-bg/92 via-bg/45 to-transparent sm:block" />
 
-      <div className="relative z-[2] h-full">
-        <div className="flex h-full w-full items-end px-6 pb-12 md:px-12 md:pb-16">
+      <div className="relative z-2 h-full">
+        <div className="flex h-full w-full items-end px-4 pb-6 sm:px-6 sm:pb-12 md:px-12 md:pb-16">
           <div className="relative min-w-0 max-w-[640px]">
             {banners.map((banner, i) => {
               const ctaHref = banner.cta_href
@@ -94,30 +94,30 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
                   }`}
                   aria-hidden={i !== active}
                 >
-                  <div className="mb-5 flex items-center gap-2.5">
-                    <div className="h-[1px] w-8 bg-brand" />
+                  <div className="mb-3 flex items-center gap-2.5 sm:mb-5">
+                    <div className="h-px w-8 bg-brand" />
                     <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand">
                       {t("promotionEyebrow")}
                     </span>
                   </div>
 
-                  <h2 className="text-[56px] font-black leading-[0.95] tracking-[-0.035em] text-text">
+                  <h2 className="text-[20px] font-black leading-[1.05] tracking-[-0.02em] text-text sm:text-[40px] sm:leading-[0.95] md:text-[52px] sm:tracking-[-0.035em]">
                     {banner.title}
                   </h2>
 
                   {banner.subtitle ? (
-                    <p className="mt-5 max-w-[440px] text-[14px] leading-[1.65] text-text/80">
+                    <p className="mt-2 text-[11px] leading-relaxed text-text/80 sm:mt-5 sm:max-w-110 sm:text-[14px] sm:leading-[1.65]">
                       {banner.subtitle}
                     </p>
                   ) : null}
 
                   {ctaHref && banner.cta_label ? (
-                    <div className="mt-7 flex items-center gap-3">
+                    <div className="mt-3 flex items-center gap-3 sm:mt-7">
                       <Link
                         href={ctaHref}
-                        className="group inline-flex items-center gap-2 rounded-[6px] bg-brand px-7 py-3 text-[14px] font-bold text-white shadow-[0_4px_24px_-4px_rgba(229,9,20,0.5)] transition-all hover:bg-brand-hover hover:shadow-[0_4px_24px_-4px_rgba(229,9,20,0.7)]"
+                        className="group inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-[12px] font-bold text-white shadow-[0_4px_24px_-4px_rgba(229,9,20,0.5)] transition-all hover:bg-brand-hover hover:shadow-[0_4px_24px_-4px_rgba(229,9,20,0.7)] sm:gap-2 sm:px-7 sm:py-3 sm:text-[14px]"
                       >
-                        <PlayCircle size={18} className="fill-white text-brand" />
+                        <PlayCircle size={16} className="fill-white text-brand sm:size-4.5" />
                         {banner.cta_label}
                       </Link>
                     </div>
@@ -129,8 +129,8 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
         </div>
 
         {total > 1 ? (
-          <div className="absolute bottom-8 right-12 z-[3] flex items-center gap-3">
-            <span className="text-[11px] font-medium tabular-nums text-text-muted">
+          <div className="absolute bottom-4 right-4 z-3 flex items-center gap-2.5 sm:bottom-8 sm:right-12 sm:gap-3">
+            <span className="hidden text-[11px] font-medium tabular-nums text-text-muted sm:inline">
               {indexLabel}
               <span className="text-border"> / </span>
               <span className="text-text-muted/60">{totalLabel}</span>
@@ -148,12 +148,16 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
                   aria-selected={i === active}
                   aria-label={banner.title}
                   onClick={() => setActive(i)}
-                  className={`h-[2px] rounded-full transition-all duration-300 ${
-                    i === active
-                      ? "w-8 bg-brand"
-                      : "w-4 bg-text-muted/30 hover:bg-text-muted/50"
-                  }`}
-                />
+                  className="flex cursor-pointer items-center py-3"
+                >
+                  <span
+                    className={`block h-0.75 rounded-full transition-all duration-300 ${
+                      i === active
+                        ? "w-8 bg-brand"
+                        : "w-4 bg-text-muted/30 hover:bg-text-muted/50"
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </div>

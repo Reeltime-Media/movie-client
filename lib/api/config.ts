@@ -20,11 +20,15 @@ export const catalogCache: RequestInit = {
 export function posterUrl(posterKey: string | null | undefined): string | undefined {
   if (!posterKey) return undefined;
   if (/^https?:\/\//i.test(posterKey)) return posterKey;
+  if (posterKey.startsWith("/")) return posterKey;
   if (!R2_PUBLIC_URL) return undefined;
   return `${R2_PUBLIC_URL}/${posterKey.replace(/^\//, "")}`;
 }
 
 export function mediaUrl(key: string | null | undefined): string | undefined {
-  if (!key || !R2_PUBLIC_URL) return undefined;
+  if (!key) return undefined;
+  if (/^https?:\/\//i.test(key)) return key;
+  if (key.startsWith("/")) return key;
+  if (!R2_PUBLIC_URL) return undefined;
   return `${R2_PUBLIC_URL}/${key}`;
 }

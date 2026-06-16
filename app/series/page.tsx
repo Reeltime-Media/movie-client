@@ -1,6 +1,5 @@
 import { SeriesView } from "@/components/catalog/SeriesView";
 import { listSeries, listEpisodes } from "@/lib/api/series";
-import { seriesToPoster } from "@/lib/api/to-poster";
 import type { SeasonRead } from "@/lib/api/types";
 
 const SERIES_EPISODE_PREFETCH_LIMIT = 12;
@@ -19,18 +18,5 @@ export default async function SeriesPage() {
     ),
   );
 
-  // Public (signed-out) posters rendered into the initial HTML for fast LCP.
-  const all = seriesList.map((s, i) =>
-    seriesToPoster(s, i, { hasSubscription: false, seasons: seasons[i] ?? [] }),
-  );
-  const half = Math.ceil(all.length / 2);
-
-  return (
-    <SeriesView
-      seriesList={seriesList}
-      seasons={seasons}
-      initialSubscribe={all.slice(0, half)}
-      initialPopular={all.slice(half)}
-    />
-  );
+  return <SeriesView seriesList={seriesList} seasons={seasons} />;
 }

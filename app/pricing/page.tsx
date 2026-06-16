@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, CheckCircle2, CreditCard, Crown, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, Crown } from "lucide-react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -15,14 +15,8 @@ import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { SubscriptionPlanRead } from "@/lib/api/types";
 import { marketingImages } from "@/lib/marketing-images";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
-import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
+import { cardClassName, cardHighlightClassName, kickerBadgeClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
 
-const PERK_KEYS = [
-  "pricingPerk1",
-  "pricingPerk2",
-  "pricingPerk3",
-  "pricingPerk4",
-] as const;
 
 function formatPrice(priceUsd: string): string {
   const parsed = Number.parseFloat(priceUsd);
@@ -98,25 +92,12 @@ function PricingPageInner() {
         viewportBleed
       >
         <div className="max-w-2xl">
-          <div
-            className="rt-page-fade-up mb-3 inline-flex items-center gap-2 rounded-sm border border-white/15 bg-black/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm"
-            style={{ "--rt-enter-delay": "0ms" } as CSSProperties}
-          >
-            <Sparkles size={12} className="text-brand" strokeWidth={2.5} aria-hidden />
-            {t("pricingBadge")}
-          </div>
           <h1
             className={["rt-page-fade-up", pageTitleOnHeroClassName].join(" ")}
             style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
           >
             {t("pricingTitle")}
           </h1>
-          <p
-            className="rt-page-fade-up mt-2.5 max-w-lg text-[13px] leading-relaxed text-white/78"
-            style={{ "--rt-enter-delay": "110ms" } as CSSProperties}
-          >
-            {t("pricingDesc")}
-          </p>
         </div>
       </CinematicDecor>
 
@@ -208,40 +189,6 @@ function PricingPageInner() {
         )}
       </section>
 
-      <section
-        className="rt-page-fade-up border-t border-border px-6 py-8 md:px-8"
-        style={{ "--rt-enter-delay": "320ms" } as CSSProperties}
-      >
-        <h2 className="text-[14px] font-bold text-text">{t("pricingPerksTitle")}</h2>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-          {PERK_KEYS.map((key) => (
-            <li key={key} className="flex items-center gap-2.5 text-[13px] text-text-muted">
-              <CheckCircle2 size={14} className="shrink-0 text-success" aria-hidden />
-              {t(key)}
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-6 flex flex-wrap items-center gap-4 text-[12px] font-semibold text-text-muted">
-          <span className="inline-flex items-center gap-2">
-            <ShieldCheck size={14} className="shrink-0" aria-hidden />
-            {t("pricingSecureNote")}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <CreditCard size={14} className="shrink-0" aria-hidden />
-            Baray
-          </span>
-        </div>
-
-        <div className="mt-8">
-          <Link
-            href="/series"
-            className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-4 py-2.5 text-[13px] font-semibold text-text transition-colors hover:border-border-hover"
-          >
-            {t("pricingBrowseSeries")}
-          </Link>
-        </div>
-      </section>
     </PageShell>
   );
 }

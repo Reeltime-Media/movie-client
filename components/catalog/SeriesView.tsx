@@ -1,15 +1,14 @@
 "use client";
 
-import { Layers, ListVideo, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { GenreFilterSelect } from "@/components/catalog/GenreFilterSelect";
 import { PageSearchBar } from "@/components/catalog/PageSearchBar";
-import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
-import { CinematicDecor } from "@/components/home/CinematicDecor";
+import { PosterCard } from "@/components/catalog/PosterCard";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
-import { SectionHeader } from "@/components/shared/SectionHeader";
 import { marketingImages } from "@/lib/marketing-images";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
@@ -24,57 +23,95 @@ import {
 import type { PosterCardProps } from "@/types/poster-card";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 
+const COLS = 5;
+const ROWS = 4;
+const PAGE_SIZE = COLS * ROWS;
+const TOP_COUNT = 10;
+
 type SeriesViewProps = {
   seriesList: SeriesRead[];
   seasons: SeasonRead[][];
-  initialSubscribe: PosterCardProps[];
-  initialPopular: PosterCardProps[];
 };
 
-export function SeriesView({
-  seriesList,
-  seasons,
-  initialSubscribe,
-  initialPopular,
-}: SeriesViewProps) {
+function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
+  const top10 = posters.slice(0, TOP_COUNT);
+  return (
+    <aside className="hidden lg:block w-72 xl:w-80 shrink-0">
+      <div className="sticky top-4 border border-border bg-surface p-4">
+        <div className="mb-4 flex items-center gap-2">
+          <span className="h-5 w-1.5 rounded-full bg-brand" aria-hidden />
+          <h2 className="text-[15px] font-bold tracking-tight text-text">Top 10 Series</h2>
+        </div>
+        <ol className="m-0 list-none space-y-1 p-0">
+          {top10.map((p, i) => {
+            return (
+              <li key={`${p.watchHref}-${i}`}>
+                <a
+                  href={p.watchHref ?? "#"}
+                  className="group flex items-center gap-4 rounded-lg px-3 py-3 transition-colors hover:bg-surface-elevated"
+                >
+                  <div className="relative h-20 w-14 shrink-0 overflow-hidden bg-surface-elevated">
+                    {p.imageSrc ? (
+                      <Image src={p.imageSrc} alt={p.titleBelow} fill sizes="56px" className="object-cover" />
+                    ) : (
+                      <div className="absolute inset-0" style={{ background: p.posterGradient }} />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold text-text transition-colors group-hover:text-brand">
+                      {p.titleBelow}
+                    </p>
+                    {p.year ? (
+                      <p className="mt-1 text-[12px] text-text-muted">{p.year}</p>
+                    ) : null}
+                    {p.entitlement?.kind === "subscribed" ? (
+                      <p className="mt-1 text-[12px] font-semibold text-success">{p.entitlement.value}</p>
+                    ) : null}
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </aside>
+  );
+}
+
+export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
   const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>("genreAll");
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [page, setPage] = useState(0);
 
   const filteredSeries = useMemo(
-    () =>
-      seriesList.filter(
-        (s) => matchesSearch(s, searchQuery) && matchesGenre(s, activeGenre),
-      ),
+    () => seriesList.filter((s) => matchesSearch(s, searchQuery) && matchesGenre(s, activeGenre)),
     [seriesList, searchQuery, activeGenre],
   );
 
   const allPosters = useMemo(
-    () =>
-      filteredSeries.map((s) => {
-        const index = seriesList.findIndex((row) => row.id === s.id);
-        return seriesToPoster(s, index, {
-          hasSubscription,
-          seasons: seasons[index] ?? [],
-        });
-      }),
+    () => filteredSeries.map((s) => {
+      const index = seriesList.findIndex((row) => row.id === s.id);
+      return seriesToPoster(s, index, { hasSubscription, seasons: seasons[index] ?? [] });
+    }),
     [filteredSeries, seriesList, seasons, hasSubscription],
   );
 
-  const subscribePosters = useMemo(() => {
-    const half = Math.ceil(allPosters.length / 2);
-    return allPosters.slice(0, half);
-  }, [allPosters]);
+  const top10Posters = useMemo(
+    () => seriesList.slice(0, TOP_COUNT).map((s, i) =>
+      seriesToPoster(s, i, { hasSubscription, seasons: seasons[i] ?? [] }),
+    ),
+    [seriesList, seasons, hasSubscription],
+  );
 
-  const popularPosters = useMemo(() => {
-    const half = Math.ceil(allPosters.length / 2);
-    return allPosters.slice(half);
-  }, [allPosters]);
+  const totalPages = Math.max(1, Math.ceil(allPosters.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+  const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== "genreAll";
 
-  const hasActiveFilters =
-    searchQuery.trim().length > 0 || activeGenre !== "genreAll";
+  useEffect(() => { setPage(0); }, [searchQuery, activeGenre]);
 
   useEffect(() => {
     if (!loggedIn || !seriesList.length) return;
@@ -85,65 +122,29 @@ export function SeriesView({
         if (cancelled) return;
         setHasSubscription(subs.some((s) => s.status === "active"));
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [seriesList, loggedIn]);
 
   return (
-    <PageShell wide>
-      <CinematicDecor
-        imageSrc={marketingImages.cinemaCurtains}
-        imageDescription="Classic red cinema curtains and velvet seats"
-        showBrandGlow
-        minHeightClass="min-h-[220px] sm:min-h-[260px] md:min-h-[300px]"
-        viewportBleed
-      >
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div
-              className="rt-page-fade-up mb-3 inline-flex items-center gap-2 rounded-sm border border-white/15 bg-black/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm"
-              style={{ "--rt-enter-delay": "0ms" } as CSSProperties}
-            >
-              <Layers size={12} className="text-brand" strokeWidth={2.5} aria-hidden />
-              {t("seriesBadge")}
-            </div>
-            <h1
-              className={["rt-page-fade-up", pageTitleOnHeroClassName].join(" ")}
-              style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
-            >
-              {t("seriesHeroTitle")}
-            </h1>
-            <p
-              className="rt-page-fade-up mt-2.5 max-w-lg text-[13px] leading-relaxed text-white/78"
-              style={{ "--rt-enter-delay": "110ms" } as CSSProperties}
-            >
-              {t("seriesHeroDesc")}
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <button
-              type="button"
-              className="rt-page-fade-up inline-flex cursor-pointer items-center gap-2 rounded-md border border-white/18 bg-white/10 px-3 py-2 text-[12px] font-semibold text-white backdrop-blur-sm transition-[transform,colors,border-color] duration-200 ease-out hover:-translate-y-px hover:border-white/28 hover:bg-white/16 active:translate-y-0"
-              style={{ "--rt-enter-delay": "160ms" } as CSSProperties}
-            >
-              <Sparkles size={14} strokeWidth={2} aria-hidden />
-              {t("seriesNewWeek")}
-            </button>
-            <button
-              type="button"
-              className="rt-page-fade-up inline-flex cursor-pointer items-center gap-2 rounded-md border border-white/18 bg-white/10 px-3 py-2 text-[12px] font-semibold text-white backdrop-blur-sm transition-[transform,colors,border-color] duration-200 ease-out hover:-translate-y-px hover:border-white/28 hover:bg-white/16 active:translate-y-0"
-              style={{ "--rt-enter-delay": "200ms" } as CSSProperties}
-            >
-              <ListVideo size={14} strokeWidth={2} aria-hidden />
-              {t("seriesContinue")}
-            </button>
-          </div>
-        </div>
-      </CinematicDecor>
-
+    <PageShell fullWidth>
       <div
-        className="rt-page-fade-up border-b border-border px-6 py-4 md:px-8"
+        className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 overflow-hidden border-b border-border min-h-36 sm:min-h-48 md:min-h-60"
+        style={{ backgroundImage: `url('${marketingImages.cinemaCurtains}')`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/55 to-transparent" />
+        <div className="relative z-1 flex min-h-[inherit] flex-col justify-end px-4 py-5 sm:px-6 sm:py-7 md:px-8 md:pb-10">
+          <h1
+            className={["rt-page-fade-up max-w-[18ch]", pageTitleOnHeroClassName].join(" ")}
+            style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
+          >
+            {t("seriesHeroTitle")}
+          </h1>
+        </div>
+      </div>
+
+      {/* Search + filter */}
+      <div
+        className="rt-page-fade-up relative z-10 border-b border-border px-4 py-3 sm:px-6 sm:py-4 md:px-8"
         style={{ "--rt-enter-delay": "240ms" } as CSSProperties}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -159,61 +160,88 @@ export function SeriesView({
             label={t("moviesFilterGenre")}
             value={activeGenre}
             onChange={setActiveGenre}
-            options={CATALOG_GENRE_KEYS.map((key) => ({
-              value: key,
-              label: t(key),
-            }))}
+            options={CATALOG_GENRE_KEYS.map((key) => ({ value: key, label: t(key) }))}
           />
         </div>
       </div>
 
-      {hasActiveFilters && allPosters.length === 0 ? (
-        <div className="px-6 py-10 text-center md:px-8">
-          <p className="text-[14px] font-semibold text-text-muted">{t("searchNoResults")}</p>
+      {/* Main layout: grid + sidebar */}
+      <div
+        className="rt-page-fade-up flex items-start gap-4 px-4 pt-4 pb-8 sm:gap-6 sm:px-6 sm:pt-6 md:px-8"
+        style={{ "--rt-enter-delay": "320ms" } as CSSProperties}
+      >
+        {/* Series grid + pagination */}
+        <div className="min-w-0 flex-1">
+          {hasActiveFilters && allPosters.length === 0 ? (
+            <div className="py-10 text-center">
+              <p className="text-[14px] font-semibold text-text-muted">{t("searchNoResults")}</p>
+            </div>
+          ) : (
+            <>
+              <ul className="m-0 list-none grid grid-cols-2 gap-3 p-0 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+                {pagePosters.map((poster, i) => (
+                  <li key={`${poster.watchHref ?? "no-href"}-${i}`}>
+                    <PosterCard {...poster} imagePriority={i < 5} />
+                  </li>
+                ))}
+              </ul>
+
+              {totalPages > 1 && (
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={safePage === 0}
+                    className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text-muted transition-colors hover:border-border-hover hover:text-text disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <ChevronLeft size={14} aria-hidden /> Prev
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => {
+                      const isActive = i === safePage;
+                      const isNearby = Math.abs(i - safePage) <= 2;
+                      const isEdge = i === 0 || i === totalPages - 1;
+                      if (!isNearby && !isEdge) {
+                        return (i === 1 || i === totalPages - 2)
+                          ? <span key={i} className="px-1 text-[12px] text-text-muted">…</span>
+                          : null;
+                      }
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setPage(i)}
+                          className={[
+                            "min-w-8 rounded-md px-2.5 py-2 text-[12px] font-semibold transition-colors",
+                            isActive
+                              ? "bg-brand text-white"
+                              : "border border-border bg-surface text-text-muted hover:border-border-hover hover:text-text",
+                          ].join(" ")}
+                        >
+                          {i + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={safePage === totalPages - 1}
+                    className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text-muted transition-colors hover:border-border-hover hover:text-text disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    Next <ChevronRight size={14} aria-hidden />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      ) : null}
 
-      {hasActiveFilters && allPosters.length > 0 ? (
-        <section
-          className="rt-page-fade-up pb-12 pt-8"
-          style={{ "--rt-enter-delay": "460ms" } as CSSProperties}
-        >
-          <div className="px-6 md:px-8">
-            <SectionHeader title={t("seriesBadge")} />
-          </div>
-          <PosterScrollRail posters={allPosters} imagePriorityCount={2} />
-        </section>
-      ) : null}
-
-      {!hasActiveFilters && subscribePosters.length > 0 ? (
-        <section
-          className="rt-page-fade-up pb-8 pt-8"
-          style={{ "--rt-enter-delay": "460ms" } as CSSProperties}
-        >
-          <div className="space-y-1 px-6 md:px-8">
-            <SectionHeader title={t("seriesSubscribeTitle")} />
-            <p className="text-[12px] font-medium text-text-muted">{t("seriesSubscribeSub")}</p>
-          </div>
-          <PosterScrollRail posters={subscribePosters} imagePriorityCount={2} />
-        </section>
-      ) : null}
-
-      {!hasActiveFilters && popularPosters.length > 0 ? (
-        <section
-          className="rt-page-fade-up pb-12 pt-2"
-          style={{ "--rt-enter-delay": "520ms" } as CSSProperties}
-        >
-          <div className="space-y-1 px-6 md:px-8">
-            <SectionHeader
-              title={t("seriesPopularTitle")}
-              showSeeAll
-              seeAllLabel={t("sectionSeeAll")}
-            />
-            <p className="text-[12px] font-medium text-text-muted">{t("seriesPopularSub")}</p>
-          </div>
-          <PosterScrollRail posters={popularPosters} />
-        </section>
-      ) : null}
+        {/* Top 10 sidebar */}
+        <Top10Sidebar posters={top10Posters} />
+      </div>
     </PageShell>
   );
 }

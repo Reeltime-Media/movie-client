@@ -26,7 +26,7 @@ export function ContentDetailHero({
             alt=""
             fill
             priority
-            className="object-cover object-[center_20%]"
+            className="object-cover object-[center_30%]"
             sizes="100vw"
           />
         ) : (

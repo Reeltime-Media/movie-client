@@ -70,7 +70,7 @@ export const km = {
   promotionSlidesAria: "បដារផ្សព្វផ្សាយ",
 
   moviesBadge: "ភាពយន្ត",
-  moviesTitle: "រកមើលភាពយន្តទាំងអស់",
+  moviesTitle: "រកមើលភាពយន្តដុំទាំងអស់",
   moviesCurated: "ជ្រើសរើសពិសេស",
   moviesMostWatched: "មើលច្រើនបំផុត",
   moviesSearchLabel: "ស្វែងរកភាពយន្ត",
@@ -146,7 +146,6 @@ export const km = {
   pricingTitle: "គម្រោងសម្រាប់មើលរឿង",
   pricingDesc:
     "បើករឿងភាគទាំងអស់នៅ Reeltime ដោយការចូលជាសមាជិកមួយដង។ វគ្គថ្មីចេញរៀងរាល់សប្តាហ៍ — លុបចោលបានគ្រប់ពេល។",
-  pricingPerksTitle: "គម្រោងទាំងអស់មាន",
   pricingPerk1: "មើលរឿងភាគទាំងអស់បាន",
   pricingPerk2: "វគ្គថ្មីរៀងរាល់សប្តាហ៍",
   pricingPerk3: "មិនគិតថ្លៃរឿងមួយៗ",

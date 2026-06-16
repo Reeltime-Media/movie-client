@@ -26,4 +26,5 @@ export type PosterCardProps = {
   progressPct?: number;
   watchHref?: string;
   watchLabel?: string;
+  year?: number | null;
 };

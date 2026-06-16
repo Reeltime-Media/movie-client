@@ -1,48 +1,48 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-const seeAllClassName =
-  "group inline-flex items-center gap-1 text-[12px] font-medium text-text-muted transition-colors hover:text-text";
-
 export function SectionHeader({
   title,
   showSeeAll = false,
   seeAllHref,
   seeAllLabel = "See all",
+  paddingX = "px-4 md:px-8",
 }: {
   title: string;
   showSeeAll?: boolean;
-  /** When set with showSeeAll, navigates to this route instead of a placeholder hash. */
   seeAllHref?: string;
-  /** Override for i18n (default English). */
   seeAllLabel?: string;
+  paddingX?: string;
 }) {
-  return (
-    <div className="flex items-center justify-between">
-      <h2 className="text-[17px] font-bold tracking-[-0.01em] text-text">
-        {title}
-      </h2>
+  const seeAllNode = showSeeAll ? (
+    seeAllHref ? (
+      <Link
+        href={seeAllHref}
+        className="group shrink-0 inline-flex items-center gap-0.5 text-[11px] font-semibold text-white/70 transition-colors duration-150 hover:text-white"
+      >
+        {seeAllLabel}
+        <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
+      </Link>
+    ) : (
+      <a
+        href="#"
+        className="group shrink-0 inline-flex items-center gap-0.5 text-[11px] font-semibold text-white/70 transition-colors duration-150 hover:text-white"
+      >
+        {seeAllLabel}
+        <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
+      </a>
+    )
+  ) : null;
 
-      {showSeeAll ? (
-        seeAllHref ? (
-          <Link href={seeAllHref} className={seeAllClassName}>
-            <span>{seeAllLabel}</span>
-            <ChevronRight
-              size={14}
-              className="transition-transform group-hover:translate-x-[2px]"
-            />
-          </Link>
-        ) : (
-          <a href="#" className={seeAllClassName}>
-            <span>{seeAllLabel}</span>
-            <ChevronRight
-              size={14}
-              className="transition-transform group-hover:translate-x-[2px]"
-            />
-          </a>
-        )
-      ) : null}
+  return (
+    <div className={`${paddingX} mb-4`}>
+      <div className="rt-section-header flex items-center justify-between gap-4 border border-brand/30 bg-brand px-4 py-3 shadow-[0_4px_24px_-6px_rgba(229,9,20,0.55)]">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="h-4 w-0.75 shrink-0 rounded-full bg-white/60" aria-hidden />
+          <h2 className="text-[15px] font-bold tracking-tight text-white">{title}</h2>
+        </div>
+        {seeAllNode}
+      </div>
     </div>
   );
 }
-

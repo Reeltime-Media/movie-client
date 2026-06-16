@@ -1,8 +1,9 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { BannerCardProps } from "@/components/catalog/BannerCard";
+import { BannerScrollRail } from "@/components/catalog/BannerScrollRail";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { Hero } from "@/components/home/Hero";
 import { PromotionBannerStrip } from "@/components/home/PromotionBannerStrip";
@@ -10,24 +11,14 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import type { TranslationKey } from "@/lib/i18n";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
-import { seriesToPoster, movieToPoster } from "@/lib/api/to-poster";
+import { movieToPoster, seriesToBanner } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
 import type { PromotionBannerRead } from "@/lib/api/promotion-banners";
 import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
-
-const quickFilters: { labelKey: TranslationKey; href: string }[] = [
-  { labelKey: "homeFilterKhmerPicks", href: "/movies" },
-  { labelKey: "homeFilterNewReleases", href: "/movies" },
-  { labelKey: "genreAction", href: "/movies" },
-  { labelKey: "genreDrama", href: "/series" },
-  { labelKey: "homeFilterThrillers", href: "/movies" },
-  { labelKey: "homeFilterFamilyNight", href: "/series" },
-];
 
 type HomeViewProps = {
   movies: ContentListItemRead[];
@@ -42,28 +33,27 @@ type HomeViewProps = {
 export function HomeView({
   movies,
   seriesList,
-  seasons,
   initialTrending,
-  initialSubscribe,
   promotionBanners,
   heroFeatured,
 }: HomeViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
 
-  // Seeded from server-rendered posters so the first paint already has the
-  // catalog — no client fetch waterfall. We only re-derive once we know the
-  // signed-in user's entitlements (owned / subscribed).
-  const [trendingPosters, setTrendingPosters] = useState<PosterCardProps[]>(initialTrending);
-  const [subscribePosters, setSubscribePosters] = useState<PosterCardProps[]>(initialSubscribe);
+  const RAIL_LIMIT = 12;
+
+  const [trendingPosters, setTrendingPosters] = useState<PosterCardProps[]>(() => initialTrending.slice(0, RAIL_LIMIT));
+  const [seriesBanners, setSeriesBanners] = useState<BannerCardProps[]>(
+    () => seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s)),
+  );
   const [thrillerPosters, setThrillerPosters] = useState<PosterCardProps[]>(
-    () => [...initialTrending].reverse(),
+    () => [...initialTrending].reverse().slice(0, RAIL_LIMIT),
   );
   const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>(
-    () => initialTrending.slice(0, 6),
+    () => initialTrending.slice(0, RAIL_LIMIT),
   );
   const [libraryPosters, setLibraryPosters] = useState<PosterCardProps[]>(
-    () => initialTrending.slice(0, 8),
+    () => initialTrending.slice(0, RAIL_LIMIT),
   );
 
   useEffect(() => {
@@ -72,29 +62,24 @@ export function HomeView({
     Promise.all([
       listPurchases().catch(() => []),
       listMySubscriptions().catch(() => []),
-    ]).then(([purchases, subs]) => {
+    ]).then(([purchases]) => {
       if (cancelled) return;
       const ownedIds = new Set(purchases.map((p) => p.content_id));
-      const hasSub = subs.some((s) => s.status === "active");
       if (movies.length) {
-        const moviePosters = movies.map((m, i) => movieToPoster(m, i, ownedIds));
+        const moviePosters = movies.map((m, i) => movieToPoster(m, i, ownedIds)).slice(0, RAIL_LIMIT);
         setTrendingPosters(moviePosters);
         setThrillerPosters([...moviePosters].reverse());
-        setLibraryPosters(moviePosters.slice(0, 8));
-        setContinuePosters(moviePosters.slice(0, 6));
+        setLibraryPosters(moviePosters);
+        setContinuePosters(moviePosters);
       }
       if (seriesList.length) {
-        setSubscribePosters(
-          seriesList.map((s, i) =>
-            seriesToPoster(s, i, { hasSubscription: hasSub, seasons: seasons[i] ?? [] }),
-          ),
-        );
+        setSeriesBanners(seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s)));
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [loggedIn, movies, seriesList, seasons]);
+  }, [loggedIn, movies, seriesList]);
 
   const displayBanners = useMemo((): PromotionBannerRead[] => {
     if (promotionBanners.length > 0) return promotionBanners;
@@ -118,7 +103,7 @@ export function HomeView({
   }, [promotionBanners, t]);
 
   return (
-    <PageShell wide>
+    <PageShell fullWidth>
       <div className="rt-page-fade-in" style={{ "--rt-enter-delay": "0ms" } as CSSProperties}>
         <Hero
           featuredSlides={heroFeatured}
@@ -127,87 +112,63 @@ export function HomeView({
         />
       </div>
 
-      <ScrollReveal as="section" variant="fade-in" className="px-6 pt-5 md:px-8">
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
-          {quickFilters.map((filter) => (
-            <Link
-              key={filter.labelKey}
-              href={filter.href}
-              className={[
-                "shrink-0 cursor-pointer rounded-md border px-3 py-2 text-[12px] font-semibold transition-colors",
-                filter.labelKey === "homeFilterKhmerPicks"
-                  ? "border-brand bg-brand text-white hover:bg-brand-hover"
-                  : "border-border bg-surface text-text-muted hover:border-border-hover hover:text-text",
-              ].join(" ")}
-            >
-              {t(filter.labelKey)}
-            </Link>
-          ))}
-        </div>
+      <ScrollReveal as="section" className="pt-8 pb-6">
+        <SectionHeader
+          title={t("moviesTrendingTitle")}
+          showSeeAll
+          seeAllHref="/movies"
+          seeAllLabel={t("sectionSeeAll")}
+
+        />
+        <PosterScrollRail posters={trendingPosters} gutter="sm" autoScroll direction="left" />
       </ScrollReveal>
 
-      <ScrollReveal as="section" className="pb-7 pt-5">
-        <div className="px-6 md:px-8">
-          <SectionHeader
-            title={t("moviesTrendingTitle")}
-            showSeeAll
-            seeAllHref="/movies"
-            seeAllLabel={t("sectionSeeAll")}
-          />
-        </div>
-        <PosterScrollRail posters={trendingPosters} imagePriorityCount={2} />
+      <ScrollReveal as="section" className="pt-8 pb-6" delay={60}>
+        <SectionHeader
+          title={t("seriesSubscribeTitle")}
+          showSeeAll
+          seeAllHref="/series"
+          seeAllLabel={t("sectionSeeAll")}
+
+        />
+        <BannerScrollRail cards={seriesBanners} autoScroll direction="right" />
       </ScrollReveal>
 
-      <ScrollReveal as="section" className="pb-8 pt-3" delay={60}>
-        <div className="px-6 md:px-8">
-          <SectionHeader
-            title={t("seriesSubscribeTitle")}
-            showSeeAll
-            seeAllHref="/series"
-            seeAllLabel={t("sectionSeeAll")}
-          />
-        </div>
-        <PosterScrollRail posters={subscribePosters} imagePriorityCount={2} />
-      </ScrollReveal>
-
-      <ScrollReveal as="div" variant="fade-up-scale" delay={40}>
+      <ScrollReveal as="div" variant="fade-up-scale" delay={40} className="pt-4 pb-2">
         <PromotionBannerStrip banners={displayBanners} />
       </ScrollReveal>
 
-      <ScrollReveal as="section" className="pb-10 pt-1">
-        <div className="px-6 md:px-8">
-          <SectionHeader
-            title={t("homeContinueWatching")}
-            showSeeAll
-            seeAllHref="/my-library"
-            seeAllLabel={t("sectionSeeAll")}
-          />
-        </div>
-        <PosterScrollRail posters={continuePosters} />
+      <ScrollReveal as="section" className="pt-8 pb-6">
+        <SectionHeader
+          title={t("homeContinueWatching")}
+          showSeeAll
+          seeAllHref="/my-library"
+          seeAllLabel={t("sectionSeeAll")}
+
+        />
+        <PosterScrollRail posters={continuePosters} gutter="sm" autoScroll direction="left" speed={0.5} />
       </ScrollReveal>
 
-      <ScrollReveal as="section" className="pb-10 pt-3" delay={40}>
-        <div className="px-6 md:px-8">
-          <SectionHeader
-            title={t("homeLateNightThrillers")}
-            showSeeAll
-            seeAllHref="/movies"
-            seeAllLabel={t("sectionSeeAll")}
-          />
-        </div>
-        <PosterScrollRail posters={thrillerPosters} />
+      <ScrollReveal as="section" className="pt-8 pb-6" delay={40}>
+        <SectionHeader
+          title={t("homeLateNightThrillers")}
+          showSeeAll
+          seeAllHref="/movies"
+          seeAllLabel={t("sectionSeeAll")}
+
+        />
+        <PosterScrollRail posters={thrillerPosters} gutter="sm" autoScroll direction="right" speed={0.7} />
       </ScrollReveal>
 
-      <ScrollReveal as="section" className="pb-12 pt-3" delay={80}>
-        <div className="px-6 md:px-8">
-          <SectionHeader
-            title={t("homeLibrarySpotlight")}
-            showSeeAll
-            seeAllHref="/my-library"
-            seeAllLabel={t("sectionSeeAll")}
-          />
-        </div>
-        <PosterScrollRail posters={libraryPosters} />
+      <ScrollReveal as="section" className="pt-8 pb-12" delay={80}>
+        <SectionHeader
+          title={t("homeLibrarySpotlight")}
+          showSeeAll
+          seeAllHref="/my-library"
+          seeAllLabel={t("sectionSeeAll")}
+
+        />
+        <PosterScrollRail posters={libraryPosters} gutter="sm" autoScroll direction="left" speed={0.55} />
       </ScrollReveal>
     </PageShell>
   );

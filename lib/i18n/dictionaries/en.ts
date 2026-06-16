@@ -28,9 +28,15 @@ export const en = {
 
   footerTagline: "Cambodia's home for cinema.",
   footerCopyright: "© {year} Reeltime Media. All rights reserved.",
-  footerPrivacy: "Privacy",
-  footerTerms: "Terms",
-  footerHelp: "Help",
+  footerPrivacy: "Privacy policy",
+  footerTerms: "Terms of service",
+  footerHelp: "Help center",
+  footerContact: "Contact us",
+  footerBrowse: "Browse",
+  footerAccount: "Account",
+  footerSupport: "Support",
+  footerFollowUs: "Follow us",
+  footerMadeIn: "Made in Cambodia",
 
   genreAll: "All",
   genreDrama: "Drama",
@@ -144,7 +150,6 @@ export const en = {
   pricingTitle: "Plans for every binge",
   pricingDesc:
     "Unlock the full Reeltime series catalog with one subscription. New episodes drop weekly—cancel anytime.",
-  pricingPerksTitle: "Every plan includes",
   pricingPerk1: "Full access to all series",
   pricingPerk2: "New episodes every week",
   pricingPerk3: "No per-title fees",

@@ -1,4 +1,5 @@
 import { movieCardHref } from "@/lib/movie-routes";
+import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import type { PosterCardProps } from "@/types/poster-card";
 import { posterUrl } from "./config";
 import {
@@ -54,6 +55,7 @@ export function movieToPoster(
     badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
     entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
     watchHref: movieCardHref(movie, Boolean(isOwned)),
+    year: movie.release_year,
   };
 }
 
@@ -92,5 +94,17 @@ export function seriesToPoster(
     entitlement: hasSubscription ? { kind: "subscribed", value: "Subscribed" } : { kind: "none" },
     watchLabel,
     watchHref,
+    year: series.release_year,
+  };
+}
+
+export function seriesToBanner(series: SeriesRead, badgeLabel = "រឿងភាគ"): BannerCardProps {
+  return {
+    imageSrc: posterUrl(series.banner_key) ?? posterUrl(series.poster_key),
+    imageAlt: series.title,
+    title: series.title,
+    year: series.release_year,
+    badgeLabel,
+    watchHref: `/watch/series/${series.slug}/1/1`,
   };
 }

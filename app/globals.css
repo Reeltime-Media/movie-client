@@ -222,6 +222,42 @@ html[lang="km"] body {
   }
 }
 
+/* Section header shimmer sweep */
+@keyframes rt-section-shimmer {
+  0%       { left: -80%; }
+  55%, 100% { left: 160%; }
+}
+
+.rt-section-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.rt-section-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.13) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  animation: rt-section-shimmer 4s ease-in-out infinite;
+  animation-delay: 0.8s;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rt-section-header::after {
+    animation: none;
+  }
+}
+
 /* Scroll-triggered reveal (home and other pages) */
 .rt-scroll-reveal {
   opacity: 0;
@@ -256,6 +292,15 @@ html[lang="km"] body {
     transform: none !important;
     transition: none !important;
   }
+}
+
+/* Hide scrollbar on auto-scroll rails (still scrollable) */
+.rt-scroll-rail {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.rt-scroll-rail::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom clear control only — hide browser default on search fields */

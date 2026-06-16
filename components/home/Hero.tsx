@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, PlayCircle, Star } from "lucide-react";
+import { PlayCircle, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -12,13 +12,6 @@ import { HeroBackground } from "@/components/home/HeroBackground";
 import { useI18n } from "@/components/providers/LocaleProvider";
 
 const AUTO_MS = 6500;
-const HERO_DESC_MAX_WORDS = 25;
-
-function truncateWords(text: string, maxWords: number): string {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  if (words.length <= maxWords) return text.trim();
-  return `${words.slice(0, maxWords).join(" ")}...`;
-}
 
 type HeroSlide = {
   id: string;
@@ -147,7 +140,7 @@ export function Hero({
   const totalLabel = String(Math.max(total, 1)).padStart(2, "0");
 
   return (
-    <section className="hero-featured relative ml-[calc(50%-50vw)] h-[min(52vh,520px)] min-h-[400px] w-screen max-w-none shrink-0 overflow-hidden">
+    <section className="hero-featured relative ml-[calc(50%-50vw)] aspect-video sm:aspect-auto sm:h-[min(58vh,520px)] sm:min-h-96 md:min-h-110 w-screen max-w-none shrink-0 overflow-hidden bg-black">
       {hasBannerBackground ? (
         slides.map((s, i) => (
           <div
@@ -166,7 +159,7 @@ export function Hero({
                 priority={i === 0}
                 sizes="100vw"
                 quality={90}
-                className="object-cover object-center"
+                className="object-contain sm:object-cover object-center sm:object-[center_15%]"
               />
             ) : (
               <div className="absolute inset-0 bg-surface-elevated" />
@@ -177,18 +170,17 @@ export function Hero({
         <HeroBackground />
       )}
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[60%] bg-gradient-to-t from-bg from-10% via-bg/80 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[55%] max-w-[780px] bg-gradient-to-r from-bg/95 via-bg/50 to-transparent" />
+      {/* Bottom gradient for text readability */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[60%] bg-linear-to-t from-black/90 via-black/50 to-transparent sm:h-[50%] sm:from-black/85 sm:via-black/40" />
 
-      <div className="relative z-[2] h-full">
-        <div className="flex h-full w-full items-end px-6 pb-12 md:px-12 md:pb-16">
-          <div className="relative min-w-0 max-w-[640px]">
+      <div className="relative z-2 h-full">
+        <div className="flex h-full w-full items-end justify-between px-4 pb-6 sm:px-6 sm:pb-8 md:px-12 md:pb-10">
+          {/* Left: title + year + button */}
+          <div className="relative min-w-0 max-w-xl">
             {slides.length === 0 ? (
-              <div className="animate-pulse space-y-4">
-                <div className="h-3 w-24 rounded bg-surface-elevated" />
-                <div className="h-14 w-80 rounded bg-surface-elevated" />
-                <div className="h-3 w-48 rounded bg-surface-elevated" />
-                <div className="h-16 w-96 rounded bg-surface-elevated" />
+              <div className="animate-pulse space-y-3">
+                <div className="h-8 w-64 rounded bg-white/10" />
+                <div className="h-4 w-20 rounded bg-white/10" />
               </div>
             ) : (
               slides.map((s, i) => (
@@ -201,59 +193,37 @@ export function Hero({
                   }`}
                   aria-hidden={i !== active}
                 >
-                  <div className="mb-5 flex items-center gap-2.5">
-                    <div className="h-[1px] w-8 bg-brand" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand">
-                      {t("heroFeatured")}
-                    </span>
-                  </div>
-
-                  <h1 className="text-[40px] font-black leading-[0.95] tracking-[-0.035em] text-text drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-[52px] md:text-[56px]">
+                  <h1 className="text-[20px] font-black leading-tight tracking-[-0.02em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-[34px] md:text-[38px]">
                     {s.title}
                   </h1>
 
-                  <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-medium text-text-muted">
-                    {s.year && <span className="text-text/90">{s.year}</span>}
-                    {s.year && s.duration && <span className="text-border">·</span>}
-                    {s.duration && <span>{s.duration}</span>}
+                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-medium text-white/70 sm:mt-1.5 sm:gap-x-2 sm:text-[13px]">
+                    {s.year && <span>{s.year}</span>}
                     {s.rating && (
                       <>
-                        <span className="text-border">·</span>
+                        <span className="text-white/30">·</span>
                         <span className="inline-flex items-center gap-1">
-                          <Star size={12} className="fill-warning text-warning" />
-                          <span className="text-text/90">{s.rating}</span>
+                          <Star size={11} className="fill-warning text-warning" />
+                          <span>{s.rating}</span>
                         </span>
                       </>
                     )}
-                    {s.genres && (
+                    {s.duration && (
                       <>
-                        <span className="text-border">·</span>
-                        <span>{s.genres}</span>
+                        <span className="text-white/30">·</span>
+                        <span>{s.duration}</span>
                       </>
                     )}
                   </div>
 
-                  {s.description && (
-                    <p className="mt-5 max-w-[440px] text-[14px] leading-[1.65] text-text/85">
-                      {truncateWords(s.description, HERO_DESC_MAX_WORDS)}
-                    </p>
-                  )}
-
-                  <div className="mt-7 flex items-center gap-3">
+                  <div className="mt-4 flex items-center gap-2.5">
                     <Link
                       href={s.watchHref}
-                      className="group inline-flex items-center gap-2 rounded-[6px] bg-brand px-7 py-3 text-[14px] font-bold text-white shadow-[0_4px_24px_-4px_rgba(229,9,20,0.5)] transition-all hover:bg-brand-hover hover:shadow-[0_4px_24px_-4px_rgba(229,9,20,0.7)]"
+                      className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
                     >
-                      <PlayCircle size={18} className="fill-white text-brand" />
+                      <PlayCircle size={15} className="fill-white text-brand" />
                       {t("heroWatchNow")}
                     </Link>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2 rounded-[6px] border border-white/15 bg-black/35 px-6 py-3 text-[13px] font-semibold text-text/90 backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-black/50"
-                    >
-                      <Info size={15} />
-                      {t("heroMoreInfo")}
-                    </button>
                   </div>
                 </div>
               ))
@@ -262,8 +232,9 @@ export function Hero({
         </div>
 
         {slides.length > 1 && (
-          <div className="absolute bottom-8 right-12 z-[3] flex items-center gap-3">
-            <span className="text-[11px] font-medium tabular-nums text-text-muted">
+          <div className="absolute bottom-6 right-4 z-3 flex items-center gap-2.5 sm:bottom-8 sm:right-12 sm:gap-3">
+            {/* Counter: hidden on mobile to avoid overlap with title */}
+            <span className="hidden text-[11px] font-medium tabular-nums text-text-muted sm:inline">
               {indexLabel}
               <span className="text-border"> / </span>
               <span className="text-text-muted/60">{totalLabel}</span>
@@ -277,12 +248,16 @@ export function Hero({
                   aria-selected={i === active}
                   aria-label={`Show ${s.title}`}
                   onClick={() => setActive(i)}
-                  className={`h-[2px] rounded-full transition-all duration-300 ${
-                    i === active
-                      ? "w-8 bg-brand"
-                      : "w-4 bg-text-muted/30 hover:bg-text-muted/50"
-                  }`}
-                />
+                  className="flex cursor-pointer items-center py-3"
+                >
+                  <span
+                    className={`block rounded-full transition-all duration-300 ${
+                      i === active
+                        ? "h-0.75 w-8 bg-brand"
+                        : "h-0.75 w-4 bg-text-muted/30 hover:bg-text-muted/50"
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </div>

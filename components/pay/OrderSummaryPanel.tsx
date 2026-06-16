@@ -34,7 +34,7 @@ export function OrderSummaryPanel({
   const isRecurring = Boolean(priceSuffix);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_64px_-32px_rgba(0,0,0,0.7)]">
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border bg-surface-elevated/40 px-5 py-3.5">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-text-muted">
           Order summary
@@ -48,7 +48,7 @@ export function OrderSummaryPanel({
       <div className="p-5">
         <div className="flex items-center gap-3.5">
           {posterSrc ? (
-            <div className="relative h-[78px] w-[52px] shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
+            <div className="relative h-19.5 w-13 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
               <Image src={posterSrc} alt="" fill className="object-cover" sizes="52px" />
             </div>
           ) : null}
@@ -70,11 +70,7 @@ export function OrderSummaryPanel({
               ) : null}
             </span>
           </div>
-          <div className="flex items-center justify-between text-[13px]">
-            <span className="text-text-muted">Taxes &amp; fees</span>
-            <span className="font-medium text-success">Included</span>
-          </div>
-          <div className="flex items-end justify-between border-t border-border pt-3">
+<div className="flex items-end justify-between border-t border-border pt-3">
             <span className="text-[13px] font-bold uppercase tracking-widest text-text">
               Total {isRecurring ? "due today" : null}
             </span>
@@ -102,10 +98,6 @@ export function OrderSummaryPanel({
         </div>
 
         <div className="mt-4 flex flex-col items-center gap-2.5 border-t border-border pt-4">
-          <p className="inline-flex items-center gap-1.5 text-[11px] text-text-disabled">
-            <Lock size={11} aria-hidden />
-            256-bit SSL encrypted · powered by Baray
-          </p>
           <PaymentBadges className="justify-center" />
         </div>
 

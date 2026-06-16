@@ -1,12 +1,11 @@
 "use client";
 
-import { Layers, Loader2, PlayCircle, Star } from "lucide-react";
+import { Loader2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageShell } from "@/components/layout/PageShell";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
-import { ContentDetailHero } from "@/components/watch/ContentDetailHero";
 import { WatchAccessPanel } from "@/components/watch/WatchAccessPanel";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchSeriesTheater } from "@/components/watch/WatchPageSection";
@@ -70,11 +69,6 @@ export default function WatchSeriesPlaybackPage() {
   if (!activeSeason || !episode) {
     return (
       <PageShell fullWidth>
-        <ContentDetailHero
-          posterKey={series.poster_key}
-          title={series.title}
-          description={series.description}
-        />
         <section className="border-b border-border">
           <WatchDetailBody>
             <div className="flex h-48 flex-col items-center justify-center gap-3 text-center">
@@ -135,19 +129,7 @@ export default function WatchSeriesPlaybackPage() {
 
   return (
     <PageShell fullWidth>
-      <ContentDetailHero
-        posterKey={episode.poster_key ?? series.poster_key}
-        kicker={
-          <span className="inline-flex items-center gap-2">
-            <Layers size={14} /> SERIES · S{seasonNum} · E{episodeNum}
-          </span>
-        }
-        title={series.title}
-        description={series.description}
-        actions={detailActions}
-      />
-
-      <section className="pb-8">
+      <section className="pt-6 pb-8">
         <WatchSeriesTheater
           media={
             canPlay ? (
@@ -200,7 +182,19 @@ export default function WatchSeriesPlaybackPage() {
             <TrailerEmbed embedUrl={trailerEmbed} title={series.title} />
           ) : null}
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] font-medium text-text-muted">
+          {/* Series title + description */}
+          <div className="mt-6">
+            <h1 className="text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-text md:text-[26px]">
+              {series.title}
+            </h1>
+            {series.description ? (
+              <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-text-muted">
+                {series.description}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] font-medium text-text-muted border-t border-border pt-4">
             <span className="inline-flex items-center gap-1.5 text-text">
               <PlayCircle size={14} className="text-text-muted" aria-hidden />
               S{seasonNum} E{episodeNum}
@@ -254,35 +248,6 @@ export default function WatchSeriesPlaybackPage() {
             </p>
           ) : null}
 
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
-            <Link
-              href="/movies"
-              className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-            >
-              Movies
-            </Link>
-            <Link
-              href="/series"
-              className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-            >
-              Series
-            </Link>
-            {loggedIn ? (
-              <Link
-                href="/my-library"
-                className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-              >
-                My library
-              </Link>
-            ) : (
-              <Link
-                href={`/login?next=${encodeURIComponent(loginNext)}`}
-                className="rounded-md border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
-              >
-                Sign in
-              </Link>
-            )}
-          </div>
         </WatchDetailBody>
       </section>
 

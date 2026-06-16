@@ -1,16 +1,14 @@
 "use client";
 
-import { CheckCircle2, ChevronRight, Clock, Film, PlayCircle, Star } from "lucide-react";
+import { ChevronRight, Clock, Link2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
-import { FavoriteButton } from "@/components/catalog/FavoriteButton";
 import { MovieComments } from "@/components/comments/MovieComments";
 import { PageShell } from "@/components/layout/PageShell";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
-import { ContentDetailHero } from "@/components/watch/ContentDetailHero";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
-import { WatchDetailBody, WatchMovieTheater } from "@/components/watch/WatchPageSection";
+import { WatchDetailBody } from "@/components/watch/WatchPageSection";
 import { useMovieWatch } from "@/hooks/watch/use-movie-watch";
 import { SAMPLE_HLS_SRC, SAMPLE_FALLBACK_SRC, SAMPLE_VIDEO_ATTRIBUTION } from "@/lib/sample-video-sources";
 import type { ContentRead } from "@/lib/api/types";
@@ -26,12 +24,17 @@ type WatchPageClientProps = {
   initialMovie?: ContentRead | null;
 };
 
-function DetailRow({ label, children }: { label: string; children: ReactNode }) {
+function ShareButton({ href, label, children }: { href: string; label: string; children: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-b-0">
-      <dt className="shrink-0 text-[12px] font-medium text-text-muted">{label}</dt>
-      <dd className="text-right text-[12px] font-semibold text-text">{children}</dd>
-    </div>
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-elevated transition-colors hover:bg-border"
+    >
+      {children}
+    </a>
   );
 }
 
@@ -81,54 +84,13 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   const fallbackSrc = SAMPLE_FALLBACK_SRC;
   const attribution = playbackUrl ? undefined : SAMPLE_VIDEO_ATTRIBUTION;
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
-
-  const detailActions = (
-    <>
-      {canPlay ? (
-        <span className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-[12px] font-semibold text-success">
-          <CheckCircle2 size={14} aria-hidden />
-          Ready to watch
-        </span>
-      ) : (
-        <>
-          <Link
-            href={loggedIn ? payHref : `/login?next=${encodeURIComponent(loginNext)}`}
-            className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
-          >
-            <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
-            {loggedIn ? (priceLabel ? `Buy · ${priceLabel}` : "Buy to watch") : "Sign in to watch"}
-          </Link>
-          {!loggedIn ? (
-            <Link
-              href={payHref}
-              className="inline-flex items-center rounded-md border border-border bg-surface/80 px-5 py-2.5 text-[13px] font-semibold text-text backdrop-blur-sm transition-colors hover:border-border-hover"
-            >
-              {priceLabel ? `Buy · ${priceLabel}` : "View purchase"}
-            </Link>
-          ) : null}
-        </>
-      )}
-      <FavoriteButton contentId={movie.id} variant="inline" />
-    </>
-  );
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   return (
     <PageShell fullWidth>
-      <ContentDetailHero
-        posterKey={movie.poster_key}
-        kicker={
-          <span className="inline-flex items-center gap-2 uppercase">
-            <Film size={13} aria-hidden />
-            {canPlay ? "Now playing" : "Feature film"}
-          </span>
-        }
-        title={title}
-        description={movie.description}
-        actions={detailActions}
-      />
-
+      {/* Full-viewport video */}
       {canPlay ? (
-        <WatchMovieTheater>
+        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-black border-b border-border h-screen flex flex-col justify-center">
           <WatchPlayer
             key={hlsSrc}
             contentId={movie.id}
@@ -137,90 +99,134 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
             title={title}
             attribution={attribution}
           />
-        </WatchMovieTheater>
+        </div>
+      ) : trailerEmbed ? (
+        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-black border-b border-border h-screen flex flex-col justify-center">
+          <TrailerEmbed embedUrl={trailerEmbed} title={title} />
+        </div>
       ) : null}
 
-      <section className="border-b border-border py-8 md:py-10">
+      {/* Details below video */}
+      <section className="border-b border-border py-6 md:py-8">
         <WatchDetailBody>
-          <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
-            <div className="min-w-0">
-              {!canPlay && trailerEmbed ? (
-                <TrailerEmbed embedUrl={trailerEmbed} title={title} />
-              ) : null}
+          <div className="mx-auto max-w-6xl">
 
-              <div className={!canPlay && trailerEmbed ? "mt-8" : ""}>
-                <MovieComments contentId={movie.id} movieTitle={title} />
-              </div>
-            </div>
-
-            <aside className="h-fit rounded-lg border border-border bg-surface p-5 lg:sticky lg:top-6">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-                Details
-              </h2>
-
-              <dl className="mt-4">
-                <DetailRow label="Type">Feature film</DetailRow>
-                {movie.release_year ? <DetailRow label="Year">{movie.release_year}</DetailRow> : null}
-                {movie.runtime ? (
-                  <DetailRow label="Runtime">
-                    <span className="inline-flex items-center justify-end gap-1">
-                      <Clock size={13} className="text-text-muted" aria-hidden />
-                      {movie.runtime}
-                    </span>
-                  </DetailRow>
-                ) : null}
+            {/* Title + actions row */}
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 className="text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-text md:text-[26px]">
+                  {title}
+                </h1>
                 {movie.rating ? (
-                  <DetailRow label="Rating">
-                    <span className="inline-flex items-center justify-end gap-1 text-warning">
-                      <Star size={13} className="fill-current" aria-hidden />
-                      {movie.rating}
-                    </span>
-                  </DetailRow>
-                ) : null}
-                {!isFree && priceLabel ? (
-                  <DetailRow label="Price">{priceLabel}</DetailRow>
-                ) : isFree ? (
-                  <DetailRow label="Access">Free</DetailRow>
-                ) : null}
-              </dl>
-
-              {movie.genres.length > 0 ? (
-                <div className="mt-4 border-t border-border pt-4">
-                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-                    Genres
-                  </h3>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {movie.genres.map((g) => (
-                      <span
-                        key={g}
-                        className="rounded-md border border-border bg-surface-elevated px-2.5 py-1 text-[11px] font-semibold text-text-muted"
-                      >
-                        {g}
-                      </span>
-                    ))}
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[13px] text-text-muted">
+                    <Star size={13} className="fill-warning text-warning shrink-0" aria-hidden />
+                    <span className="font-medium">{movie.rating}</span>
+                    {movie.release_year ? (
+                      <>
+                        <span className="text-border-hover">·</span>
+                        <span>{movie.release_year}</span>
+                      </>
+                    ) : null}
+                    {movie.runtime ? (
+                      <>
+                        <span className="text-border-hover">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock size={12} aria-hidden />
+                          {movie.runtime}
+                        </span>
+                      </>
+                    ) : null}
                   </div>
+                ) : null}
+              </div>
+
+              {/* Buy button — only shown when user cannot play */}
+              {!canPlay ? (
+                <div className="pt-1">
+                  <Link
+                    href={loggedIn ? payHref : `/login?next=${encodeURIComponent(loginNext)}`}
+                    className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+                  >
+                    <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
+                    {loggedIn ? (priceLabel ? `Buy · ${priceLabel}` : "Buy to watch") : "Sign in to watch"}
+                  </Link>
                 </div>
               ) : null}
-            </aside>
+            </div>
+
+            {/* Description */}
+            {movie.description ? (
+              <p className="mt-4 max-w-3xl text-[13px] leading-relaxed text-text-muted">
+                {movie.description}
+              </p>
+            ) : null}
+
+            {/* Genres */}
+            {movie.genres.length > 0 ? (
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <span className="text-[12px] font-bold text-text">Genre:</span>
+                {movie.genres.map((g) => (
+                  <span
+                    key={g}
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-elevated px-3 py-1 text-[12px] font-medium text-text-muted transition-colors hover:border-border-hover hover:text-text cursor-default"
+                  >
+                    {g}
+                    <ChevronRight size={11} aria-hidden />
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            {/* Share row */}
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <span className="text-[12px] font-bold text-text">Share:</span>
+              {/* Facebook */}
+              <ShareButton href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} label="Share on Facebook">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#1877F2]" aria-hidden><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.791-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+              </ShareButton>
+              {/* X / Twitter */}
+              <ShareButton href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(title)}`} label="Share on X">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-text" aria-hidden><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </ShareButton>
+              {/* Instagram */}
+              <ShareButton href="https://www.instagram.com" label="Share on Instagram">
+                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+                  <defs><radialGradient id="ig-grad" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="5%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="60%" stopColor="#d6249f"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs>
+                  <path fill="url(#ig-grad)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                </svg>
+              </ShareButton>
+              {/* Copy link */}
+              <button
+                type="button"
+                aria-label="Copy link"
+                onClick={() => navigator.clipboard?.writeText(shareUrl)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-elevated transition-colors hover:bg-border"
+              >
+                <Link2 size={15} className="text-text-muted" aria-hidden />
+              </button>
+            </div>
+          </div>
+        </WatchDetailBody>
+      </section>
+
+      {/* Comments */}
+      <section className="border-b border-border py-8 md:py-10">
+        <WatchDetailBody>
+          <div className="mx-auto max-w-6xl">
+            <MovieComments contentId={movie.id} movieTitle={title} />
           </div>
 
           <nav
             aria-label="Breadcrumb"
             className="mx-auto mt-8 flex max-w-6xl flex-wrap items-center gap-1 border-t border-border pt-6 text-[12px] text-text-muted"
           >
-            <Link href="/movies" className="font-medium transition-colors hover:text-text">
-              Movies
-            </Link>
+            <Link href="/movies" className="font-medium transition-colors hover:text-text">Movies</Link>
             <ChevronRight size={14} className="text-border-hover" aria-hidden />
             <span className="truncate font-semibold text-text">{title}</span>
             {loggedIn ? (
               <>
-                <span className="mx-1 text-border-hover" aria-hidden>
-                  ·
-                </span>
-                <Link href="/my-library" className="font-medium transition-colors hover:text-text">
-                  My library
-                </Link>
+                <span className="mx-1 text-border-hover" aria-hidden>·</span>
+                <Link href="/my-library" className="font-medium transition-colors hover:text-text">My library</Link>
               </>
             ) : null}
           </nav>
