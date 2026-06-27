@@ -18,18 +18,18 @@ export function SectionHeader({
     seeAllHref ? (
       <Link
         href={seeAllHref}
-        className="group shrink-0 inline-flex items-center gap-0.5 text-[11px] font-semibold text-white/70 transition-colors duration-150 hover:text-white"
+        className="group shrink-0 inline-flex items-center gap-1 rounded-sm border border-white/25 bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-white/25"
       >
         {seeAllLabel}
-        <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
+        <ChevronRight size={11} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
       </Link>
     ) : (
       <a
         href="#"
-        className="group shrink-0 inline-flex items-center gap-0.5 text-[11px] font-semibold text-white/70 transition-colors duration-150 hover:text-white"
+        className="group shrink-0 inline-flex items-center gap-1 rounded-sm border border-white/25 bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-white/25"
       >
         {seeAllLabel}
-        <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
+        <ChevronRight size={11} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
       </a>
     )
   ) : null;
