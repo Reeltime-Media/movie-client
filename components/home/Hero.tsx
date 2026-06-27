@@ -1,6 +1,6 @@
 "use client";
 
-import { PlayCircle, Star } from "lucide-react";
+import { Info, PlayCircle, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -152,15 +152,17 @@ export function Hero({
             aria-hidden={i !== active}
           >
             {s.bannerSrc ? (
-              <Image
-                src={s.bannerSrc}
-                alt=""
-                fill
-                priority={i === 0}
-                sizes="100vw"
-                quality={90}
-                className="object-contain sm:object-cover object-center sm:object-[center_15%]"
-              />
+              <div className={`absolute inset-0 overflow-hidden${i === active ? " rt-ken-burns-active" : ""}`}>
+                <Image
+                  src={s.bannerSrc}
+                  alt=""
+                  fill
+                  priority={i === 0}
+                  sizes="100vw"
+                  quality={90}
+                  className="object-contain sm:object-cover object-center sm:object-[center_15%]"
+                />
+              </div>
             ) : (
               <div className="absolute inset-0 bg-surface-elevated" />
             )}
@@ -172,6 +174,8 @@ export function Hero({
 
       {/* Bottom gradient for text readability */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[60%] bg-linear-to-t from-black/90 via-black/50 to-transparent sm:h-[50%] sm:from-black/85 sm:via-black/40" />
+      {/* Left gradient — ends at 65% so description text stays legible over busy posters */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-1 w-[65%] bg-linear-to-r from-black/85 via-black/40 to-transparent" />
 
       <div className="relative z-2 h-full">
         <div className="flex h-full w-full items-end justify-between px-4 pb-6 sm:px-6 sm:pb-8 md:px-12 md:pb-10">
@@ -193,37 +197,52 @@ export function Hero({
                   }`}
                   aria-hidden={i !== active}
                 >
-                  <h1 className="text-[20px] font-black leading-tight tracking-[-0.02em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-[34px] md:text-[38px]">
-                    {s.title}
-                  </h1>
+                  <div className={i === active ? "rt-hero-text-in" : ""}>
+                    <h1 className="text-[20px] font-black leading-tight tracking-[-0.02em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-[34px] md:text-[38px]">
+                      {s.title}
+                    </h1>
 
-                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-medium text-white/70 sm:mt-1.5 sm:gap-x-2 sm:text-[13px]">
-                    {s.year && <span>{s.year}</span>}
-                    {s.rating && (
-                      <>
-                        <span className="text-white/30">·</span>
-                        <span className="inline-flex items-center gap-1">
-                          <Star size={11} className="fill-warning text-warning" />
-                          <span>{s.rating}</span>
-                        </span>
-                      </>
-                    )}
-                    {s.duration && (
-                      <>
-                        <span className="text-white/30">·</span>
-                        <span>{s.duration}</span>
-                      </>
-                    )}
-                  </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-medium text-white/70 sm:mt-1.5 sm:gap-x-2 sm:text-[13px]">
+                      {s.year && <span>{s.year}</span>}
+                      {s.rating && (
+                        <>
+                          <span className="text-white/30">·</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Star size={11} className="fill-warning text-warning" />
+                            <span>{s.rating}</span>
+                          </span>
+                        </>
+                      )}
+                      {s.duration && (
+                        <>
+                          <span className="text-white/30">·</span>
+                          <span>{s.duration}</span>
+                        </>
+                      )}
+                    </div>
 
-                  <div className="mt-4 flex items-center gap-2.5">
-                    <Link
-                      href={s.watchHref}
-                      className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
-                    >
-                      <PlayCircle size={15} className="fill-white text-brand" />
-                      {t("heroWatchNow")}
-                    </Link>
+                    {s.description && (
+                      <p className="mt-2 hidden max-w-[420px] text-[13px] leading-relaxed text-white/70 line-clamp-2 sm:block">
+                        {s.description}
+                      </p>
+                    )}
+
+                    <div className="mt-4 flex items-center gap-2.5">
+                      <Link
+                        href={s.watchHref}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
+                      >
+                        <PlayCircle size={15} className="fill-white text-brand" />
+                        {t("heroWatchNow")}
+                      </Link>
+                      <Link
+                        href={`${s.watchHref}#details`}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-white/18 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
+                      >
+                        <Info size={14} />
+                        {t("heroMoreInfo")}
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))
