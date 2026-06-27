@@ -303,6 +303,37 @@ html[lang="km"] body {
   display: none;
 }
 
+/* Ken Burns slow zoom for Hero background slides */
+@keyframes rt-ken-burns {
+  from { transform: scale(1.0); }
+  to   { transform: scale(1.08); }
+}
+
+.rt-ken-burns-active {
+  animation: rt-ken-burns 8s linear forwards;
+}
+
+/* Hero text slide-up on slide enter */
+@keyframes rt-hero-text-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rt-hero-text-in {
+  animation: rt-hero-text-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rt-ken-burns-active {
+    animation: none !important;
+  }
+  .rt-hero-text-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* Custom clear control only — hide browser default on search fields */
 .rt-search-input::-webkit-search-cancel-button,
 .rt-search-input::-webkit-search-decoration,
