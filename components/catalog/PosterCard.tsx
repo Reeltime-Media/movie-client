@@ -1,3 +1,4 @@
+import { PlayCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { PosterCardProps } from "@/types/poster-card";
@@ -43,8 +44,24 @@ export function PosterCard({
           />
         ) : null}
 
+        {/* Play overlay — scrim */}
+        <div
+          className="absolute inset-0 z-[5] bg-black/50 opacity-0 transition-opacity duration-[180ms] group-hover:opacity-100"
+          aria-hidden="true"
+        />
+        {/* Play overlay — icon */}
+        <div
+          className="absolute inset-0 z-[6] flex items-center justify-center scale-[0.85] opacity-0 transition-[opacity,transform] duration-[180ms] ease-out group-hover:scale-100 group-hover:opacity-100"
+          aria-hidden="true"
+        >
+          <PlayCircle
+            size={40}
+            className="fill-white text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
+          />
+        </div>
+
         {/* Badges — top row */}
-        <div className="absolute left-2 top-2 flex flex-col gap-1">
+        <div className="absolute left-2 top-2 z-[10] flex flex-col gap-1">
           {badge.kind === "owned" ? (
             <span className="rounded-sm bg-brand px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
               {badge.label}
@@ -62,21 +79,21 @@ export function PosterCard({
 
         {/* HD badge — top right */}
         {badge.kind === "hd" ? (
-          <div className="absolute right-2 top-2 rounded-sm bg-black/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
+          <div className="absolute right-2 top-2 z-[10] rounded-sm bg-black/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
             {badge.label}
           </div>
         ) : null}
 
         {/* Entitlement pill — bottom left */}
         {entitlement?.kind === "price" ? (
-          <div className="absolute bottom-2 left-2 rounded-sm bg-black/65 px-1.5 py-0.5 text-[9px] font-bold text-white">
+          <div className="absolute bottom-2 left-2 z-[10] rounded-sm bg-black/65 px-1.5 py-0.5 text-[9px] font-bold text-white">
             {entitlement.value}
           </div>
         ) : null}
 
         {/* Watch progress bar */}
         {typeof progressPct === "number" ? (
-          <div className="absolute inset-x-0 bottom-0 h-0.75 bg-white/15">
+          <div className="absolute inset-x-0 bottom-0 z-[10] h-0.75 bg-white/15">
             <div
               className="absolute inset-y-0 left-0 bg-brand"
               style={{ width: `${Math.min(100, Math.max(0, progressPct))}%` }}
