@@ -1,4 +1,4 @@
-import { Menu, Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 
 import { iconButtonClassName } from "./styles";
@@ -15,8 +15,6 @@ type TopNavActionsProps = Pick<
   | "user"
   | "locale"
   | "t"
-  | "mobileOpen"
-  | "setMobileOpen"
   | "accountOpen"
   | "setAccountOpen"
   | "accountRef"
@@ -32,8 +30,6 @@ export function TopNavActions({
   user,
   locale,
   t,
-  mobileOpen,
-  setMobileOpen,
   accountOpen,
   setAccountOpen,
   accountRef,
@@ -86,17 +82,6 @@ export function TopNavActions({
       ) : (
         <TopNavAuthLink href={authHref} label={authLabel} variant="desktop" />
       )}
-
-      <button
-        type="button"
-        className={iconButtonClassName("lg:hidden")}
-        aria-expanded={mobileOpen}
-        aria-controls="mobile-nav-panel"
-        aria-label={mobileOpen ? t("navCloseMenu") : t("navOpenMenu")}
-        onClick={() => setMobileOpen((open) => !open)}
-      >
-        {mobileOpen ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
-      </button>
     </div>
   );
 }

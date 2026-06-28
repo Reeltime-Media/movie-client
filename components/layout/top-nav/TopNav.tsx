@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { TopNavActions } from "./TopNavActions";
 import { TopNavLogo } from "./TopNavLogo";
-import { TopNavMobilePanel } from "./TopNavMobilePanel";
 import { TopNavNavLinks } from "./TopNavNavLinks";
 import { TopNavSearchForm } from "./TopNavSearchForm";
 import { useTopNav } from "./use-top-nav";
@@ -27,12 +26,12 @@ export function TopNav() {
 
   const headerClass = transparent
     ? "border-transparent bg-transparent shadow-none"
-    : "border-border/70 bg-bg/85 shadow-[0_8px_32px_-20px_rgba(0,0,0,0.65)] backdrop-blur-md supports-[backdrop-filter]:bg-bg/75";
+    : "rt-glass";
 
   return (
     <header
       className={[
-        "fixed top-0 z-50 w-full border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ease-out",
+        "fixed top-0 z-50 w-full border-b transition-all duration-400 ease-out",
         headerClass,
       ].join(" ")}
     >
@@ -55,10 +54,6 @@ export function TopNav() {
 
         <TopNavActions {...nav} />
       </div>
-
-      {nav.mobileOpen ? (
-        <TopNavMobilePanel {...nav} onClose={() => nav.setMobileOpen(false)} />
-      ) : null}
     </header>
   );
 }

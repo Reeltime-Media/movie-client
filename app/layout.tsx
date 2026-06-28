@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { FavoritesProvider } from "@/components/providers/FavoritesProvider";
 import { GoogleAuthProvider } from "@/components/providers/GoogleAuthProvider";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
@@ -38,11 +39,12 @@ export default function RootLayout({
       className={`${inter.variable} ${kantumruy.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-bg text-text font-sans">
+      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 lg:pb-0">
         <ThemeInit />
         <GoogleAuthProvider>
           <LocaleProvider>
             <FavoritesProvider>{children}</FavoritesProvider>
+            <MobileBottomNav />
           </LocaleProvider>
         </GoogleAuthProvider>
       </body>

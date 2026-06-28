@@ -19,7 +19,6 @@ export function useTopNav() {
   const { user } = useUser();
   const { locale, setLocale, t } = useI18n();
 
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
 
@@ -27,18 +26,8 @@ export function useTopNav() {
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
   useEffect(() => {
-    setMobileOpen(false);
     setAccountOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [mobileOpen]);
 
   useEffect(() => {
     if (!accountOpen) return;
@@ -64,7 +53,6 @@ export function useTopNav() {
 
   function closeMenus() {
     setAccountOpen(false);
-    setMobileOpen(false);
   }
 
   function handleSignOut() {
@@ -77,7 +65,6 @@ export function useTopNav() {
     event.preventDefault();
     const fd = new FormData(event.currentTarget);
     const q = String(fd.get("q") ?? "").trim();
-    setMobileOpen(false);
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
   }
 
@@ -88,8 +75,6 @@ export function useTopNav() {
     user,
     locale,
     t,
-    mobileOpen,
-    setMobileOpen,
     accountOpen,
     setAccountOpen,
     accountRef,
