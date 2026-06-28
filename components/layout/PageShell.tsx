@@ -6,11 +6,14 @@ export function PageShell({
   children,
   wide = false,
   fullWidth = false,
+  footer = false,
 }: {
   children: ReactNode;
   wide?: boolean;
   /** No max-width cap — for watch/detail and checkout layouts */
   fullWidth?: boolean;
+  /** Render the site footer. Opt-in — currently only the home page. */
+  footer?: boolean;
 }) {
   const innerClass = fullWidth
     ? "w-full min-w-0"
@@ -24,7 +27,7 @@ export function PageShell({
       <main className="min-w-0 flex-1 pt-15">
         <div className={innerClass}>{children}</div>
       </main>
-      <SiteFooter />
+      {footer ? <SiteFooter /> : null}
     </div>
   );
 }

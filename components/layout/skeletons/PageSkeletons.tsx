@@ -59,7 +59,7 @@ export function CatalogPageSkeleton() {
 /** Loading skeleton for the home route (hero + a couple of rails). */
 export function HomePageSkeleton() {
   return (
-    <PageShell fullWidth>
+    <PageShell fullWidth footer>
       {/* Hero band */}
       <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none overflow-hidden border-b border-border bg-surface h-[420px] sm:h-[480px]" />
 

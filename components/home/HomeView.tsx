@@ -103,7 +103,7 @@ export function HomeView({
   }, [promotionBanners, t]);
 
   return (
-    <PageShell fullWidth>
+    <PageShell fullWidth footer>
       <div className="rt-page-fade-in" style={{ "--rt-enter-delay": "0ms" } as CSSProperties}>
         <Hero
           featuredSlides={heroFeatured}
