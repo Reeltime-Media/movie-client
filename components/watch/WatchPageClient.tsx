@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { posterUrl } from "@/lib/api/client";
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { MovieComments } from "@/components/comments/MovieComments";
 import { PageShell } from "@/components/layout/PageShell";
@@ -86,7 +87,11 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   const fallbackSrc = SAMPLE_FALLBACK_SRC;
   const attribution = playbackUrl ? undefined : SAMPLE_VIDEO_ATTRIBUTION;
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, []);
 
   return (
     <PageShell fullWidth>
@@ -228,7 +233,10 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
 
               {/* Right zone — poster thumbnail, desktop only */}
               {movie.poster_key && (
-                <div className="relative hidden aspect-[2/3] w-[110px] shrink-0 overflow-hidden rounded-md border border-border md:block">
+                <div 
+                  className="relative hidden aspect-[2/3] w-[110px] shrink-0 overflow-hidden rounded-md border border-border md:block"
+                  style={{ viewTransitionName: `poster-${movie.id}` }}
+                >
                   <Image
                     src={posterUrl(movie.poster_key) ?? ""}
                     alt={title}

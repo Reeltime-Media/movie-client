@@ -416,7 +416,7 @@ export function WatchPlayer({
                 </button>
 
                 {showQuality && (
-                  <div className="absolute bottom-full right-0 mb-2 min-w-30 overflow-hidden rounded-md border border-white/10 bg-[#141414] py-1 shadow-2xl">
+                  <div className="absolute bottom-full right-0 mb-2 min-w-30 overflow-hidden rounded-md border border-white/10 bg-[#141414] py-1">
                     <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-white/35">
                       Quality
                     </div>

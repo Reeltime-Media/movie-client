@@ -26,7 +26,7 @@ export function BannerCard({
       aria-label={`${title}${year ? ` (${year})` : ""}`}
       className="group block cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
-      <div className="relative overflow-hidden rounded-sm border border-transparent transition-all duration-200 ease-out group-hover:scale-[1.02] group-hover:border-white/20 bg-surface-elevated">
+      <div className="rt-card-hover relative overflow-hidden rounded-md border border-transparent group-hover:border-white/20 bg-surface-elevated">
         {imageSrc ? (
           <Image
             src={imageSrc}
@@ -34,7 +34,7 @@ export function BannerCard({
             width={640}
             height={360}
             sizes="(min-width: 1024px) 380px, (min-width: 640px) 340px, 80vw"
-            className="w-full h-auto block"
+            className="w-full aspect-video object-cover object-top block"
             priority={imagePriority}
             loading={imagePriority ? "eager" : "lazy"}
           />
@@ -55,7 +55,7 @@ export function BannerCard({
         {/* Title + year bottom-left, badge bottom-right */}
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3">
           <div className="min-w-0">
-            <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white drop-shadow-sm">
+            <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white">
               {title}
             </p>
             {year ? (

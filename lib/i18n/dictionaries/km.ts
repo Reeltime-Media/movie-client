@@ -180,4 +180,12 @@ export const km = {
   commentsReplyPlaceholder: "សរសេរការឆ្លើយតប…",
   commentsSignInToPost: "សូមចូលគណនីដើម្បីបង្ហោះមតិ។",
   commentsSessionExpired: "សម័យរបស់អ្នកផុតកំណត់ហើយ។ សូមចូលគណនីម្តងទៀតដើម្បីបង្ហោះមតិ។",
+
+  // Missing Footer Keys
+  footerContact: "ទាក់ទងមកយើង",
+  footerBrowse: "រកមើល",
+  footerAccount: "គណនី",
+  footerSupport: "ជំនួយ",
+  footerFollowUs: "តាមដានពួកយើង",
+  footerMadeIn: "ផលិតនៅកម្ពុជា",
 } satisfies Record<TranslationKey, string>;

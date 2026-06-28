@@ -27,9 +27,11 @@ export function useWatchProgressSync({
   const contentIdRef = useRef(contentId);
   const durationRef = useRef(duration);
 
-  contentIdRef.current = contentId;
-  durationRef.current = duration;
-  lastPositionRef.current = currentTime;
+  useEffect(() => {
+    contentIdRef.current = contentId;
+    durationRef.current = duration;
+    lastPositionRef.current = currentTime;
+  });
 
   const save = useCallback((position: number, completed: boolean, keepalive = false) => {
     const id = contentIdRef.current;

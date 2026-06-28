@@ -3,12 +3,14 @@ import type { ReactNode } from "react";
 import { posterUrl } from "@/lib/api/client";
 
 export function ContentDetailHero({
+  contentId,
   posterKey,
   kicker,
   title,
   description,
   actions,
 }: {
+  contentId?: string;
   posterKey?: string | null;
   kicker?: ReactNode;
   title: string;
@@ -19,14 +21,17 @@ export function ContentDetailHero({
 
   return (
     <section className="relative ml-[calc(50%-50vw)] w-screen max-w-[100vw] shrink-0 overflow-hidden border-b border-border">
-      <div className="relative min-h-[min(52vh,520px)] w-full md:min-h-[min(48vh,480px)]">
+      <div 
+        className="relative min-h-[min(52vh,520px)] w-full md:min-h-[min(48vh,480px)]"
+        style={{ viewTransitionName: contentId ? `poster-${contentId}` : undefined }}
+      >
         {src ? (
           <Image
             src={src}
             alt=""
             fill
             priority
-            className="object-cover object-[center_30%]"
+            className="rt-parallax-bg object-cover object-[center_30%]"
             sizes="100vw"
           />
         ) : (

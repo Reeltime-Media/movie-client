@@ -7,7 +7,10 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { WatchDetailBody } from "@/components/watch/WatchPageSection";
 import { listMovies } from "@/lib/api/movies";
 import { listSeries } from "@/lib/api/series";
+import { listPurchases } from "@/lib/api/purchases";
+import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
+import { useAuth } from "@/hooks/auth/use-auth";
 import type { PosterCardProps } from "@/types/poster-card";
 
 /** Defer discovery rails so they do not compete with watch page / player requests. */
@@ -15,6 +18,7 @@ const DEFER_MS = 1500;
 
 export function WatchDiscoveryRails() {
   const { t } = useI18n();
+  const { loggedIn } = useAuth();
   const [enabled, setEnabled] = useState(false);
   const [moreLikeThis, setMoreLikeThis] = useState<PosterCardProps[]>([]);
   const [trending, setTrending] = useState<PosterCardProps[]>([]);
@@ -28,21 +32,25 @@ export function WatchDiscoveryRails() {
   useEffect(() => {
     if (!enabled) return;
 
-    listMovies()
-      .then((movies) => {
-        const posters = movies.map((m, i) => movieToPoster(m, i));
+    const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
+    const subsPromise = loggedIn ? listMySubscriptions().catch(() => []) : Promise.resolve([]);
+
+    Promise.all([listMovies(), purchasesPromise])
+      .then(([movies, purchases]) => {
+        const ownedIds = new Set(purchases.map(p => p.content_id));
+        const posters = movies.map((m, i) => movieToPoster(m, i, ownedIds));
         setMoreLikeThis(posters.slice(0, 8));
         setTrending([...posters].reverse().slice(0, 8));
       })
       .catch(() => {});
 
-    listSeries()
-      .then((series) => {
-        // Skip per-series episode fetches here — saves N API round-trips on watch page.
-        setSeriesPicks(series.map((s, i) => seriesToPoster(s, i, { hasSubscription: false })));
+    Promise.all([listSeries(), subsPromise])
+      .then(([series, subs]) => {
+        const hasSub = subs.some((s) => s.status === "active");
+        setSeriesPicks(series.map((s, i) => seriesToPoster(s, i, { hasSubscription: hasSub })));
       })
       .catch(() => {});
-  }, [enabled]);
+  }, [enabled, loggedIn]);
 
   if (!enabled) return null;
 

@@ -48,8 +48,8 @@ export function OrderSummaryPanel({
       <div className="p-5">
         <div className="flex items-center gap-3.5">
           {posterSrc ? (
-            <div className="relative h-19.5 w-13 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
-              <Image src={posterSrc} alt="" fill className="object-cover" sizes="52px" />
+            <div className="relative h-[60px] w-[40px] shrink-0 overflow-hidden rounded-[6px] ring-1 ring-border">
+              <Image src={posterSrc} alt="" fill className="object-cover" sizes="40px" />
             </div>
           ) : null}
           <div className="min-w-0 flex-1">

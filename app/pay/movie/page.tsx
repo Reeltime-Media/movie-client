@@ -4,6 +4,7 @@ import { CreditCard, Infinity, ShieldCheck, Star } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MovieComments } from "@/components/comments/MovieComments";
 import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 import { OrderSummaryPanel } from "@/components/pay/OrderSummaryPanel";
@@ -11,7 +12,8 @@ import { PayPageHero } from "@/components/pay/PayPageHero";
 import { TrustPanel } from "@/components/pay/TrustPanel";
 import { PageShell } from "@/components/layout/PageShell";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
-import { getMovie } from "@/lib/api/movies";
+import { getMovie, listMovies } from "@/lib/api/movies";
+import { listPurchases } from "@/lib/api/purchases";
 import { createMoviePaymentIntent } from "@/lib/api/payments";
 import { posterUrl } from "@/lib/api/client";
 import { useAuth } from "@/hooks/auth/use-auth";
@@ -19,7 +21,12 @@ import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-succes
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { metaPillClassName } from "@/lib/ui/surfaces";
 import { youtubeEmbedUrl } from "@/lib/youtube";
-import type { ContentRead } from "@/lib/api/types";
+import { movieCardHref } from "@/lib/movie-routes";
+import { BannerCard } from "@/components/catalog/BannerCard";
+import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { movieToPoster } from "@/lib/api/to-poster";
+import type { PosterCardProps } from "@/types/poster-card";
+import type { ContentRead, ContentListItemRead } from "@/lib/api/types";
 
 function MoviePayInner() {
   const router = useRouter();
@@ -28,6 +35,9 @@ function MoviePayInner() {
   const slug = params.get("slug") ?? "";
 
   const [movie, setMovie] = useState<ContentRead | null>(null);
+  const [topMovies, setTopMovies] = useState<ContentListItemRead[]>([]);
+  const [recommendedPosters, setRecommendedPosters] = useState<PosterCardProps[]>([]);
+  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [paying, setPaying] = useState(false);
@@ -38,9 +48,20 @@ function MoviePayInner() {
       setLoading(false);
       return;
     }
-    getMovie(slug)
-      .then((m) => {
+    
+    let cancelled = false;
+    const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
+
+    Promise.all([getMovie(slug), listMovies(), purchasesPromise])
+      .then(([m, all, purchases]) => {
+        if (cancelled) return;
         setMovie(m);
+        const userOwnedIds = new Set(purchases.map(p => p.content_id));
+        setOwnedIds(userOwnedIds);
+        
+        const others = all.filter((x) => x.slug !== m.slug);
+        setTopMovies(others.slice(0, 10));
+        setRecommendedPosters(others.slice(10, 22).map((x, i) => movieToPoster(x, i, userOwnedIds)));
         setLoading(false);
       })
       .catch(() => {
@@ -97,101 +118,139 @@ function MoviePayInner() {
   const poster = posterUrl(movie.poster_key);
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
 
-  const sidebar = (
-    <>
-      <OrderSummaryPanel
-        itemTitle={movie.title}
-        itemSubtitle="Lifetime access · one-time purchase"
-        posterSrc={poster}
-        price={price}
-        totalNote="No subscription. Watch forever on your account."
-        payLabel={`Pay ${price}`}
-        paying={paying}
-        onPay={handlePay}
-        error={error || undefined}
-        footnote={null}
-      />
-      <TrustPanel
-        items={[
-          { icon: Infinity, label: "Watch anytime, forever" },
-          { icon: ShieldCheck, label: "Secure checkout via Baray" },
-          { icon: CreditCard, label: "Card · KHQR · ABA Pay" },
-        ]}
-        backHref="/movies"
-        backLabel="Back to movies"
-      />
-    </>
-  );
+  const banner = posterUrl(movie.banner_key) ?? poster;
 
   return (
     <PageShell fullWidth>
-      <PayPageHero
-        title="Buy once, watch forever"
-        subtitle={
-          <>
-            Own <span className="font-semibold text-white">{movie.title}</span> and stream it
-            anytime on any device.
-          </>
-        }
-        posterKey={movie.poster_key}
-        bannerKey={movie.banner_key}
-        meta={
-          <>
-            {movie.release_year ? (
-              <span className={metaPillClassName}>{movie.release_year}</span>
-            ) : null}
-            {movie.runtime ? (
-              <span className={metaPillClassName}>{movie.runtime}</span>
-            ) : null}
-            {movie.rating ? (
-              <span className={metaPillClassName}>
-                <Star size={12} className="fill-warning text-warning" aria-hidden />
-                {movie.rating}
-              </span>
-            ) : null}
-            {movie.genres.slice(0, 3).map((genre) => (
-              <span key={genre} className={metaPillClassName}>
-                {genre}
-              </span>
-            ))}
-          </>
-        }
-      />
-
-      <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 md:px-8 lg:py-8">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-          <div className="min-w-0 space-y-6">
+      {/* 1. Top Section: Trailer & Top 10 */}
+      <section className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_350px] gap-8 items-start">
+          {/* Left: Trailer */}
+          <div className="w-full">
             {trailerEmbed ? (
-              <TrailerEmbed embedUrl={trailerEmbed} title={movie.title} variant="bare" />
-            ) : null}
-
-            {movie.description ? (
-              <div>
-                <h2 className="mb-3 flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-text-muted">
-                  <span className="h-3.5 w-1 rounded-full bg-brand" aria-hidden />
-                  About this film
-                </h2>
-                <p className="max-w-3xl text-[15px] leading-[1.7] text-text-muted">
-                  {movie.description}
-                </p>
+              <div className="w-full aspect-video overflow-hidden rounded-xl bg-black border border-border">
+                <TrailerEmbed embedUrl={trailerEmbed} title={movie.title} variant="frame-only" />
               </div>
             ) : null}
-
-            <MovieComments contentId={movie.id} movieTitle={movie.title} />
           </div>
 
-          <div className="flex flex-col gap-4 lg:sticky lg:top-20">
-            {sidebar}
+          {/* Right: Top 10 Movies */}
+          <div className="flex flex-col">
+            <h2 className="text-[16px] font-bold text-text mb-4">Top 10 Movies of the Week</h2>
+            <div className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-200px)] lg:max-h-[min(600px,70vh)] custom-scrollbar pr-2 pb-4">
+              {topMovies.map((tm) => {
+                const bgImage = posterUrl(tm.poster_key) ?? "";
+                const isFree = !tm.price_usd || parseFloat(tm.price_usd) === 0;
+                const isOwned = isFree || ownedIds.has(tm.id);
+                return (
+                  <BannerCard
+                    key={tm.id}
+                    imageSrc={bgImage}
+                    title={tm.title}
+                    year={tm.release_year}
+                    badgeLabel="រឿងកុន"
+                    watchHref={movieCardHref(tm, isOwned)}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
+      <section className="mx-auto w-full max-w-[1600px] px-4 py-8 sm:px-6 md:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start xl:grid-cols-[minmax(0,1fr)_360px]">
+          
+          {/* Left Column: Overview (Poster + Details) */}
+          <div className="flex flex-col md:flex-row gap-8">
+            {poster ? (
+              <div className="relative aspect-2/3 w-40 shrink-0 overflow-hidden rounded-xl border border-border sm:w-48 md:w-56">
+                <Image src={poster} alt={movie.title} fill className="object-cover" sizes="(max-width: 768px) 160px, 224px" />
+              </div>
+            ) : null}
+            
+            <div className="flex-1 min-w-0 flex flex-col pt-2">
+              <h1 className="text-[32px] font-extrabold tracking-tight text-text sm:text-[40px] leading-[1.1] text-balance">
+                {movie.title}
+              </h1>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2.5 text-[13px] font-medium text-text-muted">
+                {movie.release_year ? <span>{movie.release_year}</span> : null}
+                {movie.runtime ? <span>{movie.runtime}</span> : null}
+                {movie.rating ? (
+                  <span className="flex items-center gap-1">
+                    <Star size={14} className="fill-warning text-warning" aria-hidden />
+                    {movie.rating}
+                  </span>
+                ) : null}
+                {movie.genres.length > 0 ? (
+                  <>
+                    <span className="h-1 w-1 rounded-full bg-border" aria-hidden />
+                    <span>{movie.genres.slice(0, 3).join(", ")}</span>
+                  </>
+                ) : null}
+              </div>
+
+              {movie.description ? (
+                <p className="mt-6 text-[15px] leading-relaxed text-text-muted md:text-[16px]">
+                  {movie.description}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Right Column: Payment Box */}
+          <div className="sticky top-24 rounded-xl border border-border bg-surface p-6">
+            <h2 className="text-[18px] font-bold text-text mb-6">Payment</h2>
+            <div className="flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={handlePay}
+                disabled={paying}
+                className="flex w-full items-center justify-center gap-3 rounded-lg bg-brand px-6 py-4 text-[16px] font-bold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {paying ? "Processing..." : `Buy Now for ${price}`}
+              </button>
+              <div className="flex flex-col items-center justify-center gap-2 text-[12px] text-text-muted mt-2">
+                <span className="flex items-center gap-1.5"><Infinity size={14} /> Lifetime Access</span>
+                <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Secure checkout</span>
+              </div>
+
+              <div className="mt-2 pt-6 border-t border-border flex flex-col items-center">
+                <div className="relative aspect-[1/1.1] w-full max-w-[60px] overflow-hidden">
+                  <Image src="/asset/payment/khqr.png" alt="KHQR Payment" fill className="object-contain" />
+                </div>
+                <p className="mt-3 text-[12px] font-medium text-text-muted">Pay with KHQR</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Comments Section below the main layout */}
+        <div className="mt-16 border-t border-border pt-16">
+          <h2 className="text-[24px] font-bold text-text mb-8">Comments</h2>
+          <div className="rounded-xl border border-border bg-surface p-6 sm:p-8">
+            <MovieComments contentId={movie.id} movieTitle={movie.title} />
+          </div>
+        </div>
+
+        {/* Recommended Section */}
+        {recommendedPosters.length > 0 && (
+          <div className="mt-16 border-t border-border pt-16">
+            <h2 className="text-[24px] font-bold text-text mb-8">Recommended from Reeltime Media</h2>
+            <div className="-mx-4 sm:-mx-6 md:-mx-8">
+              <PosterScrollRail posters={recommendedPosters} gutter="sm" autoScroll direction="left" />
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Mobile sticky pay bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur-md lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur-md sm:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-3">
           <div className="min-w-0 shrink-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-              Total
+              Lifetime Access
             </p>
             <p className="text-[19px] font-extrabold leading-none tracking-tight text-text">
               {price}
@@ -201,13 +260,13 @@ function MoviePayInner() {
             type="button"
             onClick={handlePay}
             disabled={paying}
-            className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white shadow-[0_8px_24px_-8px_rgba(229,9,20,0.55)] transition-colors duration-200 hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {paying ? "Redirecting…" : "Buy now"}
+            {paying ? "Processing…" : "Buy Now"}
           </button>
         </div>
       </div>
-      <div className="h-24 lg:hidden" aria-hidden />
+      <div className="h-24 sm:hidden" aria-hidden />
     </PageShell>
   );
 }

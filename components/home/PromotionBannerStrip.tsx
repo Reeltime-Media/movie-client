@@ -115,7 +115,7 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
                     <div className="mt-3 flex items-center gap-3 sm:mt-7">
                       <Link
                         href={ctaHref}
-                        className="group inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-[12px] font-bold text-white shadow-[0_4px_24px_-4px_rgba(229,9,20,0.5)] transition-all hover:bg-brand-hover hover:shadow-[0_4px_24px_-4px_rgba(229,9,20,0.7)] sm:gap-2 sm:px-7 sm:py-3 sm:text-[14px]"
+                        className="group inline-flex items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-[12px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover sm:gap-2 sm:px-7 sm:py-3 sm:text-[14px]"
                       >
                         <PlayCircle size={16} className="fill-white text-brand sm:size-4.5" />
                         {banner.cta_label}

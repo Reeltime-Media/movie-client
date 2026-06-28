@@ -29,21 +29,19 @@ export function PayPageHero({
 
   return (
     <div
-      className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 overflow-hidden border-b border-border"
+      className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 overflow-hidden border-b border-border h-64 sm:h-80 md:h-96"
       role="img"
       aria-label={title}
     >
       {hasImage ? (
-        /* Natural 16:9 aspect — image is never cropped */
         <Image
           src={bgImage!}
           alt=""
-          width={1920}
-          height={1080}
+          fill
           priority
           sizes="100vw"
           quality={90}
-          className="w-full h-auto block"
+          className="object-cover object-center"
           aria-hidden
         />
       ) : (

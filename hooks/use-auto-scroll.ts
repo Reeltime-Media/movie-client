@@ -14,7 +14,7 @@ export function useAutoScroll(
   const rafRef     = useRef<number>(0);
   // User interaction pause
   const userPausedRef   = useRef(false);
-  const timerRef        = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef        = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Rhythm cycle
   const phaseRef        = useRef<"scrolling" | "paused">("scrolling");
   const phaseStartRef   = useRef<number>(performance.now());
@@ -78,14 +78,15 @@ export function useAutoScroll(
     el.addEventListener("mousedown",  userPause, { passive: true });
     el.addEventListener("touchstart", userPause, { passive: true });
     el.addEventListener("wheel",      userPause, { passive: true });
-    el.addEventListener("mouseleave", () => {
+    const onMouseLeave = () => {
       clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         userPausedRef.current = false;
         phaseRef.current = "scrolling";
         phaseStartRef.current = performance.now();
       }, resumeDelay);
-    }, { passive: true });
+    };
+    el.addEventListener("mouseleave", onMouseLeave, { passive: true });
 
     return () => {
       cancelAnimationFrame(rafRef.current);
@@ -93,6 +94,7 @@ export function useAutoScroll(
       el.removeEventListener("mousedown",  userPause);
       el.removeEventListener("touchstart", userPause);
       el.removeEventListener("wheel",      userPause);
+      el.removeEventListener("mouseleave", onMouseLeave);
     };
   }, [speed, direction, resumeDelay, userPause]);
 

@@ -18,10 +18,7 @@ export default async function Home() {
     listMovies().catch(() => []),
     listSeries().catch(() => []),
     listPromotionBanners("home").catch(() => []),
-    listHeroFeatured("home").catch((err) => {
-      console.error("Home hero featured fetch failed:", err);
-      return [];
-    }),
+    listHeroFeatured("home").catch(() => []),
   ]);
 
   const seasons = await Promise.all(

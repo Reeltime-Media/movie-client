@@ -23,12 +23,9 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
   const router = useRouter();
   const { loggedIn } = useAuth();
   const { initialMovie = null } = options;
-  const seededMovieRef = useRef(
-    initialMovie && initialMovie.slug === slug ? initialMovie : null,
-  );
-
-  const [movie, setMovie] = useState<ContentRead | null>(seededMovieRef.current);
-  const [loading, setLoading] = useState(!seededMovieRef.current && Boolean(slug));
+  const isSeeded = initialMovie && initialMovie.slug === slug;
+  const [movie, setMovie] = useState<ContentRead | null>(isSeeded ? initialMovie : null);
+  const [loading, setLoading] = useState(!isSeeded && Boolean(slug));
   const [canPlay, setCanPlay] = useState(false);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -55,12 +52,11 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       }
     }
 
-    const seeded = seededMovieRef.current;
-    if (seeded && seeded.slug === slug) {
-      setMovie(seeded);
+    if (initialMovie && initialMovie.slug === slug) {
+      setMovie(initialMovie);
       setNotFound(false);
       setLoading(false);
-      void resolveEntitlement(seeded);
+      void resolveEntitlement(initialMovie);
       return () => {
         cancelled = true;
       };

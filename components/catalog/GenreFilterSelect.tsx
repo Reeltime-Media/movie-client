@@ -65,7 +65,7 @@ export function GenreFilterSelect<T extends string>({
         <ul
           role="listbox"
           aria-labelledby={id}
-          className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 border border-border bg-surface py-1 shadow-lg"
+          className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 border border-border bg-surface py-1"
         >
           {options.map((option) => {
             const isSelected = option.value === value;
@@ -73,10 +73,18 @@ export function GenreFilterSelect<T extends string>({
               <li
                 key={option.value}
                 role="option"
+                tabIndex={0}
                 aria-selected={isSelected}
                 onClick={() => {
                   onChange(option.value);
                   setOpen(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onChange(option.value);
+                    setOpen(false);
+                  }
                 }}
                 className={[
                   "cursor-pointer px-3 py-2 text-[13px] transition-colors",

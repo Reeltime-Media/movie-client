@@ -100,9 +100,7 @@ export function Hero({
           setFeaturedSlides(slides);
         }
       })
-      .catch((err) => {
-        console.error("Hero featured refresh failed:", err);
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -160,7 +158,7 @@ export function Hero({
                   priority={i === 0}
                   sizes="100vw"
                   quality={90}
-                  className="object-contain sm:object-cover object-center sm:object-[center_15%]"
+                  className="rt-parallax-bg object-contain sm:object-cover object-center sm:object-[center_15%]"
                 />
               </div>
             ) : (
@@ -230,14 +228,14 @@ export function Hero({
                     <div className="mt-4 flex items-center gap-2.5">
                       <Link
                         href={s.watchHref}
-                        className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
+                        className="group inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
                       >
                         <PlayCircle size={15} className="fill-white text-brand" />
                         {t("heroWatchNow")}
                       </Link>
                       <Link
                         href={`${s.watchHref}#details`}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-white/18 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-white/18 bg-white/12 px-3 py-1.5 text-[11px] font-bold text-white transition-colors duration-200 hover:bg-white/20 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
                       >
                         <Info size={14} />
                         {t("heroMoreInfo")}

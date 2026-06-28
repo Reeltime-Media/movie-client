@@ -119,7 +119,7 @@ export function SiteFooter() {
               href="/"
               className="flex w-fit items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35"
             >
-              <div className="h-7 w-7 overflow-hidden rounded-md bg-brand shadow-[0_4px_12px_-4px_rgba(229,9,20,0.5)]">
+              <div className="h-7 w-7 overflow-hidden rounded-md bg-brand">
                 <Image
                   src="/logo_r.jpeg"
                   alt="Reeltime logo"

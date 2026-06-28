@@ -1,4 +1,4 @@
-import { PlayCircle } from "lucide-react";
+import { Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { PosterCardProps } from "@/types/poster-card";
@@ -6,10 +6,10 @@ import type { PosterCardProps } from "@/types/poster-card";
 export type { PosterCardProps } from "@/types/poster-card";
 
 export function PosterCard({
+  contentId,
   imageSrc,
   imageAlt,
   imagePriority = false,
-  posterTitle,
   titleBelow,
   posterGradient,
   badge = { kind: "none" },
@@ -29,8 +29,8 @@ export function PosterCard({
     >
       {/* Poster image */}
       <div
-        className="relative aspect-2/3 overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.03]"
-        style={{ background: posterGradient }}
+        className="rt-card-hover relative aspect-2/3 overflow-hidden rounded-md"
+        style={{ background: posterGradient, viewTransitionName: contentId ? `poster-${contentId}` : undefined }}
       >
         {imageSrc ? (
           <Image
@@ -54,9 +54,9 @@ export function PosterCard({
           className="absolute inset-0 z-[6] flex items-center justify-center scale-[0.85] opacity-0 transition-[opacity,transform] duration-[180ms] ease-out group-hover:scale-100 group-hover:opacity-100"
           aria-hidden="true"
         >
-          <PlayCircle
+          <Play
             size={40}
-            className="fill-white text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
+            className="fill-white text-white ml-2"
           />
         </div>
 

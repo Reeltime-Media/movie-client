@@ -24,19 +24,19 @@ export function SectionHeader({
         <ChevronRight size={11} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
       </Link>
     ) : (
-      <a
-        href="#"
+      <button
+        type="button"
         className="group shrink-0 inline-flex items-center gap-1 rounded-sm border border-white/25 bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-white/25"
       >
         {seeAllLabel}
         <ChevronRight size={11} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
-      </a>
+      </button>
     )
   ) : null;
 
   return (
     <div className={`${paddingX} mb-4`}>
-      <div className="rt-section-header flex items-center justify-between gap-4 border border-brand/30 bg-brand px-4 py-3 shadow-[0_4px_24px_-6px_rgba(229,9,20,0.55)]">
+      <div className="rt-section-header flex items-center justify-between gap-4 border border-brand/30 bg-brand px-4 py-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="h-4 w-0.75 shrink-0 rounded-full bg-white/60" aria-hidden />
           <h2 className="text-[15px] font-bold tracking-tight text-white">{title}</h2>

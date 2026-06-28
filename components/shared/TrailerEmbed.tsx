@@ -3,22 +3,26 @@ import { Play } from "lucide-react";
 interface TrailerEmbedProps {
   embedUrl: string;
   title: string;
-  /** bare = full-bleed video, no card chrome */
-  variant?: "card" | "bare";
+  /** bare = text above, card = box with icon, frame-only = literally just the video */
+  variant?: "card" | "bare" | "frame-only";
 }
 
 export function TrailerEmbed({ embedUrl, title, variant = "bare" }: TrailerEmbedProps) {
   const player = (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black ring-1 ring-white/10">
+    <div className={`relative aspect-video w-full overflow-hidden ${variant !== "frame-only" ? "bg-black ring-1 ring-white/10" : ""}`}>
       <iframe
         src={embedUrl}
         title={`${title} trailer`}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-        className="absolute inset-0 h-full w-full"
+        className="absolute inset-0 h-full w-full border-0"
       />
     </div>
   );
+
+  if (variant === "frame-only") {
+    return player;
+  }
 
   if (variant === "card") {
     return (

@@ -349,3 +349,78 @@ html[lang="km"] body {
   width: 0;
   height: 0;
 }
+
+/* ==========================================================================
+   MODERN FRONTEND UPGRADES (View Transitions, Parallax, Glassmorphism)
+   ========================================================================== */
+
+/* 1. Native Cross-Document View Transitions */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fade-out-scale {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.98); }
+}
+
+@keyframes fade-in-scale {
+  from { opacity: 0; transform: scale(1.02); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+::view-transition-old(root) {
+  animation-name: fade-out-scale;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in-scale;
+}
+
+/* 2. Scroll-driven Animations */
+@keyframes rt-parallax {
+  from { transform: translateY(0); }
+  to { transform: translateY(35%); }
+}
+
+.rt-parallax-bg {
+  /* Using scroll() for native scroll-driven parallax */
+  animation: rt-parallax linear both;
+  animation-timeline: scroll();
+  animation-range: entry 0% cover 100%;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rt-parallax-bg {
+    animation: none !important;
+  }
+}
+
+/* 3. Frosted nav & card hover */
+.rt-glass {
+  background: rgba(10, 10, 10, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .rt-glass {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.rt-card-hover {
+  transition: transform 200ms ease;
+}
+
+.rt-card-hover:hover,
+.rt-card-hover:focus-visible {
+  transform: scale(1.03);
+  z-index: 20;
+}
+
