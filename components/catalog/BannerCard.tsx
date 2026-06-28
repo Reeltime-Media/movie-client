@@ -9,6 +9,8 @@ export type BannerCardProps = {
   badgeLabel?: string;
   watchHref?: string;
   imagePriority?: boolean;
+  /** Show the whole image (object-contain, may letterbox) instead of cropping. */
+  imageContain?: boolean;
 };
 
 export function BannerCard({
@@ -19,6 +21,7 @@ export function BannerCard({
   badgeLabel,
   watchHref = "#",
   imagePriority = false,
+  imageContain = false,
 }: BannerCardProps) {
   return (
     <Link
@@ -34,7 +37,10 @@ export function BannerCard({
             width={640}
             height={360}
             sizes="(min-width: 1024px) 380px, (min-width: 640px) 340px, 80vw"
-            className="w-full aspect-video object-cover object-top block"
+            className={[
+              "w-full aspect-video block",
+              imageContain ? "object-contain" : "object-cover object-top",
+            ].join(" ")}
             priority={imagePriority}
             loading={imagePriority ? "eager" : "lazy"}
           />

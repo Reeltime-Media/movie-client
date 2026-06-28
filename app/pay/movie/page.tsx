@@ -23,6 +23,7 @@ import { metaPillClassName } from "@/lib/ui/surfaces";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import { movieCardHref } from "@/lib/movie-routes";
 import { BannerCard } from "@/components/catalog/BannerCard";
+import { seedBannerSrc } from "@/lib/seed/top10-banners";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { movieToPoster } from "@/lib/api/to-poster";
 import type { PosterCardProps } from "@/types/poster-card";
@@ -139,13 +140,14 @@ function MoviePayInner() {
             <h2 className="text-[16px] font-bold text-text mb-4">Top 10 Movies of the Week</h2>
             <div className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-200px)] lg:max-h-[min(600px,70vh)] custom-scrollbar pr-2 pb-4">
               {topMovies.map((tm) => {
-                const bgImage = posterUrl(tm.poster_key) ?? "";
+                const bgImage = seedBannerSrc(tm.slug);
                 const isFree = !tm.price_usd || parseFloat(tm.price_usd) === 0;
                 const isOwned = isFree || ownedIds.has(tm.id);
                 return (
                   <BannerCard
                     key={tm.id}
                     imageSrc={bgImage}
+                    imageContain
                     title={tm.title}
                     year={tm.release_year}
                     badgeLabel="រឿងកុន"
