@@ -97,7 +97,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     <PageShell fullWidth>
       {/* Full-viewport video */}
       {canPlay ? (
-        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-black border-b border-border h-screen flex flex-col justify-center">
+        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-white border-b border-border h-screen flex flex-col justify-center px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
           <WatchPlayer
             key={hlsSrc}
             contentId={movie.id}
@@ -108,7 +108,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
           />
         </div>
       ) : trailerEmbed ? (
-        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-black border-b border-border h-screen flex flex-col justify-center">
+        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-white border-b border-border h-screen flex flex-col justify-center px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
           <TrailerEmbed embedUrl={trailerEmbed} title={title} />
         </div>
       ) : null}
