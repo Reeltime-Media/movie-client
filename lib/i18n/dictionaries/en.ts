@@ -115,6 +115,7 @@ export const en = {
   homeContinueWatching: "Continue watching",
   homeLateNightThrillers: "Late-night thrillers",
   homeLibrarySpotlight: "Library spotlight",
+  homeMostWatchedTitle: "Top 10 movies of the week",
   watchMoreLikeThis: "More like this",
   watchSeriesPicks: "Series picks for you",
 

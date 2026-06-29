@@ -86,7 +86,7 @@ export function PosterCard({
 
         {/* Entitlement pill — bottom left */}
         {entitlement?.kind === "price" ? (
-          <div className="absolute bottom-2 left-2 z-[10] rounded-sm bg-black/65 px-1.5 py-0.5 text-[9px] font-bold text-white">
+          <div className="absolute bottom-2 left-2 z-[10] rounded-sm bg-white px-2 py-0.5 text-[13px] font-bold text-brand">
             {entitlement.value}
           </div>
         ) : null}

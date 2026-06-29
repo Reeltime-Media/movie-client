@@ -98,6 +98,24 @@ export function seriesToPoster(
   };
 }
 
+export function movieToBanner(
+  movie: ContentListItemRead,
+  ownedIds?: Set<string>,
+): BannerCardProps {
+  const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
+  const owned = isFree || Boolean(ownedIds?.has(movie.id));
+  const price =
+    !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
+  return {
+    imageSrc: posterUrl(movie.poster_key),
+    imageAlt: movie.title,
+    title: movie.title,
+    year: movie.release_year,
+    badgeLabel: price,
+    watchHref: movieCardHref(movie, owned),
+  };
+}
+
 export function seriesToBanner(series: SeriesRead, badgeLabel = "រឿងភាគ"): BannerCardProps {
   return {
     imageSrc: posterUrl(series.banner_key) ?? posterUrl(series.poster_key),

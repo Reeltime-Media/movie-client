@@ -111,6 +111,7 @@ export const km = {
   homeContinueWatching: "បន្តមើល",
   homeLateNightThrillers: "រន្ធត់ពេលយប់",
   homeLibrarySpotlight: "បញ្ចាំងបណ្ណាល័យ",
+  homeMostWatchedTitle: "ភាពយន្តពេញនិយម ១០ កំពូលប្រចាំសប្តាហ៍",
   watchMoreLikeThis: "ស្រដៀងនេះ",
   watchSeriesPicks: "រឿងភាគសម្រាប់អ្នក",
 

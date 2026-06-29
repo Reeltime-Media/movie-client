@@ -13,7 +13,7 @@ import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
-import { movieToPoster, seriesToBanner } from "@/lib/api/to-poster";
+import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
@@ -55,6 +55,12 @@ export function HomeView({
   const [libraryPosters, setLibraryPosters] = useState<PosterCardProps[]>(
     () => initialTrending.slice(0, RAIL_LIMIT),
   );
+  const [ownedIds, setOwnedIds] = useState<Set<string>>(() => new Set());
+
+  const topMovieBanners = useMemo<BannerCardProps[]>(
+    () => movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds)),
+    [movies, ownedIds],
+  );
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -64,9 +70,10 @@ export function HomeView({
       listMySubscriptions().catch(() => []),
     ]).then(([purchases]) => {
       if (cancelled) return;
-      const ownedIds = new Set(purchases.map((p) => p.content_id));
+      const owned = new Set(purchases.map((p) => p.content_id));
+      setOwnedIds(owned);
       if (movies.length) {
-        const moviePosters = movies.map((m, i) => movieToPoster(m, i, ownedIds)).slice(0, RAIL_LIMIT);
+        const moviePosters = movies.map((m, i) => movieToPoster(m, i, owned)).slice(0, RAIL_LIMIT);
         setTrendingPosters(moviePosters);
         setThrillerPosters([...moviePosters].reverse());
         setLibraryPosters(moviePosters);
@@ -111,6 +118,11 @@ export function HomeView({
           fallbackSeries={seriesList}
         />
       </div>
+
+      <ScrollReveal as="section" className="pt-8 pb-6">
+        <SectionHeader title={t("homeMostWatchedTitle")} showSeeAll seeAllHref="/movies" seeAllLabel={t("sectionSeeAll")} />
+        <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
+      </ScrollReveal>
 
       <ScrollReveal as="section" className="pt-8 pb-6">
         <SectionHeader
@@ -158,6 +170,16 @@ export function HomeView({
 
         />
         <PosterScrollRail posters={thrillerPosters} gutter="sm" autoScroll direction="right" speed={0.7} />
+      </ScrollReveal>
+
+      <ScrollReveal as="section" className="pt-8 pb-6" delay={60}>
+        <SectionHeader
+          title={t("seriesPopularTitle")}
+          showSeeAll
+          seeAllHref="/series"
+          seeAllLabel={t("sectionSeeAll")}
+        />
+        <BannerScrollRail cards={seriesBanners} autoScroll direction="left" />
       </ScrollReveal>
 
       <ScrollReveal as="section" className="pt-8 pb-12" delay={80}>

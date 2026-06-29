@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Clock, Link2, PlayCircle, Star } from "lucide-react";
+import { Clock, Link2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { posterUrl } from "@/lib/api/client";
@@ -55,6 +55,14 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     payHref,
   } = useMovieWatch(slug, { initialMovie });
 
+  // Keep all hooks above the early returns below so hook order stays stable
+  // across the loading → loaded transition.
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, []);
+
   if (loading) {
     return (
       <PageShell fullWidth>
@@ -87,44 +95,34 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   const fallbackSrc = SAMPLE_FALLBACK_SRC;
   const attribution = playbackUrl ? undefined : SAMPLE_VIDEO_ATTRIBUTION;
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
-  const [shareUrl, setShareUrl] = useState("");
-
-  useEffect(() => {
-    setShareUrl(window.location.href);
-  }, []);
 
   return (
     <PageShell fullWidth>
-      {/* Full-viewport video */}
-      {canPlay ? (
-        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-white border-b border-border h-screen flex flex-col justify-center px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
-          <WatchPlayer
-            key={hlsSrc}
-            contentId={movie.id}
-            hlsSrc={hlsSrc}
-            fallbackSrc={fallbackSrc}
-            title={title}
-            attribution={attribution}
-          />
-        </div>
-      ) : trailerEmbed ? (
-        <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 bg-white border-b border-border h-screen flex flex-col justify-center px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
-          <TrailerEmbed embedUrl={trailerEmbed} title={title} />
+      {/* Cinematic video band — its height tracks the 16:9 player and is capped
+          to the viewport on large screens. On phones the cap doesn't bind, so the
+          band collapses to a tight player at the top instead of a tall box with
+          empty space above and below. */}
+      {canPlay || trailerEmbed ? (
+        <div className="relative ml-[calc(50%-50vw)] flex w-screen max-w-none shrink-0 items-center justify-center border-b border-border px-2 py-2 sm:px-6 sm:py-6 lg:px-10">
+          <div className="w-full max-w-[calc((100dvh-7rem)*16/9)]">
+            {canPlay ? (
+              <WatchPlayer
+                key={hlsSrc}
+                contentId={movie.id}
+                hlsSrc={hlsSrc}
+                fallbackSrc={fallbackSrc}
+                title={title}
+                attribution={attribution}
+              />
+            ) : (
+              <TrailerEmbed embedUrl={trailerEmbed!} title={title} />
+            )}
+          </div>
         </div>
       ) : null}
 
       {/* Details below video */}
       <section id="details" className="relative border-b border-border py-6 md:py-8">
-        {movie.poster_key && (
-          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-            <Image
-              src={posterUrl(movie.poster_key) ?? ""}
-              alt=""
-              fill
-              className="object-cover object-center opacity-[0.12] blur-[48px] scale-110"
-            />
-          </div>
-        )}
         <WatchDetailBody>
           <div className="mx-auto max-w-6xl">
             <div className="flex items-start gap-8">
@@ -257,21 +255,6 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
           <div className="mx-auto max-w-6xl">
             <MovieComments contentId={movie.id} movieTitle={title} />
           </div>
-
-          <nav
-            aria-label="Breadcrumb"
-            className="mx-auto mt-8 flex max-w-6xl flex-wrap items-center gap-1 border-t border-border pt-6 text-[12px] text-text-muted"
-          >
-            <Link href="/movies" className="font-medium transition-colors hover:text-text">Movies</Link>
-            <ChevronRight size={14} className="text-border-hover" aria-hidden />
-            <span className="truncate font-semibold text-text">{title}</span>
-            {loggedIn ? (
-              <>
-                <span className="mx-1 text-border-hover" aria-hidden>·</span>
-                <Link href="/my-library" className="font-medium transition-colors hover:text-text">My library</Link>
-              </>
-            ) : null}
-          </nav>
         </WatchDetailBody>
       </section>
 
