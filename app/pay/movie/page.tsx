@@ -19,6 +19,7 @@ import { posterUrl } from "@/lib/api/client";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { canWatchMovie } from "@/lib/movie-entitlement";
 import { movieCardHref, movieWatchHref } from "@/lib/movie-routes";
 import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
@@ -53,32 +54,49 @@ function MoviePayInner() {
       setLoading(false);
       return;
     }
-    
+
     let cancelled = false;
     const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
 
-    Promise.all([getMovie(slug), listMovies(), purchasesPromise])
-      .then(([m, all, purchases]) => {
+    Promise.all([getMovie(slug), purchasesPromise])
+      .then(([m, purchases]) => {
         if (cancelled) return;
+        const userOwnedIds = new Set(purchases.map((p) => p.content_id));
+
+        if (loggedIn && canWatchMovie(m, { ownedIds: userOwnedIds, isAdmin })) {
+          router.replace(movieWatchHref(m.slug));
+          return;
+        }
+
         setMovie(m);
-        const userOwnedIds = new Set(purchases.map(p => p.content_id));
         setOwnedIds(userOwnedIds);
-        
-        const others = all.filter((x) => x.slug !== m.slug);
-        setTopMovies(others.slice(0, 10));
-        setRecommendedPosters(others.slice(10, 22).map((x, i) => movieToPoster(x, i, userOwnedIds, isAdmin)));
         setLoading(false);
       })
       .catch(() => {
-        setError("Movie not found.");
-        setLoading(false);
+        if (!cancelled) {
+          setError("Movie not found.");
+          setLoading(false);
+        }
       });
-  }, [slug, loggedIn, isAdmin]);
+  }, [slug, loggedIn, isAdmin, router]);
 
   useEffect(() => {
-    if (!isAdmin || !movie || !loggedIn) return;
-    router.replace(movieWatchHref(movie.slug));
-  }, [isAdmin, movie, loggedIn, router]);
+    if (!movie || loading) return;
+    let cancelled = false;
+    listMovies()
+      .then((all) => {
+        if (cancelled) return;
+        const others = all.filter((x) => x.slug !== movie.slug);
+        setTopMovies(others.slice(0, 10));
+        setRecommendedPosters(
+          others.slice(10, 22).map((x, i) => movieToPoster(x, i, ownedIds, isAdmin)),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [movie, loading, ownedIds, isAdmin]);
 
   async function handlePay() {
     if (!movie) return;
@@ -150,8 +168,7 @@ function MoviePayInner() {
             <div className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-200px)] lg:max-h-[min(600px,70vh)] custom-scrollbar pr-2 pb-4">
               {topMovies.map((tm) => {
                 const bgImage = seedBannerSrc(tm.slug);
-                const isFree = !tm.price_usd || parseFloat(tm.price_usd) === 0;
-                const isOwned = isFree || ownedIds.has(tm.id) || isAdmin;
+                const isOwned = canWatchMovie(tm, { ownedIds, isAdmin });
                 return (
                   <BannerCard
                     key={tm.id}

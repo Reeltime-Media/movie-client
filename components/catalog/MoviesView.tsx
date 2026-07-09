@@ -102,15 +102,23 @@ export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
     [movies, searchQuery, activeGenre],
   );
 
+  const entitlementPending = loggedIn && ownedIds === null;
+
   const allPosters = useMemo(
-    () => filteredMovies.map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin)),
-    [filteredMovies, ownedIds, isAdmin],
+    () =>
+      filteredMovies.map((m, i) =>
+        movieToPoster(m, i, ownedIds ?? undefined, isAdmin, entitlementPending),
+      ),
+    [filteredMovies, ownedIds, isAdmin, entitlementPending],
   );
 
   // Top 10 always uses unfiltered movies
   const top10Posters = useMemo(
-    () => movies.slice(0, TOP_COUNT).map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin)),
-    [movies, ownedIds, isAdmin],
+    () =>
+      movies
+        .slice(0, TOP_COUNT)
+        .map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin, entitlementPending)),
+    [movies, ownedIds, isAdmin, entitlementPending],
   );
 
   const totalPages = Math.max(1, Math.ceil(allPosters.length / PAGE_SIZE));

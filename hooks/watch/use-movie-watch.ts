@@ -10,11 +10,8 @@ import { getPlaybackUrl } from "@/lib/api/playback";
 import { listPurchases } from "@/lib/api/purchases";
 import type { ContentRead } from "@/lib/api/types";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { canWatchMovie, isMovieFree } from "@/lib/movie-entitlement";
 import { moviePayHref, movieWatchHref } from "@/lib/movie-routes";
-
-function isMovieFree(movie: ContentRead) {
-  return !movie.price_usd || parseFloat(movie.price_usd) === 0;
-}
 
 type UseMovieWatchOptions = {
   /** When provided (e.g. from Server Component), skips the initial metadata fetch. */
@@ -47,7 +44,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       const purchases = loggedIn ? await listPurchases().catch(() => []) : [];
       if (cancelled) return;
       const entitled =
-        isAdmin || isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
+        canWatchMovie(m, { ownedIds: new Set(purchases.map((p) => p.content_id)), isAdmin });
       setCanPlay(loggedIn && entitled);
       if (loggedIn && entitled) {
         setPlaybackLoading(true);
@@ -86,8 +83,10 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       .then(async ([m, purchases]) => {
         if (cancelled) return;
         setMovie(m);
-        const entitled =
-          isAdmin || isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
+        const entitled = canWatchMovie(m, {
+          ownedIds: new Set(purchases.map((p) => p.content_id)),
+          isAdmin,
+        });
         setCanPlay(loggedIn && entitled);
         if (loggedIn && entitled) {
           setPlaybackLoading(true);
