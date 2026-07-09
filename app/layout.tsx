@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { DevToolsGuard } from "@/components/providers/DevToolsGuard";
 import { FavoritesProvider } from "@/components/providers/FavoritesProvider";
 import { GoogleAuthProvider } from "@/components/providers/GoogleAuthProvider";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
@@ -41,6 +42,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 lg:pb-0">
         <ThemeInit />
+        <DevToolsGuard />
         <GoogleAuthProvider>
           <LocaleProvider>
             <FavoritesProvider>{children}</FavoritesProvider>

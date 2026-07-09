@@ -3,6 +3,7 @@
 import Hls from "hls.js";
 import {
   AlertCircle,
+  EyeOff,
   Loader2,
   Maximize2,
   Minimize2,
@@ -64,6 +65,7 @@ export function WatchPlayer({
   const [showQuality, setShowQuality] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [obscured, setObscured] = useState(false);
 
   const { markCompleted, flushProgress } = useWatchProgressSync({
     contentId,
@@ -221,6 +223,29 @@ export function WatchPlayer({
     };
   }, []);
 
+  // ── Obscure on blur/tab-switch ──────────────────────────────────
+  // Weak deterrent only: browsers give pages no way to detect an actual
+  // screenshot or screen recording. This just pauses and darkens the
+  // frame when the tab loses focus/visibility (e.g. switching to a
+  // recording tool's controls), which stops casual capture attempts
+  // without doing anything for a determined user.
+  useEffect(() => {
+    const obscure = () => {
+      const v = videoRef.current;
+      if (v && !v.paused) v.pause();
+      setObscured(true);
+    };
+    const onVisibility = () => {
+      if (document.hidden) obscure();
+    };
+    window.addEventListener("blur", obscure);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("blur", obscure);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
   // ── Controls auto-hide ─────────────────────────────────────────
   const resetHideTimer = useCallback(() => {
     setShowControls(true);
@@ -234,6 +259,7 @@ export function WatchPlayer({
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
+    setObscured(false);
     if (v.paused) {
       void safePlay(v);
     } else {
@@ -338,6 +364,7 @@ export function WatchPlayer({
         onMouseMove={resetHideTimer}
         onMouseLeave={() => { if (playing) setShowControls(false); }}
         onClick={togglePlay}
+        onContextMenu={(e) => e.preventDefault()}
       >
         {/* Video element — no native controls */}
         <video
@@ -346,7 +373,24 @@ export function WatchPlayer({
           playsInline
           preload="auto"
           aria-label={`Video player: ${title}`}
+          controlsList="nodownload noremoteplayback"
+          disablePictureInPicture
+          disableRemotePlayback
+          onContextMenu={(e) => e.preventDefault()}
         />
+
+        {/* Obscured on tab blur/switch — weak deterrent, see effect above */}
+        {obscured && !error && (
+          <div
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black"
+            onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+          >
+            <EyeOff size={28} className="text-white/50" />
+            <p className="text-[12px] font-medium text-white/50">
+              Paused — click to resume
+            </p>
+          </div>
+        )}
 
         {/* Buffering spinner */}
         {buffering && !error && (
