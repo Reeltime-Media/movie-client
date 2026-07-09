@@ -11,6 +11,7 @@ import type { ContentListItemRead, SeasonRead, SeriesRead } from "./types";
 
 export type SeriesPosterOptions = {
   hasSubscription?: boolean;
+  isAdmin?: boolean;
   seasons?: SeasonRead[];
 };
 
@@ -36,10 +37,11 @@ export function movieToPoster(
   movie: ContentListItemRead,
   index = 0,
   ownedIds?: Set<string>,
+  isAdmin = false,
 ): PosterCardProps {
   const { gradient, accent } = pick(index);
   const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
-  const isOwned = isFree || ownedIds?.has(movie.id);
+  const isOwned = isFree || ownedIds?.has(movie.id) || isAdmin;
   const price =
     !isFree && movie.price_usd
       ? `$${parseFloat(movie.price_usd).toFixed(2)}`
@@ -54,7 +56,7 @@ export function movieToPoster(
     accentColor: accent,
     badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
     entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
-    watchHref: movieCardHref(movie, Boolean(isOwned)),
+    watchHref: movieCardHref(movie, Boolean(isOwned), isAdmin),
     year: movie.release_year,
   };
 }
@@ -67,7 +69,7 @@ export function seriesToPoster(
   const { gradient, accent } = pick(index);
   const opts: SeriesPosterOptions =
     typeof options === "boolean" ? { hasSubscription: options } : (options ?? {});
-  const hasSubscription = Boolean(opts.hasSubscription);
+  const hasSubscription = Boolean(opts.hasSubscription) || Boolean(opts.isAdmin);
   const seasons = opts.seasons ?? [];
   const hasFreeEpisodes = seasonsHaveFreeEpisodes(seasons);
   const firstFree = hasFreeEpisodes ? findFirstFreeEpisode(seasons) : null;
@@ -101,9 +103,10 @@ export function seriesToPoster(
 export function movieToBanner(
   movie: ContentListItemRead,
   ownedIds?: Set<string>,
+  isAdmin = false,
 ): BannerCardProps {
   const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
-  const owned = isFree || Boolean(ownedIds?.has(movie.id));
+  const owned = isFree || Boolean(ownedIds?.has(movie.id)) || isAdmin;
   const price =
     !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
   return {
@@ -112,7 +115,7 @@ export function movieToBanner(
     title: movie.title,
     year: movie.release_year,
     badgeLabel: price,
-    watchHref: movieCardHref(movie, owned),
+    watchHref: movieCardHref(movie, owned, isAdmin),
   };
 }
 

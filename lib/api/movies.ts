@@ -1,5 +1,6 @@
 import { fetchAllPages } from "./pagination";
 import { apiFetch, catalogCache } from "./client";
+import { clientCached, CLIENT_CATALOG_TTL_MS } from "./client-cache";
 import type { ContentListItemRead, ContentRead } from "./types";
 
 export type CatalogListParams = {
@@ -18,9 +19,14 @@ function moviesListPath(params?: CatalogListParams): string {
 }
 
 export async function listMovies(params?: CatalogListParams): Promise<ContentListItemRead[]> {
-  return fetchAllPages<ContentListItemRead>(moviesListPath(params), 100, catalogCache);
+  const path = moviesListPath(params);
+  return clientCached(`movies:list:${path}`, CLIENT_CATALOG_TTL_MS, () =>
+    fetchAllPages<ContentListItemRead>(path, 100, catalogCache),
+  );
 }
 
 export async function getMovie(slug: string): Promise<ContentRead> {
-  return apiFetch<ContentRead>(`/movies/${slug}`, catalogCache);
+  return clientCached(`movies:${slug}`, CLIENT_CATALOG_TTL_MS, () =>
+    apiFetch<ContentRead>(`/movies/${slug}`, catalogCache),
+  );
 }

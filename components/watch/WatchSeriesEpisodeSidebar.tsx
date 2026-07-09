@@ -8,12 +8,15 @@ export function WatchSeriesEpisodeSidebar({
   seasons,
   activeSeason,
   activeEpisode,
+  onEpisodeHover,
 }: {
   seriesSlug: string;
   seriesTitle: string;
   seasons: SeasonRead[];
   activeSeason: number;
   activeEpisode: number;
+  /** Warm the stream URL when a playable episode is hovered/focused. */
+  onEpisodeHover?: (episodeId: string, isFree: boolean) => void;
 }) {
   const seasonData = seasons.find((s) => s.season_number === activeSeason);
   const episodes = seasonData?.episodes ?? [];
@@ -76,6 +79,16 @@ export function WatchSeriesEpisodeSidebar({
                 <Link
                   href={href}
                   aria-current={isActive ? "true" : undefined}
+                  onMouseEnter={
+                    isFree && onEpisodeHover
+                      ? () => onEpisodeHover(ep.id, isFree)
+                      : undefined
+                  }
+                  onFocus={
+                    isFree && onEpisodeHover
+                      ? () => onEpisodeHover(ep.id, isFree)
+                      : undefined
+                  }
                   className={[
                     "flex min-h-[56px] items-stretch outline-none transition-colors",
                     isActive ? "bg-surface-elevated" : "hover:bg-surface-elevated/70",

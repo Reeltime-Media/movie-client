@@ -17,11 +17,13 @@ import { listPurchases } from "@/lib/api/purchases";
 import { createMoviePaymentIntent } from "@/lib/api/payments";
 import { posterUrl } from "@/lib/api/client";
 import { useAuth } from "@/hooks/auth/use-auth";
+import { useUser } from "@/hooks/auth/use-user";
+import { isAdminUser } from "@/lib/auth/is-admin";
+import { movieCardHref, movieWatchHref } from "@/lib/movie-routes";
 import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { metaPillClassName } from "@/lib/ui/surfaces";
 import { youtubeEmbedUrl } from "@/lib/youtube";
-import { movieCardHref } from "@/lib/movie-routes";
 import { BannerCard } from "@/components/catalog/BannerCard";
 import { seedBannerSrc } from "@/lib/seed/top10-banners";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
@@ -32,6 +34,8 @@ import type { ContentRead, ContentListItemRead } from "@/lib/api/types";
 function MoviePayInner() {
   const router = useRouter();
   const { loggedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const params = useSearchParams();
   const slug = params.get("slug") ?? "";
 
@@ -62,14 +66,19 @@ function MoviePayInner() {
         
         const others = all.filter((x) => x.slug !== m.slug);
         setTopMovies(others.slice(0, 10));
-        setRecommendedPosters(others.slice(10, 22).map((x, i) => movieToPoster(x, i, userOwnedIds)));
+        setRecommendedPosters(others.slice(10, 22).map((x, i) => movieToPoster(x, i, userOwnedIds, isAdmin)));
         setLoading(false);
       })
       .catch(() => {
         setError("Movie not found.");
         setLoading(false);
       });
-  }, [slug]);
+  }, [slug, loggedIn, isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin || !movie || !loggedIn) return;
+    router.replace(movieWatchHref(movie.slug));
+  }, [isAdmin, movie, loggedIn, router]);
 
   async function handlePay() {
     if (!movie) return;
@@ -129,7 +138,7 @@ function MoviePayInner() {
           {/* Left: Trailer */}
           <div className="w-full">
             {trailerEmbed ? (
-              <div className="w-full aspect-video overflow-hidden rounded-xl bg-black border border-border">
+              <div className="w-full aspect-video overflow-hidden bg-black border border-border">
                 <TrailerEmbed embedUrl={trailerEmbed} title={movie.title} variant="frame-only" />
               </div>
             ) : null}
@@ -142,7 +151,7 @@ function MoviePayInner() {
               {topMovies.map((tm) => {
                 const bgImage = seedBannerSrc(tm.slug);
                 const isFree = !tm.price_usd || parseFloat(tm.price_usd) === 0;
-                const isOwned = isFree || ownedIds.has(tm.id);
+                const isOwned = isFree || ownedIds.has(tm.id) || isAdmin;
                 return (
                   <BannerCard
                     key={tm.id}
@@ -151,7 +160,7 @@ function MoviePayInner() {
                     title={tm.title}
                     year={tm.release_year}
                     badgeLabel="រឿងកុន"
-                    watchHref={movieCardHref(tm, isOwned)}
+                    watchHref={movieCardHref(tm, isOwned, isAdmin)}
                   />
                 );
               })}

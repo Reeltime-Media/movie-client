@@ -1,5 +1,6 @@
 import { fetchAllPages } from "./pagination";
 import { apiFetch, catalogCache } from "./client";
+import { clientCached, CLIENT_CATALOG_TTL_MS } from "./client-cache";
 import type { SeasonRead, SeriesRead } from "./types";
 import type { CatalogListParams } from "./movies";
 
@@ -14,13 +15,20 @@ function seriesListPath(params?: CatalogListParams): string {
 }
 
 export async function listSeries(params?: CatalogListParams): Promise<SeriesRead[]> {
-  return fetchAllPages<SeriesRead>(seriesListPath(params), 100, catalogCache);
+  const path = seriesListPath(params);
+  return clientCached(`series:list:${path}`, CLIENT_CATALOG_TTL_MS, () =>
+    fetchAllPages<SeriesRead>(path, 100, catalogCache),
+  );
 }
 
 export async function getSeries(slug: string): Promise<SeriesRead> {
-  return apiFetch<SeriesRead>(`/series/${slug}`, catalogCache);
+  return clientCached(`series:${slug}`, CLIENT_CATALOG_TTL_MS, () =>
+    apiFetch<SeriesRead>(`/series/${slug}`, catalogCache),
+  );
 }
 
 export async function listEpisodes(slug: string): Promise<SeasonRead[]> {
-  return apiFetch<SeasonRead[]>(`/series/${slug}/episodes`, catalogCache);
+  return clientCached(`series:${slug}:episodes`, CLIENT_CATALOG_TTL_MS, () =>
+    apiFetch<SeasonRead[]>(`/series/${slug}/episodes`, catalogCache),
+  );
 }

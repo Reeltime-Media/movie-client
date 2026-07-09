@@ -4,10 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/auth/use-auth";
+import { useUser } from "@/hooks/auth/use-user";
 import { getMovie } from "@/lib/api/movies";
 import { getPlaybackUrl } from "@/lib/api/playback";
 import { listPurchases } from "@/lib/api/purchases";
 import type { ContentRead } from "@/lib/api/types";
+import { isAdminUser } from "@/lib/auth/is-admin";
 import { moviePayHref, movieWatchHref } from "@/lib/movie-routes";
 
 function isMovieFree(movie: ContentRead) {
@@ -22,6 +24,8 @@ type UseMovieWatchOptions = {
 export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) {
   const router = useRouter();
   const { loggedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const { initialMovie = null } = options;
   const isSeeded = initialMovie && initialMovie.slug === slug;
   const [movie, setMovie] = useState<ContentRead | null>(isSeeded ? initialMovie : null);
@@ -41,7 +45,8 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     async function resolveEntitlement(m: ContentRead) {
       const purchases = loggedIn ? await listPurchases().catch(() => []) : [];
       if (cancelled) return;
-      const entitled = isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
+      const entitled =
+        isAdmin || isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
       setCanPlay(loggedIn && entitled);
       if (loggedIn && entitled) {
         getPlaybackUrl(m.id)
@@ -72,7 +77,8 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       .then(([m, purchases]) => {
         if (cancelled) return;
         setMovie(m);
-        const entitled = isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
+        const entitled =
+          isAdmin || isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
         setCanPlay(loggedIn && entitled);
         if (loggedIn && entitled) {
           getPlaybackUrl(m.id)
@@ -86,7 +92,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     return () => {
       cancelled = true;
     };
-  }, [slug, router, loggedIn]);
+  }, [slug, router, loggedIn, isAdmin]);
 
   const derived = useMemo(() => {
     if (!movie) {

@@ -83,6 +83,11 @@ export function WatchPlayer({
     setLevels([]);
     setSelectedLevel(-1);
     setAutoLevel(-1);
+    // Reset progress state so switching source (e.g. next episode) without a
+    // remount doesn't briefly show the previous video's time/scrubber.
+    setCurrentTime(0);
+    setDuration(0);
+    setBufferedEnd(0);
 
     if (Hls.isSupported()) {
       const hls = new Hls({ startLevel: -1, capLevelToPlayerSize: true });
@@ -188,9 +193,32 @@ export function WatchPlayer({
 
   // ── Fullscreen listener ────────────────────────────────────────
   useEffect(() => {
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    const update = () => {
+      // Standard fullscreen API (Chrome/Firefox/desktop Safari)
+      if (typeof document !== "undefined" && "fullscreenElement" in document) {
+        setIsFullscreen(!!document.fullscreenElement);
+        return;
+      }
+      setIsFullscreen(false);
+    };
+
+    const onDocChange = () => update();
+    document.addEventListener("fullscreenchange", onDocChange);
+
+    // iOS Safari fullscreen is video-only and does not reliably emit document.fullscreenchange.
+    // Track video fullscreen via WebKit-specific events.
+    const v = videoRef.current;
+    const onWebkitBegin = () => setIsFullscreen(true);
+    const onWebkitEnd = () => setIsFullscreen(false);
+    v?.addEventListener?.("webkitbeginfullscreen" as any, onWebkitBegin as any);
+    v?.addEventListener?.("webkitendfullscreen" as any, onWebkitEnd as any);
+
+    update();
+    return () => {
+      document.removeEventListener("fullscreenchange", onDocChange);
+      v?.removeEventListener?.("webkitbeginfullscreen" as any, onWebkitBegin as any);
+      v?.removeEventListener?.("webkitendfullscreen" as any, onWebkitEnd as any);
+    };
   }, []);
 
   // ── Controls auto-hide ─────────────────────────────────────────
@@ -242,9 +270,31 @@ export function WatchPlayer({
   }, []);
 
   const toggleFullscreen = useCallback(() => {
+    const v = videoRef.current;
     const el = containerRef.current;
-    if (!el) return;
-    document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen();
+    if (!v || !el) return;
+
+    // Exit if already fullscreen (standard API)
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+      return;
+    }
+
+    // Prefer putting the <video> element fullscreen on mobile (iOS Safari requirement).
+    const anyVideo = v as any;
+    if (typeof v.requestFullscreen === "function") {
+      void v.requestFullscreen();
+      return;
+    }
+    if (typeof anyVideo.webkitEnterFullscreen === "function") {
+      anyVideo.webkitEnterFullscreen();
+      return;
+    }
+
+    // Fallback to container fullscreen (some browsers allow this)
+    if (typeof el.requestFullscreen === "function") {
+      void el.requestFullscreen();
+    }
   }, []);
 
   // ── Keyboard shortcuts ────────────────────────────────────────

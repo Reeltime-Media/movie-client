@@ -15,6 +15,8 @@ import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
+import { useUser } from "@/hooks/auth/use-user";
+import { isAdminUser } from "@/lib/auth/is-admin";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
 import type { PromotionBannerRead } from "@/lib/api/promotion-banners";
@@ -39,6 +41,8 @@ export function HomeView({
 }: HomeViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
 
   const RAIL_LIMIT = 12;
 
@@ -58,8 +62,8 @@ export function HomeView({
   const [ownedIds, setOwnedIds] = useState<Set<string>>(() => new Set());
 
   const topMovieBanners = useMemo<BannerCardProps[]>(
-    () => movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds)),
-    [movies, ownedIds],
+    () => movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds, isAdmin)),
+    [movies, ownedIds, isAdmin],
   );
 
   useEffect(() => {
@@ -73,7 +77,7 @@ export function HomeView({
       const owned = new Set(purchases.map((p) => p.content_id));
       setOwnedIds(owned);
       if (movies.length) {
-        const moviePosters = movies.map((m, i) => movieToPoster(m, i, owned)).slice(0, RAIL_LIMIT);
+        const moviePosters = movies.map((m, i) => movieToPoster(m, i, owned, isAdmin)).slice(0, RAIL_LIMIT);
         setTrendingPosters(moviePosters);
         setThrillerPosters([...moviePosters].reverse());
         setLibraryPosters(moviePosters);
@@ -86,7 +90,7 @@ export function HomeView({
     return () => {
       cancelled = true;
     };
-  }, [loggedIn, movies, seriesList]);
+  }, [loggedIn, movies, seriesList, isAdmin]);
 
   const displayBanners = useMemo((): PromotionBannerRead[] => {
     if (promotionBanners.length > 0) return promotionBanners;

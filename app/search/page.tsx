@@ -13,6 +13,8 @@ import { listPurchases } from "@/lib/api/purchases";
 import { listEpisodes, listSeries } from "@/lib/api/series";
 import { movieCardHref } from "@/lib/movie-routes";
 import { useAuth } from "@/hooks/auth/use-auth";
+import { useUser } from "@/hooks/auth/use-user";
+import { isAdminUser } from "@/lib/auth/is-admin";
 import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 
 
@@ -120,6 +122,8 @@ function SearchPageInner() {
   const params = useSearchParams();
   const { t } = useI18n();
   const { loggedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const urlQuery = params.get("q") ?? "";
   const [input, setInput] = useState(urlQuery);
   const [loading, setLoading] = useState(false);
@@ -167,7 +171,7 @@ function SearchPageInner() {
           return {
             kind: "movie",
             data: m,
-            href: movieCardHref(m, Boolean(isOwned)),
+            href: movieCardHref(m, Boolean(isOwned), isAdmin),
           };
         });
 
@@ -189,7 +193,7 @@ function SearchPageInner() {
     return () => {
       cancelled = true;
     };
-  }, [urlQuery, loggedIn]);
+  }, [urlQuery, loggedIn, isAdmin]);
 
   const submitSearch = useCallback(() => {
     const next = input.trim();

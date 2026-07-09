@@ -13,6 +13,8 @@ import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listPurchases } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
+import { useUser } from "@/hooks/auth/use-user";
+import { isAdminUser } from "@/lib/auth/is-admin";
 import {
   CATALOG_GENRE_KEYS,
   type CatalogGenreKey,
@@ -88,6 +90,8 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
 export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>("genreAll");
   const [searchQuery, setSearchQuery] = useState("");
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
@@ -99,14 +103,14 @@ export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
   );
 
   const allPosters = useMemo(
-    () => filteredMovies.map((m, i) => movieToPoster(m, i, ownedIds ?? undefined)),
-    [filteredMovies, ownedIds],
+    () => filteredMovies.map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin)),
+    [filteredMovies, ownedIds, isAdmin],
   );
 
   // Top 10 always uses unfiltered movies
   const top10Posters = useMemo(
-    () => movies.slice(0, TOP_COUNT).map((m, i) => movieToPoster(m, i, ownedIds ?? undefined)),
-    [movies, ownedIds],
+    () => movies.slice(0, TOP_COUNT).map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin)),
+    [movies, ownedIds, isAdmin],
   );
 
   const totalPages = Math.max(1, Math.ceil(allPosters.length / PAGE_SIZE));

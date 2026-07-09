@@ -11,6 +11,8 @@ import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
+import { useUser } from "@/hooks/auth/use-user";
+import { isAdminUser } from "@/lib/auth/is-admin";
 import type { PosterCardProps } from "@/types/poster-card";
 
 /** Defer discovery rails so they do not compete with watch page / player requests. */
@@ -19,6 +21,8 @@ const DEFER_MS = 1500;
 export function WatchDiscoveryRails() {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const [enabled, setEnabled] = useState(false);
   const [moreLikeThis, setMoreLikeThis] = useState<PosterCardProps[]>([]);
   const [trending, setTrending] = useState<PosterCardProps[]>([]);
@@ -38,7 +42,7 @@ export function WatchDiscoveryRails() {
     Promise.all([listMovies(), purchasesPromise])
       .then(([movies, purchases]) => {
         const ownedIds = new Set(purchases.map(p => p.content_id));
-        const posters = movies.map((m, i) => movieToPoster(m, i, ownedIds));
+        const posters = movies.map((m, i) => movieToPoster(m, i, ownedIds, isAdmin));
         setMoreLikeThis(posters.slice(0, 8));
         setTrending([...posters].reverse().slice(0, 8));
       })
@@ -47,10 +51,10 @@ export function WatchDiscoveryRails() {
     Promise.all([listSeries(), subsPromise])
       .then(([series, subs]) => {
         const hasSub = subs.some((s) => s.status === "active");
-        setSeriesPicks(series.map((s, i) => seriesToPoster(s, i, { hasSubscription: hasSub })));
+        setSeriesPicks(series.map((s, i) => seriesToPoster(s, i, { hasSubscription: hasSub, isAdmin })));
       })
       .catch(() => {});
-  }, [enabled, loggedIn]);
+  }, [enabled, loggedIn, isAdmin]);
 
   if (!enabled) return null;
 
