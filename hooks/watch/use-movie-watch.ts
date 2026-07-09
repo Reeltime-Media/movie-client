@@ -32,6 +32,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
   const [loading, setLoading] = useState(!isSeeded && Boolean(slug));
   const [canPlay, setCanPlay] = useState(false);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
+  const [playbackLoading, setPlaybackLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -49,11 +50,18 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
         isAdmin || isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
       setCanPlay(loggedIn && entitled);
       if (loggedIn && entitled) {
-        getPlaybackUrl(m.id)
-          .then((url) => !cancelled && setPlaybackUrl(url))
-          .catch(() => !cancelled && setPlaybackUrl(null));
+        setPlaybackLoading(true);
+        try {
+          const url = await getPlaybackUrl(m.id);
+          if (!cancelled) setPlaybackUrl(url);
+        } catch {
+          if (!cancelled) setPlaybackUrl(null);
+        } finally {
+          if (!cancelled) setPlaybackLoading(false);
+        }
       } else {
         setPlaybackUrl(null);
+        setPlaybackLoading(false);
       }
     }
 
@@ -68,22 +76,29 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     }
 
     setPlaybackUrl(null);
+    setPlaybackLoading(false);
     setCanPlay(false);
     setLoading(true);
 
     const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
 
     Promise.all([getMovie(slug), purchasesPromise])
-      .then(([m, purchases]) => {
+      .then(async ([m, purchases]) => {
         if (cancelled) return;
         setMovie(m);
         const entitled =
           isAdmin || isMovieFree(m) || purchases.some((p) => p.content_id === m.id);
         setCanPlay(loggedIn && entitled);
         if (loggedIn && entitled) {
-          getPlaybackUrl(m.id)
-            .then((url) => !cancelled && setPlaybackUrl(url))
-            .catch(() => !cancelled && setPlaybackUrl(null));
+          setPlaybackLoading(true);
+          try {
+            const url = await getPlaybackUrl(m.id);
+            if (!cancelled) setPlaybackUrl(url);
+          } catch {
+            if (!cancelled) setPlaybackUrl(null);
+          } finally {
+            if (!cancelled) setPlaybackLoading(false);
+          }
         }
       })
       .catch(() => !cancelled && setNotFound(true))
@@ -121,6 +136,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     notFound,
     canPlay,
     playbackUrl,
+    playbackLoading,
     loggedIn,
     ...derived,
   };

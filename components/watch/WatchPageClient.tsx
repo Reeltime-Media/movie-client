@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Link2, PlayCircle, Star } from "lucide-react";
+import { Clock, Link2, Loader2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { posterUrl } from "@/lib/api/client";
@@ -13,7 +13,6 @@ import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody } from "@/components/watch/WatchPageSection";
 import { useMovieWatch } from "@/hooks/watch/use-movie-watch";
-import { SAMPLE_HLS_SRC, SAMPLE_FALLBACK_SRC, SAMPLE_VIDEO_ATTRIBUTION } from "@/lib/sample-video-sources";
 import type { ContentRead } from "@/lib/api/types";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 
@@ -48,6 +47,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     notFound,
     canPlay,
     playbackUrl,
+    playbackLoading,
     loggedIn,
     isFree,
     priceLabel,
@@ -91,9 +91,6 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   }
 
   const title = movie.title;
-  const hlsSrc = playbackUrl ?? SAMPLE_HLS_SRC;
-  const fallbackSrc = SAMPLE_FALLBACK_SRC;
-  const attribution = playbackUrl ? undefined : SAMPLE_VIDEO_ATTRIBUTION;
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
 
   return (
@@ -106,14 +103,19 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
         <div className="relative ml-[calc(50%-50vw)] flex w-screen max-w-none shrink-0 items-center justify-center border-b border-border px-2 py-2 sm:px-6 sm:py-6 lg:px-10">
           <div className="w-full max-w-[calc((100dvh-7rem)*16/9)]">
             {canPlay ? (
-              <WatchPlayer
-                key={hlsSrc}
-                contentId={movie.id}
-                hlsSrc={hlsSrc}
-                fallbackSrc={fallbackSrc}
-                title={title}
-                attribution={attribution}
-              />
+              playbackLoading || !playbackUrl ? (
+                <div className="flex aspect-video w-full items-center justify-center bg-black">
+                  <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
+                  <span className="sr-only">Loading stream</span>
+                </div>
+              ) : (
+                <WatchPlayer
+                  key={playbackUrl}
+                  contentId={movie.id}
+                  hlsSrc={playbackUrl}
+                  title={title}
+                />
+              )
             ) : (
               <TrailerEmbed embedUrl={trailerEmbed!} title={title} />
             )}

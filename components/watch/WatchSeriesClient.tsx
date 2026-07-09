@@ -10,7 +10,6 @@ import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchSeriesTheater } from "@/components/watch/WatchPageSection";
 import { WatchSeriesEpisodeSidebar } from "@/components/watch/WatchSeriesEpisodeSidebar";
 import { useSeriesWatch } from "@/hooks/watch/use-series-watch";
-import { SAMPLE_HLS_SRC, SAMPLE_FALLBACK_SRC, SAMPLE_VIDEO_ATTRIBUTION } from "@/lib/sample-video-sources";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 
@@ -109,9 +108,6 @@ export function WatchSeriesClient({
   }
 
   const trailerEmbed = youtubeEmbedUrl(series.trailer_url);
-  const hlsSrc = playbackUrl ?? SAMPLE_HLS_SRC;
-  const fallbackSrc = SAMPLE_FALLBACK_SRC;
-  const attribution = playbackUrl ? undefined : SAMPLE_VIDEO_ATTRIBUTION;
 
   return (
     <PageShell fullWidth>
@@ -119,18 +115,17 @@ export function WatchSeriesClient({
         <WatchSeriesTheater
           media={
             canPlay ? (
-              playbackLoading ? (
+              playbackLoading || !playbackUrl ? (
                 <div className="flex aspect-video w-full items-center justify-center rounded-md bg-black">
                   <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
                   <span className="sr-only">Loading stream</span>
                 </div>
               ) : (
                 <WatchPlayer
+                  key={playbackUrl}
                   contentId={episode.id}
-                  hlsSrc={hlsSrc}
-                  fallbackSrc={fallbackSrc}
+                  hlsSrc={playbackUrl}
                   title={playerTitle}
-                  attribution={attribution}
                 />
               )
             ) : (
