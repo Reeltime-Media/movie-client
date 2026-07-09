@@ -1,4 +1,4 @@
-import { API_URL, apiFetch } from "./client";
+import { apiFetch, getApiUrl } from "./client";
 
 export interface PlaybackAuth {
   /** Master playlist path, relative to the API, carrying a scoped playback token. */
@@ -13,5 +13,5 @@ export interface PlaybackAuth {
  */
 export async function getPlaybackUrl(contentId: string): Promise<string> {
   const auth = await apiFetch<PlaybackAuth>(`/playback/${contentId}/authorize`);
-  return `${API_URL}${auth.master_url}`;
+  return `${getApiUrl()}${auth.master_url}`;
 }

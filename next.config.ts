@@ -1,12 +1,6 @@
 import type { NextConfig } from "next";
 
-const apiProxyTarget = process.env.API_PROXY_TARGET?.replace(/\/$/, "");
-
 const nextConfig: NextConfig = {
-  async rewrites() {
-    if (!apiProxyTarget) return [];
-    return [{ source: "/api-proxy/:path*", destination: `${apiProxyTarget}/:path*` }];
-  },
   images: {
     // Serve modern, smaller formats; the browser picks the best it supports.
     formats: ["image/avif", "image/webp"],

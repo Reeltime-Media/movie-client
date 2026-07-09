@@ -1,4 +1,4 @@
-export { API_URL, R2_PUBLIC_URL, CATALOG_REVALIDATE_SECONDS, catalogCache, posterUrl, mediaUrl } from "./config";
+export { getApiUrl, R2_PUBLIC_URL, CATALOG_REVALIDATE_SECONDS, catalogCache, posterUrl, mediaUrl } from "./config";
 export {
   clearToken,
   getAuthSnapshot,
@@ -9,7 +9,7 @@ export {
 } from "@/lib/auth/token";
 
 import { handleUnauthorizedApiResponse } from "@/lib/auth-redirect";
-import { API_URL } from "./config";
+import { getApiUrl } from "./config";
 import { parseApiErrorMessage } from "./errors";
 import { getToken } from "@/lib/auth/token";
 
@@ -28,7 +28,7 @@ export async function apiFetch<T>(
   if (token) headers["Authorization"] = `Bearer ${token}`;
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${getApiUrl()}${path}`, {
     ...rest,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -56,7 +56,7 @@ export async function apiFormPost<T>(
   fields: Record<string, string>,
 ): Promise<T> {
   const body = new URLSearchParams(fields);
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${getApiUrl()}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,

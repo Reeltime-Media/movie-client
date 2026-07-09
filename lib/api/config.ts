@@ -1,6 +1,9 @@
 import { resolveApiUrl } from "./resolve-api-url";
 
-export const API_URL = resolveApiUrl();
+/** Resolved at call time so HTTPS clients use /api-proxy, not a build-time server URL. */
+export function getApiUrl(): string {
+  return resolveApiUrl();
+}
 
 export const R2_PUBLIC_URL =
   (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? "").replace(/\/$/, "");
