@@ -1,3 +1,4 @@
+import { canWatchMovie, isMovieFree } from "@/lib/movie-entitlement";
 import { movieCardHref } from "@/lib/movie-routes";
 import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import type { PosterCardProps } from "@/types/poster-card";
@@ -38,10 +39,11 @@ export function movieToPoster(
   index = 0,
   ownedIds?: Set<string>,
   isAdmin = false,
+  entitlementPending = false,
 ): PosterCardProps {
   const { gradient, accent } = pick(index);
-  const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
-  const isOwned = isFree || ownedIds?.has(movie.id) || isAdmin;
+  const isOwned = canWatchMovie(movie, { ownedIds, isAdmin });
+  const isFree = isMovieFree(movie);
   const price =
     !isFree && movie.price_usd
       ? `$${parseFloat(movie.price_usd).toFixed(2)}`
@@ -54,9 +56,9 @@ export function movieToPoster(
     titleBelow: movie.title,
     posterGradient: gradient,
     accentColor: accent,
-    badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
+    badge: isOwned && !isMovieFree(movie) ? { kind: "owned", label: "OWNED" } : { kind: "none" },
     entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
-    watchHref: movieCardHref(movie, Boolean(isOwned), isAdmin),
+    watchHref: movieCardHref(movie, Boolean(isOwned), isAdmin, entitlementPending),
     year: movie.release_year,
   };
 }
@@ -104,9 +106,10 @@ export function movieToBanner(
   movie: ContentListItemRead,
   ownedIds?: Set<string>,
   isAdmin = false,
+  entitlementPending = false,
 ): BannerCardProps {
-  const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
-  const owned = isFree || Boolean(ownedIds?.has(movie.id)) || isAdmin;
+  const owned = canWatchMovie(movie, { ownedIds, isAdmin });
+  const isFree = isMovieFree(movie);
   const price =
     !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
   return {
@@ -115,7 +118,7 @@ export function movieToBanner(
     title: movie.title,
     year: movie.release_year,
     badgeLabel: price,
-    watchHref: movieCardHref(movie, owned, isAdmin),
+    watchHref: movieCardHref(movie, owned, isAdmin, entitlementPending),
   };
 }
 
