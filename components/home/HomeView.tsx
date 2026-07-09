@@ -59,22 +59,15 @@ export function HomeView({
   const [libraryPosters, setLibraryPosters] = useState<PosterCardProps[]>(
     () => initialTrending.slice(0, RAIL_LIMIT),
   );
-  const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
-  const entitlementPending = loggedIn && ownedIds === null;
+  const [ownedIds, setOwnedIds] = useState<Set<string>>(() => new Set());
 
   const topMovieBanners = useMemo<BannerCardProps[]>(
-    () =>
-      movies
-        .slice(0, RAIL_LIMIT)
-        .map((m) => movieToBanner(m, ownedIds ?? undefined, isAdmin, entitlementPending)),
-    [movies, ownedIds, isAdmin, entitlementPending],
+    () => movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds, isAdmin)),
+    [movies, ownedIds, isAdmin],
   );
 
   useEffect(() => {
-    if (!loggedIn) {
-      setOwnedIds(new Set());
-      return;
-    }
+    if (!loggedIn) return;
     let cancelled = false;
     Promise.all([
       listPurchases().catch(() => []),
@@ -84,9 +77,7 @@ export function HomeView({
       const owned = new Set(purchases.map((p) => p.content_id));
       setOwnedIds(owned);
       if (movies.length) {
-        const moviePosters = movies
-          .map((m, i) => movieToPoster(m, i, owned, isAdmin, false))
-          .slice(0, RAIL_LIMIT);
+        const moviePosters = movies.map((m, i) => movieToPoster(m, i, owned, isAdmin)).slice(0, RAIL_LIMIT);
         setTrendingPosters(moviePosters);
         setThrillerPosters([...moviePosters].reverse());
         setLibraryPosters(moviePosters);

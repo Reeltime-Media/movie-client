@@ -11,7 +11,6 @@ import { posterUrl } from "@/lib/api/config";
 import { listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
 import { listEpisodes, listSeries } from "@/lib/api/series";
-import { canWatchMovie } from "@/lib/movie-entitlement";
 import { movieCardHref } from "@/lib/movie-routes";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
@@ -166,12 +165,13 @@ function SearchPageInner() {
           ),
         );
 
-        const movieResults: SearchResult[] = movies.map((m) => {
-          const isOwned = canWatchMovie(m, { ownedIds, isAdmin });
+        const movieResults: SearchResult[] = movies.map((m, i) => {
+          const isFree = !m.price_usd || parseFloat(m.price_usd) === 0;
+          const isOwned = isFree || ownedIds.has(m.id);
           return {
             kind: "movie",
             data: m,
-            href: movieCardHref(m, isOwned, isAdmin),
+            href: movieCardHref(m, Boolean(isOwned), isAdmin),
           };
         });
 
