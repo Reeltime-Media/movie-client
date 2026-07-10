@@ -234,7 +234,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
               {/* Right zone — poster thumbnail, desktop only */}
               {movie.poster_key && (
                 <div 
-                  className="relative hidden aspect-[2/3] w-[110px] shrink-0 overflow-hidden rounded-md border border-border md:block"
+                  className="relative hidden aspect-[2/3] w-[110px] shrink-0 overflow-hidden border border-border md:block"
                   style={{ viewTransitionName: `poster-${movie.id}` }}
                 >
                   <CdnImage

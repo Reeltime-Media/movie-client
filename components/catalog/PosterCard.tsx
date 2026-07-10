@@ -29,7 +29,7 @@ export function PosterCard({
     >
       {/* Poster image */}
       <div
-        className="rt-card-hover relative aspect-2/3 overflow-hidden rounded-md"
+        className="rt-card-hover relative aspect-2/3 overflow-hidden"
         style={{ background: posterGradient, viewTransitionName: contentId ? `poster-${contentId}` : undefined }}
       >
         {imageSrc ? (

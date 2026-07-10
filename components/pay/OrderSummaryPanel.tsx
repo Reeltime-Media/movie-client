@@ -48,7 +48,7 @@ export function OrderSummaryPanel({
       <div className="p-5">
         <div className="flex items-center gap-3.5">
           {posterSrc ? (
-            <div className="relative h-[60px] w-[40px] shrink-0 overflow-hidden rounded-[6px] ring-1 ring-border">
+            <div className="relative h-[60px] w-[40px] shrink-0 overflow-hidden ring-1 ring-border">
               <CdnImage src={posterSrc} alt="" fill className="object-cover" sizes="40px" />
             </div>
           ) : null}

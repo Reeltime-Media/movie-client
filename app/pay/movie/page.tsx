@@ -176,7 +176,7 @@ function MoviePayInner() {
           {/* Left Column: Overview (Poster + Details) */}
           <div className="flex flex-col md:flex-row gap-8">
             {poster ? (
-              <div className="relative aspect-2/3 w-40 shrink-0 overflow-hidden rounded-xl border border-border sm:w-48 md:w-56">
+              <div className="relative aspect-2/3 w-40 shrink-0 overflow-hidden border border-border sm:w-48 md:w-56">
                 <CdnImage src={poster} alt={movie.title} fill className="object-cover" sizes="(max-width: 768px) 160px, 224px" />
               </div>
             ) : null}

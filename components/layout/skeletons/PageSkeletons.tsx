@@ -2,7 +2,7 @@ import { PageShell } from "@/components/layout/PageShell";
 
 /** A single shimmering poster tile (2:3), matching the real poster grid. */
 function PosterTile() {
-  return <div className="aspect-2/3 animate-pulse rounded-sm bg-surface-elevated" />;
+  return <div className="aspect-2/3 animate-pulse bg-surface-elevated" />;
 }
 
 /** Responsive poster grid skeleton — mirrors the catalog grid breakpoints. */
