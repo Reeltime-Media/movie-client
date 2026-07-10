@@ -39,6 +39,19 @@ export async function getMe(): Promise<UserRead> {
   return apiFetch<UserRead>("/users/me");
 }
 
+/** Always resolves regardless of whether the email matches an account — the
+ * API intentionally doesn't reveal account existence. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiFetch<void>("/auth/forgot-password", { method: "POST", body: { email } });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await apiFetch<void>("/auth/reset-password", {
+    method: "POST",
+    body: { token, password },
+  });
+}
+
 export async function updateMe(data: {
   full_name?: string;
   password?: string;
