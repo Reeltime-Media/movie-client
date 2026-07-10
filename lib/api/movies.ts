@@ -30,3 +30,12 @@ export async function getMovie(slug: string): Promise<ContentRead> {
     apiFetch<ContentRead>(`/movies/${slug}`, catalogCache),
   );
 }
+
+export async function getRelatedMovies(
+  slug: string,
+  limit = 8,
+): Promise<ContentListItemRead[]> {
+  return clientCached(`movies:${slug}:related:${limit}`, CLIENT_CATALOG_TTL_MS, () =>
+    apiFetch<ContentListItemRead[]>(`/movies/${slug}/related?limit=${limit}`, catalogCache),
+  );
+}

@@ -28,6 +28,25 @@ export function posterUrl(posterKey: string | null | undefined): string | undefi
   return `${R2_PUBLIC_URL}/${posterKey.replace(/^\//, "")}`;
 }
 
+/**
+ * Smaller poster URL for thumbnails. When NEXT_PUBLIC_R2_IMAGE_WIDTH_PARAM is set
+ * (e.g. "width"), appends `?width=220` for CDN/worker transforms.
+ */
+export function posterThumbUrl(
+  posterKey: string | null | undefined,
+  width = 220,
+): string | undefined {
+  const base = posterUrl(posterKey);
+  if (!base) return undefined;
+  if (!isR2ImageUrl(base)) return base;
+
+  const param = process.env.NEXT_PUBLIC_R2_IMAGE_WIDTH_PARAM?.trim();
+  if (!param) return base;
+
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}${param}=${width}`;
+}
+
 /** True for poster/banner URLs served from our R2 public bucket. */
 export function isR2ImageUrl(src: string): boolean {
   if (R2_PUBLIC_URL && src.startsWith(R2_PUBLIC_URL)) return true;

@@ -1,7 +1,7 @@
 import { movieCardHref } from "@/lib/movie-routes";
 import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import type { PosterCardProps } from "@/types/poster-card";
-import { posterUrl } from "./config";
+import { posterThumbUrl, posterUrl } from "./config";
 import {
   findFirstFreeEpisode,
   freeEpisodeWatchHref,
@@ -49,7 +49,7 @@ export function movieToPoster(
 
   return {
     contentId: movie.id,
-    imageSrc: posterUrl(movie.poster_key),
+    imageSrc: posterThumbUrl(movie.poster_key, 400) ?? posterUrl(movie.poster_key),
     posterTitle: movie.title.toUpperCase(),
     titleBelow: movie.title,
     posterGradient: gradient,
@@ -87,7 +87,7 @@ export function seriesToPoster(
   }
 
   return {
-    imageSrc: posterUrl(series.poster_key),
+    imageSrc: posterThumbUrl(series.poster_key, 400) ?? posterUrl(series.poster_key),
     posterTitle: series.title.toUpperCase(),
     titleBelow: series.title,
     posterGradient: gradient,
@@ -110,7 +110,7 @@ export function movieToBanner(
   const price =
     !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
   return {
-    imageSrc: posterUrl(movie.poster_key),
+    imageSrc: posterThumbUrl(movie.poster_key, 400) ?? posterUrl(movie.poster_key),
     imageAlt: movie.title,
     title: movie.title,
     year: movie.release_year,

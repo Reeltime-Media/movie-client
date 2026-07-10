@@ -14,9 +14,14 @@ import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 
 // Lazy-loaded: pulls in hls.js, which we don't want in the initial bundle.
+const WatchPlayerSkeleton = dynamic(
+  () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayerSkeleton),
+  { ssr: false },
+);
+
 const WatchPlayer = dynamic(
   () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayer),
-  { ssr: false },
+  { ssr: false, loading: () => <WatchPlayerSkeleton /> },
 );
 
 type WatchSeriesClientProps = {
@@ -40,6 +45,7 @@ export function WatchSeriesClient({
     notFound,
     playbackUrl,
     playbackLoading,
+    resumeTime,
     loggedIn,
     seasonNum,
     episodeNum,
@@ -49,6 +55,7 @@ export function WatchSeriesClient({
     payHref,
     canPlay,
     playerTitle,
+    hasSubscription,
     prefetchEpisode,
   } = useSeriesWatch({ seriesSlug, playback, initialSeries, initialSeasons });
 
@@ -97,6 +104,7 @@ export function WatchSeriesClient({
                   seasons={seasons}
                   activeSeason={1}
                   activeEpisode={1}
+                  hasSubscription={hasSubscription}
                   onEpisodeHover={prefetchEpisode}
                 />
               </div>
@@ -126,6 +134,7 @@ export function WatchSeriesClient({
                   contentId={episode.id}
                   hlsSrc={playbackUrl}
                   title={playerTitle}
+                  initialTime={resumeTime ?? 0}
                 />
               )
             ) : (
@@ -153,6 +162,7 @@ export function WatchSeriesClient({
               seasons={seasons}
               activeSeason={seasonNum}
               activeEpisode={episodeNum}
+              hasSubscription={hasSubscription}
               onEpisodeHover={prefetchEpisode}
             />
           }
@@ -232,7 +242,7 @@ export function WatchSeriesClient({
         </WatchDetailBody>
       </section>
 
-      <WatchDiscoveryRails />
+      <WatchDiscoveryRails seriesSlug={series.slug} genres={series.genres} />
     </PageShell>
   );
 }

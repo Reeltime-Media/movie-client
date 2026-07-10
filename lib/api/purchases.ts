@@ -1,9 +1,12 @@
 import { apiFetch } from "./client";
+import { clientCached, CLIENT_CATALOG_TTL_MS } from "./client-cache";
 import { listMovies } from "./movies";
 import type { ContentListItemRead, PurchaseRead } from "./types";
 
 export function listPurchases(): Promise<PurchaseRead[]> {
-  return apiFetch<PurchaseRead[]>("/purchases/");
+  return clientCached("user:purchases", CLIENT_CATALOG_TTL_MS, () =>
+    apiFetch<PurchaseRead[]>("/purchases/"),
+  );
 }
 
 /** Movies the signed-in user has purchased. */

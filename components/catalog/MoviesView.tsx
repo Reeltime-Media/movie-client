@@ -32,6 +32,7 @@ const TOP_COUNT = 10;
 type MoviesViewProps = {
   movies: ContentListItemRead[];
   initialPosters: PosterCardProps[];
+  initialGenre?: CatalogGenreKey;
 };
 
 function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
@@ -87,15 +88,24 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
   );
 }
 
-export function MoviesView({ movies, initialPosters }: MoviesViewProps) {
+export function MoviesView({
+  movies,
+  initialPosters,
+  initialGenre = "genreAll",
+}: MoviesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
-  const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>("genreAll");
+  const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>(initialGenre);
   const [searchQuery, setSearchQuery] = useState("");
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
   const [page, setPage] = useState(0);
+
+  // Sync when navigating from a home genre rail (e.g. /movies?genre=Thriller).
+  useEffect(() => {
+    setActiveGenre(initialGenre);
+  }, [initialGenre]);
 
   const filteredMovies = useMemo(
     () => movies.filter((m) => matchesSearch(m, searchQuery) && matchesGenre(m, activeGenre)),

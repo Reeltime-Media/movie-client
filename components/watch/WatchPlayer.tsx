@@ -36,42 +36,119 @@ export function WatchPlayer({
   title,
   attribution,
   bleed = false,
+  initialTime = 0,
 }: {
-  /** When set, saves resume progress for logged-in users (≥30s or 10% watched). */
   contentId?: string;
   hlsSrc: string;
   fallbackSrc?: string;
   title: string;
   attribution?: string;
   bleed?: boolean;
+  /** Resume position in seconds (skipped when 0). */
+  initialTime?: number;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const bufferedBarRef = useRef<HTMLDivElement>(null);
+  const thumbRef = useRef<HTMLDivElement>(null);
+  const timeDisplayRef = useRef<HTMLSpanElement>(null);
+  const currentTimeRef = useRef(0);
+  const durationRef = useRef(0);
+  const bufferedEndRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const lastDisplayTickRef = useRef(0);
+  const pendingSeekRef = useRef(initialTime > 0 ? initialTime : null);
+  const hasStartedRef = useRef(false);
 
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(1);
-  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [bufferedEnd, setBufferedEnd] = useState(0);
+  const [displayTime, setDisplayTime] = useState(0);
   const [buffering, setBuffering] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [levels, setLevels] = useState<QualityLevel[]>([]);
-  const [selectedLevel, setSelectedLevel] = useState(-1); // -1 = Auto
+  const [selectedLevel, setSelectedLevel] = useState(-1);
   const [autoLevel, setAutoLevel] = useState(-1);
   const [showQuality, setShowQuality] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preloadMode, setPreloadMode] = useState<"metadata" | "auto">("metadata");
+
+  const getPosition = useCallback(() => currentTimeRef.current, []);
+  const getDuration = useCallback(() => durationRef.current, []);
 
   const { markCompleted, flushProgress } = useWatchProgressSync({
     contentId,
-    currentTime,
-    duration,
+    getPosition,
+    getDuration,
   });
 
-  // ── Init HLS ──────────────────────────────────────────────────
+  const updateProgressUi = useCallback(() => {
+    const dur = durationRef.current;
+    const current = currentTimeRef.current;
+    const buffered = bufferedEndRef.current;
+    const progressPct = dur > 0 ? (current / dur) * 100 : 0;
+    const bufferedPct = dur > 0 ? (buffered / dur) * 100 : 0;
+
+    if (progressBarRef.current) {
+      progressBarRef.current.style.width = `${progressPct}%`;
+    }
+    if (bufferedBarRef.current) {
+      bufferedBarRef.current.style.width = `${bufferedPct}%`;
+    }
+    if (thumbRef.current) {
+      thumbRef.current.style.left = `calc(${progressPct}% - 6px)`;
+    }
+
+    const now = performance.now();
+    if (now - lastDisplayTickRef.current >= 1000) {
+      lastDisplayTickRef.current = now;
+      const formatted = `${formatTime(current)} / ${formatTime(dur)}`;
+      if (timeDisplayRef.current) {
+        timeDisplayRef.current.textContent = formatted;
+      }
+      setDisplayTime(current);
+    }
+  }, []);
+
+  const stopRaf = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, []);
+
+  const startRaf = useCallback(() => {
+    stopRaf();
+    const tick = () => {
+      const video = videoRef.current;
+      if (video) {
+        currentTimeRef.current = video.currentTime;
+        if (video.buffered.length > 0) {
+          bufferedEndRef.current = video.buffered.end(video.buffered.length - 1);
+        }
+        updateProgressUi();
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, [stopRaf, updateProgressUi]);
+
+  const applyPendingSeek = useCallback(() => {
+    const video = videoRef.current;
+    const seekTo = pendingSeekRef.current;
+    if (!video || seekTo === null || seekTo <= 0) return;
+    if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+    video.currentTime = Math.min(seekTo, video.duration - 1);
+    currentTimeRef.current = video.currentTime;
+    pendingSeekRef.current = null;
+    updateProgressUi();
+  }, [updateProgressUi]);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -83,11 +160,15 @@ export function WatchPlayer({
     setLevels([]);
     setSelectedLevel(-1);
     setAutoLevel(-1);
-    // Reset progress state so switching source (e.g. next episode) without a
-    // remount doesn't briefly show the previous video's time/scrubber.
-    setCurrentTime(0);
     setDuration(0);
-    setBufferedEnd(0);
+    setDisplayTime(0);
+    currentTimeRef.current = 0;
+    durationRef.current = 0;
+    bufferedEndRef.current = 0;
+    pendingSeekRef.current = initialTime > 0 ? initialTime : null;
+    hasStartedRef.current = false;
+    setPreloadMode("metadata");
+    updateProgressUi();
 
     if (Hls.isSupported()) {
       const hls = new Hls({ startLevel: -1, capLevelToPlayerSize: true });
@@ -104,6 +185,7 @@ export function WatchPlayer({
           })),
         );
         setBuffering(false);
+        applyPendingSeek();
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
@@ -111,7 +193,16 @@ export function WatchPlayer({
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) setError("Stream error — please refresh.");
+        if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hls.startLoad();
+          return;
+        }
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hls.recoverMediaError();
+          return;
+        }
+        setError("Stream error — please refresh.");
       });
 
       return () => {
@@ -121,7 +212,6 @@ export function WatchPlayer({
       };
     }
 
-    // Native HLS (Safari)
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = hlsSrc;
       return () => {
@@ -131,7 +221,6 @@ export function WatchPlayer({
       };
     }
 
-    // MP4 fallback
     if (fallbackSrc) {
       video.src = fallbackSrc;
       return () => {
@@ -140,35 +229,47 @@ export function WatchPlayer({
         video.load();
       };
     }
-  }, [hlsSrc, fallbackSrc]);
+  }, [hlsSrc, fallbackSrc, initialTime, applyPendingSeek, updateProgressUi]);
 
-  // ── Video event listeners ──────────────────────────────────────
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setPlaying(true);
+    const onPlay = () => {
+      setPlaying(true);
+      if (!hasStartedRef.current) {
+        hasStartedRef.current = true;
+        setPreloadMode("auto");
+      }
+      startRaf();
+    };
     const onPause = () => {
       setPlaying(false);
+      stopRaf();
       flushProgress();
+      updateProgressUi();
     };
     const onEnded = () => {
       setPlaying(false);
+      stopRaf();
       markCompleted();
     };
     const onWaiting = () => setBuffering(true);
-    const onCanPlay = () => setBuffering(false);
-    const onDurationChange = () => setDuration(video.duration);
+    const onCanPlay = () => {
+      setBuffering(false);
+      applyPendingSeek();
+    };
+    const onDurationChange = () => {
+      durationRef.current = video.duration;
+      setDuration(video.duration);
+      applyPendingSeek();
+      updateProgressUi();
+    };
     const onVolumeChange = () => {
       setMuted(video.muted);
       setVolume(video.volume);
     };
-    const onTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
-      if (video.buffered.length > 0) {
-        setBufferedEnd(video.buffered.end(video.buffered.length - 1));
-      }
-    };
+    const onLoadedMetadata = () => applyPendingSeek();
 
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
@@ -177,9 +278,10 @@ export function WatchPlayer({
     video.addEventListener("canplay", onCanPlay);
     video.addEventListener("durationchange", onDurationChange);
     video.addEventListener("volumechange", onVolumeChange);
-    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("loadedmetadata", onLoadedMetadata);
 
     return () => {
+      stopRaf();
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
       video.removeEventListener("ended", onEnded);
@@ -187,14 +289,19 @@ export function WatchPlayer({
       video.removeEventListener("canplay", onCanPlay);
       video.removeEventListener("durationchange", onDurationChange);
       video.removeEventListener("volumechange", onVolumeChange);
-      video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("loadedmetadata", onLoadedMetadata);
     };
-  }, [flushProgress, markCompleted]);
+  }, [
+    flushProgress,
+    markCompleted,
+    startRaf,
+    stopRaf,
+    applyPendingSeek,
+    updateProgressUi,
+  ]);
 
-  // ── Fullscreen listener ────────────────────────────────────────
   useEffect(() => {
     const update = () => {
-      // Standard fullscreen API (Chrome/Firefox/desktop Safari)
       if (typeof document !== "undefined" && "fullscreenElement" in document) {
         setIsFullscreen(!!document.fullscreenElement);
         return;
@@ -205,8 +312,6 @@ export function WatchPlayer({
     const onDocChange = () => update();
     document.addEventListener("fullscreenchange", onDocChange);
 
-    // iOS Safari fullscreen is video-only and does not reliably emit document.fullscreenchange.
-    // Track video fullscreen via WebKit-specific events.
     const v = videoRef.current;
     const onWebkitBegin = () => setIsFullscreen(true);
     const onWebkitEnd = () => setIsFullscreen(false);
@@ -221,7 +326,6 @@ export function WatchPlayer({
     };
   }, []);
 
-  // ── Controls auto-hide ─────────────────────────────────────────
   const resetHideTimer = useCallback(() => {
     setShowControls(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -230,7 +334,6 @@ export function WatchPlayer({
     }, 3000);
   }, []);
 
-  // ── Actions ───────────────────────────────────────────────────
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -256,11 +359,14 @@ export function WatchPlayer({
   const seek = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const v = videoRef.current;
-      if (!v || !duration) return;
+      const dur = durationRef.current;
+      if (!v || !dur) return;
       const rect = e.currentTarget.getBoundingClientRect();
-      v.currentTime = ((e.clientX - rect.left) / rect.width) * duration;
+      v.currentTime = ((e.clientX - rect.left) / rect.width) * dur;
+      currentTimeRef.current = v.currentTime;
+      updateProgressUi();
     },
-    [duration],
+    [updateProgressUi],
   );
 
   const changeQuality = useCallback((levelIndex: number) => {
@@ -274,14 +380,14 @@ export function WatchPlayer({
     const el = containerRef.current;
     if (!v || !el) return;
 
-    // Exit if already fullscreen (standard API)
     if (document.fullscreenElement) {
       void document.exitFullscreen();
       return;
     }
 
-    // Prefer putting the <video> element fullscreen on mobile (iOS Safari requirement).
-    const anyVideo = v as any;
+    const anyVideo = v as HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+    };
     if (typeof v.requestFullscreen === "function") {
       void v.requestFullscreen();
       return;
@@ -290,21 +396,21 @@ export function WatchPlayer({
       anyVideo.webkitEnterFullscreen();
       return;
     }
-
-    // Fallback to container fullscreen (some browsers allow this)
     if (typeof el.requestFullscreen === "function") {
       void el.requestFullscreen();
     }
   }, []);
 
-  // ── Keyboard shortcuts ────────────────────────────────────────
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
       const v = videoRef.current;
       if (!v) return;
-      if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+      if (e.code === "Space") {
+        e.preventDefault();
+        togglePlay();
+      }
       if (e.code === "ArrowRight") v.currentTime = Math.min(v.duration, v.currentTime + 10);
       if (e.code === "ArrowLeft") v.currentTime = Math.max(0, v.currentTime - 10);
       if (e.code === "KeyF") toggleFullscreen();
@@ -313,10 +419,6 @@ export function WatchPlayer({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [togglePlay, toggleFullscreen, toggleMute]);
-
-  // ── Derived values ────────────────────────────────────────────
-  const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const bufferedPct = duration > 0 ? (bufferedEnd / duration) * 100 : 0;
 
   const qualityLabel =
     selectedLevel === -1
@@ -336,16 +438,17 @@ export function WatchPlayer({
           bleed ? "" : "rounded-md",
         ].join(" ")}
         onMouseMove={resetHideTimer}
-        onMouseLeave={() => { if (playing) setShowControls(false); }}
+        onMouseLeave={() => {
+          if (playing) setShowControls(false);
+        }}
         onClick={togglePlay}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {/* Video element — no native controls */}
         <video
           ref={videoRef}
           className="absolute inset-0 h-full w-full object-contain"
           playsInline
-          preload="auto"
+          preload={preloadMode}
           aria-label={`Video player: ${title}`}
           controlsList="nodownload noremoteplayback"
           disablePictureInPicture
@@ -353,14 +456,12 @@ export function WatchPlayer({
           onContextMenu={(e) => e.preventDefault()}
         />
 
-        {/* Buffering spinner */}
         {buffering && !error && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <Loader2 size={40} className="animate-spin text-white/60" />
           </div>
         )}
 
-        {/* Error state */}
         {error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60">
             <AlertCircle size={36} className="text-danger" />
@@ -368,7 +469,6 @@ export function WatchPlayer({
           </div>
         )}
 
-        {/* Bottom gradient scrim */}
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-28 transition-opacity duration-300"
           style={{
@@ -377,35 +477,34 @@ export function WatchPlayer({
           }}
         />
 
-        {/* Controls overlay */}
         <div
           className="absolute inset-x-0 bottom-0 px-4 pb-3 transition-opacity duration-300"
           style={{ opacity: showControls ? 1 : 0 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Seek / progress bar */}
           <div
             className="group/seek relative mb-3 h-1 cursor-pointer rounded-full bg-white/20 hover:h-1.25"
             style={{ transition: "height 120ms ease" }}
             onClick={seek}
           >
             <div
+              ref={bufferedBarRef}
               className="absolute inset-y-0 left-0 rounded-full bg-white/25"
-              style={{ width: `${bufferedPct}%` }}
+              style={{ width: "0%" }}
             />
             <div
+              ref={progressBarRef}
               className="absolute inset-y-0 left-0 rounded-full bg-brand"
-              style={{ width: `${progressPct}%` }}
+              style={{ width: "0%" }}
             />
             <div
+              ref={thumbRef}
               className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-white opacity-0 shadow transition-opacity group-hover/seek:opacity-100"
-              style={{ left: `calc(${progressPct}% - 6px)` }}
+              style={{ left: "calc(0% - 6px)" }}
             />
           </div>
 
-          {/* Button row */}
           <div className="flex items-center gap-3">
-            {/* Play / Pause */}
             <button
               type="button"
               onClick={togglePlay}
@@ -419,7 +518,6 @@ export function WatchPlayer({
               )}
             </button>
 
-            {/* Volume */}
             <div className="group/vol flex items-center gap-1.5">
               <button
                 type="button"
@@ -448,16 +546,17 @@ export function WatchPlayer({
               />
             </div>
 
-            {/* Time display */}
-            <span className="tabular-nums text-[11px] font-medium text-white/75">
-              {formatTime(currentTime)}{" "}
+            <span
+              ref={timeDisplayRef}
+              className="tabular-nums text-[11px] font-medium text-white/75"
+            >
+              {formatTime(displayTime)}{" "}
               <span className="text-white/40">/</span>{" "}
               {formatTime(duration)}
             </span>
 
             <div className="flex-1" />
 
-            {/* Quality picker */}
             {levels.length > 0 && (
               <div className="relative">
                 <button
@@ -476,7 +575,6 @@ export function WatchPlayer({
                       Quality
                     </div>
 
-                    {/* Auto */}
                     <button
                       type="button"
                       onClick={() => changeQuality(-1)}
@@ -493,7 +591,6 @@ export function WatchPlayer({
                       )}
                     </button>
 
-                    {/* Quality levels, highest first */}
                     {[...levels]
                       .sort((a, b) => b.height - a.height)
                       .map((l) => (
@@ -523,7 +620,6 @@ export function WatchPlayer({
               </div>
             )}
 
-            {/* Fullscreen */}
             <button
               type="button"
               onClick={toggleFullscreen}
@@ -540,5 +636,15 @@ export function WatchPlayer({
         <figcaption className="sr-only">{attribution}</figcaption>
       ) : null}
     </figure>
+  );
+}
+
+/** Inline skeleton shown while the hls.js chunk loads. */
+export function WatchPlayerSkeleton() {
+  return (
+    <div className="flex aspect-video w-full items-center justify-center bg-black">
+      <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
+      <span className="sr-only">Loading player</span>
+    </div>
   );
 }

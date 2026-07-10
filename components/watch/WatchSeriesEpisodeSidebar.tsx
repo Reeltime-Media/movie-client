@@ -8,6 +8,8 @@ export function WatchSeriesEpisodeSidebar({
   seasons,
   activeSeason,
   activeEpisode,
+  hasSubscription = false,
+  isAdmin = false,
   onEpisodeHover,
 }: {
   seriesSlug: string;
@@ -15,8 +17,10 @@ export function WatchSeriesEpisodeSidebar({
   seasons: SeasonRead[];
   activeSeason: number;
   activeEpisode: number;
+  hasSubscription?: boolean;
+  isAdmin?: boolean;
   /** Warm the stream URL when a playable episode is hovered/focused. */
-  onEpisodeHover?: (episodeId: string, isFree: boolean) => void;
+  onEpisodeHover?: (episodeId: string) => void;
 }) {
   const seasonData = seasons.find((s) => s.season_number === activeSeason);
   const episodes = seasonData?.episodes ?? [];
@@ -71,7 +75,8 @@ export function WatchSeriesEpisodeSidebar({
             const epNum = ep.episode_number ?? 0;
             const isActive = epNum === activeEpisode;
             const isFree = ep.is_free === true;
-            const href = isFree
+            const canPrefetch = isAdmin || isFree || hasSubscription;
+            const href = isFree || hasSubscription || isAdmin
               ? `/watch/series/${seriesSlug}/${activeSeason}/${epNum}`
               : `/pay/subscription?slug=${encodeURIComponent(seriesSlug)}&title=${encodeURIComponent(seriesTitle)}&season=${activeSeason}&episode=${epNum}`;
             return (
@@ -80,13 +85,13 @@ export function WatchSeriesEpisodeSidebar({
                   href={href}
                   aria-current={isActive ? "true" : undefined}
                   onMouseEnter={
-                    isFree && onEpisodeHover
-                      ? () => onEpisodeHover(ep.id, isFree)
+                    canPrefetch && onEpisodeHover
+                      ? () => onEpisodeHover(ep.id)
                       : undefined
                   }
                   onFocus={
-                    isFree && onEpisodeHover
-                      ? () => onEpisodeHover(ep.id, isFree)
+                    canPrefetch && onEpisodeHover
+                      ? () => onEpisodeHover(ep.id)
                       : undefined
                   }
                   className={[
@@ -103,42 +108,43 @@ export function WatchSeriesEpisodeSidebar({
                     aria-hidden
                   />
                   <span className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-bg text-[13px] font-bold tabular-nums text-brand">
+                    <span
+                      className={[
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
+                        isActive
+                          ? "bg-brand text-white"
+                          : "bg-surface-elevated text-text-muted",
+                      ].join(" ")}
+                    >
                       {epNum}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span
                         className={[
-                          "block truncate text-[13px] leading-snug text-text",
-                          isActive ? "font-semibold" : "font-medium",
+                          "block truncate text-[12px] font-semibold",
+                          isActive ? "text-text" : "text-text-muted",
                         ].join(" ")}
                       >
-                        {ep.title || `Episode ${epNum}`}
+                        {ep.title}
                       </span>
-                      <span className="mt-0.5 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
-                        {isFree ? (
-                          <>
-                            <PlayCircle size={11} className="text-success" aria-hidden />
-                            <span className="text-success">Free</span>
-                          </>
-                        ) : (
-                          <>
-                            <Lock size={11} className="text-brand" aria-hidden />
-                            <span className="text-text-muted">Subscribe</span>
-                          </>
-                        )}
-                        {ep.runtime ? (
-                          <>
-                            <span className="text-text-disabled" aria-hidden>
-                              ·
-                            </span>
-                            <span className="normal-case tracking-normal text-text-disabled">
-                              {ep.runtime}
-                            </span>
-                          </>
-                        ) : null}
-                      </span>
+                      {ep.runtime ? (
+                        <span className="mt-0.5 block text-[10px] text-text-disabled">
+                          {ep.runtime}
+                        </span>
+                      ) : null}
                     </span>
+                    {!isFree && !hasSubscription && !isAdmin ? (
+                      <Lock size={14} className="shrink-0 text-text-disabled" aria-hidden />
+                    ) : (
+                      <PlayCircle
+                        size={14}
+                        className={[
+                          "shrink-0",
+                          isActive ? "text-brand" : "text-text-disabled",
+                        ].join(" ")}
+                        aria-hidden
+                      />
+                    )}
                   </span>
                 </Link>
               </li>

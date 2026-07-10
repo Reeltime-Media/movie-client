@@ -1,4 +1,4 @@
-export { getApiUrl, R2_PUBLIC_URL, CATALOG_REVALIDATE_SECONDS, catalogCache, posterUrl, mediaUrl } from "./config";
+export { getApiUrl, R2_PUBLIC_URL, CATALOG_REVALIDATE_SECONDS, catalogCache, posterUrl, posterThumbUrl, mediaUrl, isR2ImageUrl } from "./config";
 export {
   clearToken,
   getAuthSnapshot,

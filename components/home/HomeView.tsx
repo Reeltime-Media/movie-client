@@ -6,13 +6,13 @@ import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import { BannerScrollRail } from "@/components/catalog/BannerScrollRail";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { Hero } from "@/components/home/Hero";
+import { HomeGenreRails } from "@/components/home/HomeGenreRails";
 import { PromotionBannerStrip } from "@/components/home/PromotionBannerStrip";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { listPurchases } from "@/lib/api/purchases";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
@@ -32,6 +32,8 @@ type HomeViewProps = {
   heroFeatured: HeroFeaturedSlide[];
 };
 
+const RAIL_LIMIT = 12;
+
 export function HomeView({
   movies,
   seriesList,
@@ -44,53 +46,38 @@ export function HomeView({
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
 
-  const RAIL_LIMIT = 12;
-
-  const [trendingPosters, setTrendingPosters] = useState<PosterCardProps[]>(() => initialTrending.slice(0, RAIL_LIMIT));
-  const [seriesBanners, setSeriesBanners] = useState<BannerCardProps[]>(
-    () => seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s)),
-  );
-  const [thrillerPosters, setThrillerPosters] = useState<PosterCardProps[]>(
-    () => [...initialTrending].reverse().slice(0, RAIL_LIMIT),
-  );
-  const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>(
-    () => initialTrending.slice(0, RAIL_LIMIT),
-  );
-  const [libraryPosters, setLibraryPosters] = useState<PosterCardProps[]>(
-    () => initialTrending.slice(0, RAIL_LIMIT),
-  );
   const [ownedIds, setOwnedIds] = useState<Set<string>>(() => new Set());
+
+  const moviePosters = useMemo(
+    () => movies.slice(0, RAIL_LIMIT).map((m, i) => movieToPoster(m, i, ownedIds, isAdmin)),
+    [movies, ownedIds, isAdmin],
+  );
+
+  const seriesBanners = useMemo(
+    () => seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s)),
+    [seriesList],
+  );
 
   const topMovieBanners = useMemo<BannerCardProps[]>(
     () => movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds, isAdmin)),
     [movies, ownedIds, isAdmin],
   );
 
+  const trendingPosters = moviePosters.length > 0 ? moviePosters : initialTrending.slice(0, RAIL_LIMIT);
+
   useEffect(() => {
     if (!loggedIn) return;
     let cancelled = false;
-    Promise.all([
-      listPurchases().catch(() => []),
-      listMySubscriptions().catch(() => []),
-    ]).then(([purchases]) => {
-      if (cancelled) return;
-      const owned = new Set(purchases.map((p) => p.content_id));
-      setOwnedIds(owned);
-      if (movies.length) {
-        const moviePosters = movies.map((m, i) => movieToPoster(m, i, owned, isAdmin)).slice(0, RAIL_LIMIT);
-        setTrendingPosters(moviePosters);
-        setThrillerPosters([...moviePosters].reverse());
-        setLibraryPosters(moviePosters);
-        setContinuePosters(moviePosters);
-      }
-      if (seriesList.length) {
-        setSeriesBanners(seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s)));
-      }
-    });
+    listPurchases()
+      .catch(() => [])
+      .then((purchases) => {
+        if (cancelled) return;
+        setOwnedIds(new Set(purchases.map((p) => p.content_id)));
+      });
     return () => {
       cancelled = true;
     };
-  }, [loggedIn, movies, seriesList, isAdmin]);
+  }, [loggedIn]);
 
   const displayBanners = useMemo((): PromotionBannerRead[] => {
     if (promotionBanners.length > 0) return promotionBanners;
@@ -136,7 +123,7 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <PosterScrollRail posters={trendingPosters} gutter="sm" />
+        <PosterScrollRail posters={moviePosters.length > 0 ? moviePosters : initialTrending.slice(0, RAIL_LIMIT)} gutter="sm" />
       </section>
 
       <section className="pt-8 pb-6">
@@ -162,19 +149,10 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <PosterScrollRail posters={continuePosters} gutter="sm" />
+        <PosterScrollRail posters={trendingPosters} gutter="sm" />
       </section>
 
-      <section className="pt-8 pb-6">
-        <SectionHeader
-          title={t("homeLateNightThrillers")}
-          showSeeAll
-          seeAllHref="/movies"
-          seeAllLabel={t("sectionSeeAll")}
-
-        />
-        <PosterScrollRail posters={thrillerPosters} gutter="sm" />
-      </section>
+      <HomeGenreRails movies={movies} ownedIds={ownedIds} isAdmin={isAdmin} />
 
       <section className="pt-8 pb-6">
         <SectionHeader
@@ -194,7 +172,7 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <PosterScrollRail posters={libraryPosters} gutter="sm" />
+        <PosterScrollRail posters={trendingPosters} gutter="sm" />
       </section>
     </PageShell>
   );

@@ -11,6 +11,10 @@ export function listWatchProgress(): Promise<WatchProgressRead[]> {
   return apiFetch<WatchProgressRead[]>("/watch-progress/");
 }
 
+export function getWatchProgress(contentId: string): Promise<WatchProgressRead> {
+  return apiFetch<WatchProgressRead>(`/watch-progress/${contentId}`);
+}
+
 export function upsertWatchProgress(
   contentId: string,
   data: WatchProgressUpdate,

@@ -1,20 +1,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
-import { getPlaybackUrl } from "@/lib/api/playback";
 import { getSeries, listEpisodes } from "@/lib/api/series";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { ContentRead, SeasonRead, SeriesRead } from "@/lib/api/types";
+import { getWatchProgress } from "@/lib/api/watch-progress";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import {
+  getCachedPlaybackUrl,
+  prefetchPlaybackUrl,
+  resolvePlaybackUrl,
+} from "@/lib/watch/playback-cache";
 
 type UseSeriesWatchParams = {
   seriesSlug: string;
   playback: string[];
-  /** Seeded from the Server Component so first paint has catalog data already. */
   initialSeries?: SeriesRead | null;
   initialSeasons?: SeasonRead[];
 };
@@ -42,11 +46,8 @@ export function useSeriesWatch({
   const [hasSubscription, setHasSubscription] = useState(false);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const [playbackLoading, setPlaybackLoading] = useState(false);
-  const playbackCacheRef = useRef<Map<string, string>>(new Map());
+  const [resumeTime, setResumeTime] = useState<number | null>(null);
 
-  // Catalog (series + episodes): seeded from the Server Component when the slug
-  // matches; otherwise fetched on the client (with the module-level catalog
-  // cache). Subscriptions always need the client-only auth token.
   useEffect(() => {
     if (playback.length === 0) {
       router.replace(`/watch/series/${seriesSlug}/1/1`);
@@ -84,8 +85,6 @@ export function useSeriesWatch({
     return () => {
       cancelled = true;
     };
-    // initialSeries/initialSeasons are read from the closure and are keyed to
-    // seriesSlug by the server; re-running on slug change re-seeds correctly.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seriesSlug, playback.length, router, loggedIn]);
 
@@ -99,68 +98,95 @@ export function useSeriesWatch({
     [activeSeason, episodeNum],
   );
 
-  /** Warm the playback-URL cache for an entitled episode (no-op if already cached). */
   const warmPlayback = useCallback(
     (ep: ContentRead | undefined | null) => {
       if (!ep || !loggedIn) return;
       const entitled = isAdmin || ep.is_free === true || hasSubscription;
       if (!entitled) return;
-      if (playbackCacheRef.current.has(ep.id)) return;
-      getPlaybackUrl(ep.id)
-        .then((url) => playbackCacheRef.current.set(ep.id, url))
-        .catch(() => {
-          /* best-effort prefetch */
-        });
+      void prefetchPlaybackUrl(ep.id);
     },
     [loggedIn, hasSubscription, isAdmin],
   );
 
-  /** Exposed for hover/focus prefetch from the episode list. */
   const prefetchEpisode = useCallback(
-    (episodeId: string, isFree: boolean) => {
+    (episodeId: string) => {
       if (!loggedIn) return;
-      if (!(isAdmin || isFree || hasSubscription)) return;
-      if (playbackCacheRef.current.has(episodeId)) return;
-      getPlaybackUrl(episodeId)
-        .then((url) => playbackCacheRef.current.set(episodeId, url))
-        .catch(() => {
-          /* best-effort prefetch */
-        });
+      if (!(isAdmin || hasSubscription)) {
+        const ep = activeSeason?.episodes.find((e) => e.id === episodeId);
+        if (!ep?.is_free) return;
+      }
+      void prefetchPlaybackUrl(episodeId);
     },
-    [loggedIn, hasSubscription, isAdmin],
+    [loggedIn, hasSubscription, isAdmin, activeSeason],
   );
 
-  // Resolve the current episode's playback URL. A cached entry (warmed by
-  // prefetch) renders the player instantly, so switching episodes doesn't flash
-  // a spinner; the request still runs in the background to refresh the token.
   useEffect(() => {
     const entitled = Boolean(episode && (isAdmin || episode.is_free === true || hasSubscription));
     if (!episode || !entitled || !loggedIn) {
       setPlaybackUrl(null);
       setPlaybackLoading(false);
+      setResumeTime(null);
       return;
     }
+
     let cancelled = false;
-    const cached = playbackCacheRef.current.get(episode.id);
+    const isFree = episode.is_free === true;
+    const cached = getCachedPlaybackUrl(episode.id);
+
     if (cached) {
       setPlaybackUrl(cached);
+      setPlaybackLoading(false);
+    } else {
+      setPlaybackLoading(true);
     }
-    setPlaybackLoading(!cached);
 
-    getPlaybackUrl(episode.id)
-      .then((url) => {
+    const progressPromise = getWatchProgress(episode.id).catch(() => null);
+
+    const resolvePlayback = async () => {
+      if (isFree || isAdmin) {
+        return resolvePlaybackUrl(episode.id);
+      }
+
+      const subsPromise = hasSubscription
+        ? Promise.resolve(true)
+        : listMySubscriptions()
+            .then((subs) => subs.some((s) => s.status === "active"))
+            .catch(() => false);
+
+      const [hasSub, url] = await Promise.all([
+        subsPromise,
+        resolvePlaybackUrl(episode.id),
+      ]);
+
+      if (!hasSub && !isAdmin) {
+        throw new Error("not entitled");
+      }
+      return url;
+    };
+
+    Promise.all([progressPromise, resolvePlayback()])
+      .then(([progress, url]) => {
         if (cancelled) return;
-        playbackCacheRef.current.set(episode.id, url);
+        if (progress && !progress.completed && progress.position_seconds > 0) {
+          setResumeTime(progress.position_seconds);
+        } else {
+          setResumeTime(null);
+        }
         setPlaybackUrl(url);
       })
-      .catch(() => !cancelled && setPlaybackUrl(null))
+      .catch(() => {
+        if (!cancelled) {
+          setPlaybackUrl(null);
+          setResumeTime(null);
+        }
+      })
       .finally(() => !cancelled && setPlaybackLoading(false));
+
     return () => {
       cancelled = true;
     };
   }, [episode, hasSubscription, isAdmin, loggedIn, seriesSlug, seasonNum, episodeNum]);
 
-  // Prefetch the neighbouring episodes so forward/back navigation is instant.
   useEffect(() => {
     if (!activeSeason || !episode) return;
     const eps = activeSeason.episodes;
@@ -203,6 +229,7 @@ export function useSeriesWatch({
     hasSubscription,
     playbackUrl,
     playbackLoading,
+    resumeTime,
     loggedIn,
     seasonNum,
     episodeNum,

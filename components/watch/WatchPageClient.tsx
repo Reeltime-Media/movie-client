@@ -3,12 +3,12 @@
 import { Clock, Link2, Loader2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import { CdnImage } from "@/components/ui/CdnImage";
-import { posterUrl } from "@/lib/api/client";
+import { posterThumbUrl } from "@/lib/api/client";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { MovieComments } from "@/components/comments/MovieComments";
 import { PageShell } from "@/components/layout/PageShell";
+import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody } from "@/components/watch/WatchPageSection";
@@ -16,8 +16,18 @@ import { useMovieWatch } from "@/hooks/watch/use-movie-watch";
 import type { ContentRead } from "@/lib/api/types";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 
+const WatchPlayerSkeleton = dynamic(
+  () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayerSkeleton),
+  { ssr: false },
+);
+
 const WatchPlayer = dynamic(
   () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayer),
+  { ssr: false, loading: () => <WatchPlayerSkeleton /> },
+);
+
+const MovieComments = dynamic(
+  () => import("@/components/comments/MovieComments").then((m) => m.MovieComments),
   { ssr: false },
 );
 
@@ -48,6 +58,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     canPlay,
     playbackUrl,
     playbackLoading,
+    resumeTime,
     loggedIn,
     isFree,
     priceLabel,
@@ -114,6 +125,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                   contentId={movie.id}
                   hlsSrc={playbackUrl}
                   title={title}
+                  initialTime={resumeTime ?? 0}
                 />
               )
             ) : (
@@ -238,9 +250,10 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                   style={{ viewTransitionName: `poster-${movie.id}` }}
                 >
                   <CdnImage
-                    src={posterUrl(movie.poster_key) ?? ""}
+                    src={posterThumbUrl(movie.poster_key, 220) ?? ""}
                     alt={title}
                     fill
+                    sizes="110px"
                     className="object-cover"
                   />
                 </div>
@@ -255,12 +268,14 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
       <section className="border-b border-border py-8 md:py-10">
         <WatchDetailBody>
           <div className="mx-auto max-w-6xl">
-            <MovieComments contentId={movie.id} movieTitle={title} />
+            <LazyWhenVisible>
+              <MovieComments contentId={movie.id} movieTitle={title} />
+            </LazyWhenVisible>
           </div>
         </WatchDetailBody>
       </section>
 
-      <WatchDiscoveryRails />
+      <WatchDiscoveryRails movieSlug={movie.slug} genres={movie.genres} />
     </PageShell>
   );
 }

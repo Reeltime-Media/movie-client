@@ -37,3 +37,18 @@ export async function fetchAllPages<T>(
 
   return all;
 }
+
+/** Fetch a single page from a paginated list endpoint. */
+export async function fetchPage<T>(
+  path: string,
+  page = 1,
+  pageSize = 12,
+  init?: RequestInit,
+): Promise<T[]> {
+  const q = path.includes("?") ? "&" : "?";
+  const res = await apiFetch<PaginatedResponse<T>>(
+    `${path}${q}page=${page}&page_size=${pageSize}`,
+    init,
+  );
+  return res.items;
+}

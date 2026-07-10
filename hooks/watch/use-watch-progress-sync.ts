@@ -14,28 +14,28 @@ export { qualifiesAsWatch } from "@/lib/watch/progress";
 
 export function useWatchProgressSync({
   contentId,
-  currentTime,
-  duration,
+  getPosition,
+  getDuration,
 }: {
   contentId?: string;
-  currentTime: number;
-  duration: number;
+  getPosition: () => number;
+  getDuration: () => number;
 }) {
   const lastSavedAtRef = useRef(0);
-  const lastPositionRef = useRef(0);
   const hasQualifiedRef = useRef(false);
   const contentIdRef = useRef(contentId);
-  const durationRef = useRef(duration);
+  const getPositionRef = useRef(getPosition);
+  const getDurationRef = useRef(getDuration);
 
   useEffect(() => {
     contentIdRef.current = contentId;
-    durationRef.current = duration;
-    lastPositionRef.current = currentTime;
+    getPositionRef.current = getPosition;
+    getDurationRef.current = getDuration;
   });
 
   const save = useCallback((position: number, completed: boolean, keepalive = false) => {
     const id = contentIdRef.current;
-    const dur = durationRef.current;
+    const dur = getDurationRef.current();
     if (!id || !isLoggedIn()) return;
     if (!qualifiesAsWatch(position, dur) && !completed) return;
 
@@ -57,19 +57,27 @@ export function useWatchProgressSync({
   useEffect(() => {
     if (!contentId || !isLoggedIn()) return;
 
-    if (!qualifiesAsWatch(currentTime, duration)) return;
+    const tick = () => {
+      const position = getPositionRef.current();
+      const duration = getDurationRef.current();
+      if (!qualifiesAsWatch(position, duration)) return;
 
-    const now = Date.now();
-    if (now - lastSavedAtRef.current < WATCH_PROGRESS_SAVE_INTERVAL_MS) return;
+      const now = Date.now();
+      if (now - lastSavedAtRef.current < WATCH_PROGRESS_SAVE_INTERVAL_MS) return;
 
-    save(currentTime, isWatchCompleted(currentTime, duration));
-  }, [contentId, currentTime, duration, save]);
+      save(position, isWatchCompleted(position, duration));
+    };
+
+    const interval = window.setInterval(tick, WATCH_PROGRESS_SAVE_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, [contentId, save]);
 
   useEffect(() => {
     if (!contentId) return;
 
     const flush = () => {
-      const position = lastPositionRef.current;
+      const position = getPositionRef.current();
+      const duration = getDurationRef.current();
       if (!hasQualifiedRef.current && !qualifiesAsWatch(position, duration)) return;
       save(position, isWatchCompleted(position, duration), true);
     };
@@ -86,15 +94,15 @@ export function useWatchProgressSync({
       window.removeEventListener("pagehide", flush);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [contentId, duration, save]);
+  }, [contentId, save]);
 
   const markCompleted = useCallback(() => {
-    save(lastPositionRef.current, true, true);
+    save(getPositionRef.current(), true, true);
   }, [save]);
 
   const flushProgress = useCallback(() => {
-    const position = lastPositionRef.current;
-    const dur = durationRef.current;
+    const position = getPositionRef.current();
+    const dur = getDurationRef.current();
     save(position, isWatchCompleted(position, dur), true);
   }, [save]);
 
