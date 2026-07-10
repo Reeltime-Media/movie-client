@@ -4,6 +4,7 @@ export const km = {
   navHome: "ទំព័រដើម",
   navMovies: "ភាពយន្ត",
   navSeries: "រឿងភាគ",
+  navShortMovies: "រឿងខ្លី",
   navMyLibrary: "បណ្ណាល័យរបស់ខ្ញុំ",
   navPricing: "តម្លៃ",
   navProfile: "ប្រវត្តិរូប",
@@ -142,6 +143,12 @@ export const km = {
   homeDecorDesc:
     "រឿងចាក់មុន ម៉ារ៉ាតុងយប់ និងរឿងដែលនៅក្នុងចិត្ត — អារម្មណ៍ដូចនៅរោង មើលបានគ្រប់ទីកន្លែង។",
   homeDecorCta: "រកមើលភាពយន្ត",
+
+  shortMoviesBadge: "មកដល់ឆាប់ៗនេះ",
+  shortMoviesTitle: "រឿងខ្លី",
+  shortMoviesDesc:
+    "រឿងខ្មែរខ្លីៗកំពុងមកដល់ — មើលបានរហ័ស ទាំងពេលធ្វើដំណើរ សម្រាក ឬមុនគេង។",
+  shortMoviesBrowseMovies: "រកមើលភាពយន្ត",
 
   pricingBadge: "ការចូលជាសមាជិករឿងភាគ",
   pricingTitle: "គម្រោងសម្រាប់មើលរឿង",

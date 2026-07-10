@@ -32,7 +32,7 @@ export function TopNavLocaleSwitcher({
   if (variant === "desktop") {
     return (
       <div
-        className="hidden items-center rounded-lg border border-border bg-surface p-0.5 sm:flex"
+        className="hidden h-10 items-center rounded-lg border border-border/80 bg-surface/70 p-1 sm:flex"
         role="group"
         aria-label={langSwitchLabel}
       >

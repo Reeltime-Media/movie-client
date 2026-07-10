@@ -43,7 +43,7 @@ export function TopNavActions({
     isAuthPage && pathname === "/login" ? t("navCreateAccount") : t("navSignIn");
 
   return (
-    <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+    <div className="ml-auto flex shrink-0 items-center gap-2 lg:gap-2.5">
       <TopNavLocaleSwitcher
         locale={locale}
         langSwitchLabel={t("langSwitch")}

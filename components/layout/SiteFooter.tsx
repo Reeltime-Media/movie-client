@@ -13,6 +13,7 @@ const browseLinks: FooterLink[] = [
   { href: "/", labelKey: "navHome" },
   { href: "/movies", labelKey: "navMovies" },
   { href: "/series", labelKey: "navSeries" },
+  { href: "/short-movies", labelKey: "navShortMovies" },
   { href: "/pricing", labelKey: "navPricing" },
 ];
 

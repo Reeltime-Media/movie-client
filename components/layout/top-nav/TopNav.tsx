@@ -35,24 +35,31 @@ export function TopNav() {
         headerClass,
       ].join(" ")}
     >
-      <div className="mx-auto flex h-[3.75rem] max-w-7xl items-center gap-3 px-4 sm:gap-4 md:px-6 lg:px-8">
-        <TopNavLogo />
+      <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-4 px-5 sm:px-6 md:px-8 lg:gap-5 lg:px-10 xl:px-12">
+        <div className="flex min-w-0 shrink-0 items-center gap-5 lg:gap-8">
+          <TopNavLogo />
+          <TopNavNavLinks
+            links={nav.visibleLinks}
+            pathname={nav.pathname}
+            label={nav.t}
+            variant="desktop"
+          />
+        </div>
 
-        <TopNavNavLinks
-          links={nav.visibleLinks}
-          pathname={nav.pathname}
-          label={nav.t}
-          variant="desktop"
-        />
+        <div className="min-w-0 flex-1" aria-hidden />
 
-        <TopNavSearchForm
-          searchLabel={nav.t("navSearch")}
-          placeholder={nav.t("searchPlaceholder")}
-          onSubmit={nav.submitSearch}
-          variant="desktop"
-        />
+        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <TopNavSearchForm
+            searchLabel={nav.t("navSearch")}
+            placeholder={nav.t("searchPlaceholder")}
+            onSubmit={nav.submitSearch}
+            variant="desktop"
+          />
 
-        <TopNavActions {...nav} />
+          <div className="hidden h-7 w-px shrink-0 bg-border/80 lg:block" aria-hidden />
+
+          <TopNavActions {...nav} />
+        </div>
       </div>
     </header>
   );

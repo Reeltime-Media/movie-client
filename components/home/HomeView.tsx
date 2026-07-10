@@ -128,7 +128,7 @@ export function HomeView({
         <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
       </ScrollReveal>
 
-      <ScrollReveal as="section" className="pt-8 pb-6">
+      <section className="pt-8 pb-6">
         <SectionHeader
           title={t("moviesTrendingTitle")}
           showSeeAll
@@ -136,10 +136,10 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <PosterScrollRail posters={trendingPosters} gutter="sm" autoScroll direction="left" />
-      </ScrollReveal>
+        <PosterScrollRail posters={trendingPosters} gutter="sm" />
+      </section>
 
-      <ScrollReveal as="section" className="pt-8 pb-6" delay={60}>
+      <section className="pt-8 pb-6">
         <SectionHeader
           title={t("seriesSubscribeTitle")}
           showSeeAll
@@ -147,14 +147,14 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <BannerScrollRail cards={seriesBanners} autoScroll direction="right" />
-      </ScrollReveal>
+        <BannerScrollRail cards={seriesBanners} />
+      </section>
 
-      <ScrollReveal as="div" variant="fade-up-scale" delay={40} className="pt-4 pb-2">
+      <section className="pt-4 pb-2">
         <PromotionBannerStrip banners={displayBanners} />
-      </ScrollReveal>
+      </section>
 
-      <ScrollReveal as="section" className="pt-8 pb-6">
+      <section className="pt-8 pb-6">
         <SectionHeader
           title={t("homeContinueWatching")}
           showSeeAll
@@ -162,10 +162,10 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <PosterScrollRail posters={continuePosters} gutter="sm" autoScroll direction="left" speed={0.5} />
-      </ScrollReveal>
+        <PosterScrollRail posters={continuePosters} gutter="sm" />
+      </section>
 
-      <ScrollReveal as="section" className="pt-8 pb-6" delay={40}>
+      <section className="pt-8 pb-6">
         <SectionHeader
           title={t("homeLateNightThrillers")}
           showSeeAll
@@ -173,20 +173,20 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <PosterScrollRail posters={thrillerPosters} gutter="sm" autoScroll direction="right" speed={0.7} />
-      </ScrollReveal>
+        <PosterScrollRail posters={thrillerPosters} gutter="sm" />
+      </section>
 
-      <ScrollReveal as="section" className="pt-8 pb-6" delay={60}>
+      <section className="pt-8 pb-6">
         <SectionHeader
           title={t("seriesPopularTitle")}
           showSeeAll
           seeAllHref="/series"
           seeAllLabel={t("sectionSeeAll")}
         />
-        <BannerScrollRail cards={seriesBanners} autoScroll direction="left" />
-      </ScrollReveal>
+        <BannerScrollRail cards={seriesBanners} />
+      </section>
 
-      <ScrollReveal as="section" className="pt-8 pb-12" delay={80}>
+      <section className="pt-8 pb-12">
         <SectionHeader
           title={t("homeLibrarySpotlight")}
           showSeeAll
@@ -194,8 +194,8 @@ export function HomeView({
           seeAllLabel={t("sectionSeeAll")}
 
         />
-        <PosterScrollRail posters={libraryPosters} gutter="sm" autoScroll direction="left" speed={0.55} />
-      </ScrollReveal>
+        <PosterScrollRail posters={libraryPosters} gutter="sm" />
+      </section>
     </PageShell>
   );
 }

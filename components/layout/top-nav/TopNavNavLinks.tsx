@@ -25,7 +25,7 @@ export function TopNavNavLinks({
     <nav
       className={
         variant === "desktop"
-          ? "hidden min-w-0 flex-1 items-center gap-1 lg:flex"
+          ? "hidden min-w-0 items-center gap-0.5 xl:gap-1 lg:flex"
           : "flex flex-col gap-1"
       }
       aria-label={variant === "desktop" ? "Primary" : "Primary mobile"}

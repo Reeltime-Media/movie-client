@@ -2,6 +2,7 @@ export const en = {
   navHome: "Home",
   navMovies: "Movies",
   navSeries: "Series",
+  navShortMovies: "Short movies",
   navMyLibrary: "My library",
   navPricing: "Pricing",
   navProfile: "Profile",
@@ -146,6 +147,12 @@ export const en = {
   homeDecorDesc:
     "Premieres, late-night marathons, and stories that stick — the same mood as the theater, wherever you watch.",
   homeDecorCta: "Browse movies",
+
+  shortMoviesBadge: "Coming soon",
+  shortMoviesTitle: "Short movies",
+  shortMoviesDesc:
+    "Bite-sized Khmer stories are on the way — quick watches for your commute, your break, or a late-night scroll.",
+  shortMoviesBrowseMovies: "Browse movies",
 
   pricingBadge: "Series subscription",
   pricingTitle: "Plans for every binge",

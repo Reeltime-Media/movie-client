@@ -24,7 +24,7 @@ export function PageShell({
   return (
     <div className="flex min-h-full flex-col overflow-x-hidden bg-bg text-text">
       <TopNav />
-      <main className="min-w-0 flex-1 pt-15">
+      <main className="min-w-0 flex-1 pt-16">
         <div className={innerClass}>{children}</div>
       </main>
       {footer ? <SiteFooter /> : null}

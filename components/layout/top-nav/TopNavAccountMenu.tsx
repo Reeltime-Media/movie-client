@@ -36,10 +36,10 @@ export function TopNavAccountMenu({
         type="button"
         onClick={onToggle}
         className={[
-          "inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface py-1.5 pl-1.5 pr-2.5 transition-colors",
-          "hover:border-border-hover hover:bg-surface-elevated",
+          "inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-border/80 bg-surface/70 py-1.5 pl-1.5 pr-2.5 transition-colors",
+          "hover:border-border-hover hover:bg-surface",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35",
-          accountOpen ? "border-border-hover bg-surface-elevated" : "",
+          accountOpen ? "border-border-hover bg-surface" : "",
         ].join(" ")}
         aria-expanded={accountOpen}
         aria-haspopup="menu"
