@@ -1,7 +1,7 @@
 "use client";
 
 import { PlayCircle } from "lucide-react";
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -54,7 +54,7 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
               aria-hidden={i !== active}
             >
               {imageSrc ? (
-                <Image
+                <CdnImage
                   src={imageSrc}
                   alt=""
                   fill

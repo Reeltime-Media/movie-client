@@ -1,6 +1,6 @@
 import { Play } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import { CdnImage } from "@/components/ui/CdnImage";
 import type { PosterCardProps } from "@/types/poster-card";
 
 export type { PosterCardProps } from "@/types/poster-card";
@@ -33,7 +33,7 @@ export function PosterCard({
         style={{ background: posterGradient, viewTransitionName: contentId ? `poster-${contentId}` : undefined }}
       >
         {imageSrc ? (
-          <Image
+          <CdnImage
             src={imageSrc}
             alt={imageAlt ?? titleBelow}
             fill

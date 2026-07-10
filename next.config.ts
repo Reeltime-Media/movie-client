@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // R2 posters are large originals; allow more time when optimization is used.
+    imgOptTimeoutInSeconds: 30,
+  },
   images: {
     // Serve modern, smaller formats; the browser picks the best it supports.
     formats: ["image/avif", "image/webp"],

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 
 type UserAvatarProps = {
   name?: string | null;
@@ -52,7 +52,7 @@ export function UserAvatar({
   if (avatarUrl) {
     return (
       <div className={shell}>
-        <Image
+        <CdnImage
           src={avatarUrl}
           alt=""
           width={imagePx}

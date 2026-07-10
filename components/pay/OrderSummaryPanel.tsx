@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import { Lock } from "lucide-react";
 import type { ReactNode } from "react";
 import { CheckoutPayButton } from "@/components/pay/CheckoutPayButton";
@@ -49,7 +49,7 @@ export function OrderSummaryPanel({
         <div className="flex items-center gap-3.5">
           {posterSrc ? (
             <div className="relative h-[60px] w-[40px] shrink-0 overflow-hidden rounded-[6px] ring-1 ring-border">
-              <Image src={posterSrc} alt="" fill className="object-cover" sizes="40px" />
+              <CdnImage src={posterSrc} alt="" fill className="object-cover" sizes="40px" />
             </div>
           ) : null}
           <div className="min-w-0 flex-1">

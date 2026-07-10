@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CdnImage } from "@/components/ui/CdnImage";
 
 export type BannerCardProps = {
   imageSrc?: string;
@@ -31,7 +31,7 @@ export function BannerCard({
     >
       <div className="rt-card-hover relative overflow-hidden rounded-md border border-transparent group-hover:border-white/20 bg-surface-elevated">
         {imageSrc ? (
-          <Image
+          <CdnImage
             src={imageSrc}
             alt={imageAlt ?? title}
             width={640}

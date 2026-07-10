@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { GenreFilterSelect } from "@/components/catalog/GenreFilterSelect";
@@ -52,7 +52,7 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
                 >
                   <div className="relative h-20 w-14 shrink-0 overflow-hidden bg-surface-elevated">
                     {p.imageSrc ? (
-                      <Image src={p.imageSrc} alt={p.titleBelow} fill sizes="56px" className="object-cover" />
+                      <CdnImage src={p.imageSrc} alt={p.titleBelow} fill sizes="56px" className="object-cover" />
                     ) : (
                       <div className="absolute inset-0" style={{ background: p.posterGradient }} />
                     )}

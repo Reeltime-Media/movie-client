@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import type { LucideIcon } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { posterUrl } from "@/lib/api/client";
@@ -34,7 +34,7 @@ export function PayPageHero({
       aria-label={title}
     >
       {hasImage ? (
-        <Image
+        <CdnImage
           src={bgImage!}
           alt=""
           fill

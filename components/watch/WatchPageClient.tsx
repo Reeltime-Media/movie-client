@@ -2,7 +2,7 @@
 
 import { Clock, Link2, Loader2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import { posterUrl } from "@/lib/api/client";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
@@ -237,7 +237,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                   className="relative hidden aspect-[2/3] w-[110px] shrink-0 overflow-hidden rounded-md border border-border md:block"
                   style={{ viewTransitionName: `poster-${movie.id}` }}
                 >
-                  <Image
+                  <CdnImage
                     src={posterUrl(movie.poster_key) ?? ""}
                     alt={title}
                     fill

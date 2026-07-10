@@ -1,7 +1,7 @@
 "use client";
 
 import { Info, PlayCircle, Star } from "lucide-react";
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -151,7 +151,7 @@ export function Hero({
           >
             {s.bannerSrc ? (
               <div className={`absolute inset-0 overflow-hidden${i === active ? " rt-ken-burns-active" : ""}`}>
-                <Image
+                <CdnImage
                   src={s.bannerSrc}
                   alt=""
                   fill

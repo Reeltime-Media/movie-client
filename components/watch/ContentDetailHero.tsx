@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import type { ReactNode } from "react";
 import { posterUrl } from "@/lib/api/client";
 
@@ -26,7 +26,7 @@ export function ContentDetailHero({
         style={{ viewTransitionName: contentId ? `poster-${contentId}` : undefined }}
       >
         {src ? (
-          <Image
+          <CdnImage
             src={src}
             alt=""
             fill

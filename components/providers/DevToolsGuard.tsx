@@ -13,6 +13,7 @@ export function DevToolsGuard() {
     const blockContextMenu = (e: MouseEvent) => e.preventDefault();
 
     const blockKeys = (e: KeyboardEvent) => {
+      if (!e.key) return;
       const key = e.key.toLowerCase();
       const modifier = e.ctrlKey || e.metaKey;
 

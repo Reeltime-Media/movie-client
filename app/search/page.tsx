@@ -1,7 +1,7 @@
 "use client";
 
 import { Play, Search } from "lucide-react";
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { PageSearchBar } from "@/components/catalog/PageSearchBar";
@@ -73,7 +73,7 @@ function ResultRow({ result, query }: { result: SearchResult; query: string }) {
       <a href={href} className="shrink-0">
         <div className="relative h-30 w-22.5 overflow-hidden bg-surface-elevated">
           {imgSrc && (
-            <Image src={imgSrc} alt={title} fill sizes="90px" className="object-cover" />
+            <CdnImage src={imgSrc} alt={title} fill sizes="90px" className="object-cover" />
           )}
         </div>
       </a>

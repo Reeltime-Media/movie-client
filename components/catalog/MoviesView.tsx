@@ -1,9 +1,9 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { CdnImage } from "@/components/ui/CdnImage";
 import { GenreFilterSelect } from "@/components/catalog/GenreFilterSelect";
 import { PageSearchBar } from "@/components/catalog/PageSearchBar";
 import { PosterCard } from "@/components/catalog/PosterCard";
@@ -54,7 +54,7 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
                   {/* Thumbnail */}
                   <div className="relative h-20 w-14 shrink-0 overflow-hidden bg-surface-elevated">
                     {p.imageSrc ? (
-                      <Image
+                      <CdnImage
                         src={p.imageSrc}
                         alt={p.titleBelow}
                         fill

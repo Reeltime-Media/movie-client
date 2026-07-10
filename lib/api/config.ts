@@ -28,6 +28,12 @@ export function posterUrl(posterKey: string | null | undefined): string | undefi
   return `${R2_PUBLIC_URL}/${posterKey.replace(/^\//, "")}`;
 }
 
+/** True for poster/banner URLs served from our R2 public bucket. */
+export function isR2ImageUrl(src: string): boolean {
+  if (R2_PUBLIC_URL && src.startsWith(R2_PUBLIC_URL)) return true;
+  return /\.r2\.dev\//.test(src);
+}
+
 export function mediaUrl(key: string | null | undefined): string | undefined {
   if (!key) return undefined;
   if (/^https?:\/\//i.test(key)) return key;

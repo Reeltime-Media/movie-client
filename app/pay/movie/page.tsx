@@ -4,6 +4,7 @@ import { CreditCard, Infinity, ShieldCheck, Star } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { CdnImage } from "@/components/ui/CdnImage";
 import Image from "next/image";
 import { MovieComments } from "@/components/comments/MovieComments";
 import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
@@ -176,7 +177,7 @@ function MoviePayInner() {
           <div className="flex flex-col md:flex-row gap-8">
             {poster ? (
               <div className="relative aspect-2/3 w-40 shrink-0 overflow-hidden rounded-xl border border-border sm:w-48 md:w-56">
-                <Image src={poster} alt={movie.title} fill className="object-cover" sizes="(max-width: 768px) 160px, 224px" />
+                <CdnImage src={poster} alt={movie.title} fill className="object-cover" sizes="(max-width: 768px) 160px, 224px" />
               </div>
             ) : null}
             

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CdnImage } from "@/components/ui/CdnImage";
 import Link from "next/link";
 import { Lock, PlayCircle } from "lucide-react";
 import { posterUrl } from "@/lib/api/client";
@@ -34,7 +34,7 @@ export function WatchAccessPanel({
       ].join(" ")}
     >
       {imageSrc ? (
-        <Image
+        <CdnImage
           src={imageSrc}
           alt={`${title} poster`}
           fill
