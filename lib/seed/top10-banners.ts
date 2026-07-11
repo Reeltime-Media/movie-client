@@ -1,12 +1,7 @@
 /**
- * Banner images for the "Top 10 Movies of the Week" cards.
- *
- * The catalog list endpoint (`ContentListItemRead`) only returns `poster_key`,
- * not `banner_key`, so the Top 10 cards have no banner of their own. We fall
- * back to a shared default banner served from `public/sample_images/`.
- *
- * To give a specific movie its own banner, map its `slug` to an image path in
- * `bySlug`; anything not listed uses `DEFAULT_BANNER`.
+ * Fallback banner images for pay-page Top 10 cards when a movie has no
+ * `banner_key`. Map a slug in `bySlug` for a custom override; otherwise
+ * `DEFAULT_BANNER` is used.
  */
 
 /** Default banner used for any movie that has no banner of its own. */

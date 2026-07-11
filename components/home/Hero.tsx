@@ -134,9 +134,6 @@ export function Hero({
     return () => window.clearInterval(id);
   }, [goNext, total]);
 
-  const indexLabel = String(active + 1).padStart(2, "0");
-  const totalLabel = String(Math.max(total, 1)).padStart(2, "0");
-
   return (
     <section className="hero-featured relative ml-[calc(50%-50vw)] aspect-video sm:aspect-auto sm:h-[min(58vh,520px)] sm:min-h-96 md:min-h-110 w-screen max-w-none shrink-0 overflow-hidden bg-black">
       {hasBannerBackground ? (
@@ -247,38 +244,6 @@ export function Hero({
             )}
           </div>
         </div>
-
-        {slides.length > 1 && (
-          <div className="absolute bottom-6 right-4 z-3 flex items-center gap-2.5 sm:bottom-8 sm:right-12 sm:gap-3">
-            {/* Counter: hidden on mobile to avoid overlap with title */}
-            <span className="hidden text-[11px] font-medium tabular-nums text-text-muted sm:inline">
-              {indexLabel}
-              <span className="text-border"> / </span>
-              <span className="text-text-muted/60">{totalLabel}</span>
-            </span>
-            <div className="flex items-center gap-1.5" role="tablist" aria-label={t("heroFeaturedTitlesAria")}>
-              {slides.map((s, i) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === active}
-                  aria-label={`Show ${s.title}`}
-                  onClick={() => setActive(i)}
-                  className="flex cursor-pointer items-center py-3"
-                >
-                  <span
-                    className={`block rounded-full transition-all duration-300 ${
-                      i === active
-                        ? "h-0.75 w-8 bg-brand"
-                        : "h-0.75 w-4 bg-text-muted/30 hover:bg-text-muted/50"
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

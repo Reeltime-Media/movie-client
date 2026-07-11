@@ -110,7 +110,7 @@ export function movieToBanner(
   const price =
     !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
   return {
-    imageSrc: posterThumbUrl(movie.poster_key, 400) ?? posterUrl(movie.poster_key),
+    imageSrc: posterUrl(movie.banner_key) ?? posterUrl(movie.poster_key),
     imageAlt: movie.title,
     title: movie.title,
     year: movie.release_year,
