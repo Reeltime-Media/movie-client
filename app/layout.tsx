@@ -40,7 +40,7 @@ export default function RootLayout({
       className={`${inter.variable} ${kantumruy.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 lg:pb-0">
+      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 xl:pb-0">
         <ThemeInit />
         <DevToolsGuard />
         <GoogleAuthProvider>

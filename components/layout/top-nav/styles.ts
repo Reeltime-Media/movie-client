@@ -11,12 +11,12 @@ export function iconButtonClassName(extra = "") {
 
 export function navLinkClassName(active: boolean) {
   return [
-    "relative whitespace-nowrap rounded-md px-3 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors duration-200",
+    "relative whitespace-nowrap rounded-md px-2.5 py-2 text-[13px] font-medium leading-normal tracking-[-0.01em] transition-colors duration-200 xl:px-3",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35",
     active
       ? [
           "text-text",
-          "after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:rounded-full after:bg-brand",
+          "after:absolute after:inset-x-2.5 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-brand xl:inset-x-3",
         ].join(" ")
       : "text-text-muted hover:text-text",
   ].join(" ");

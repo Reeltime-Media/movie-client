@@ -18,7 +18,7 @@ export function TopNavSearchForm({
   if (variant === "desktop") {
     return (
       <form
-        className="relative hidden w-[min(100%,14rem)] shrink-0 lg:block xl:w-[min(100%,18rem)] 2xl:w-[min(100%,22rem)]"
+        className="relative hidden w-[min(100%,12rem)] shrink min-w-0 md:block lg:w-[min(100%,14rem)] xl:w-[min(100%,18rem)] 2xl:w-[min(100%,22rem)]"
         role="search"
         onSubmit={onSubmit}
       >

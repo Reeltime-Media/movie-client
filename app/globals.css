@@ -161,6 +161,8 @@ html[lang="km"] body {
     system-ui,
     -apple-system,
     sans-serif;
+  /* Kantumruy ascenders/descenders need a taller line box than Latin. */
+  line-height: 1.65;
 }
 
 /* Page entrance motion (home, movies, series — respects reduced-motion) */

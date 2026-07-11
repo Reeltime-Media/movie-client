@@ -10,8 +10,8 @@ import { bottomNavTabs } from "./tabs";
 /**
  * App-style floating bottom navigation for mobile / tablet.
  * Inactive tabs collapse to an icon; the active tab expands into a brand-red
- * pill showing its icon + label. Hidden on desktop (`lg+`), where the top nav
- * takes over.
+ * pill showing its icon + label. Hidden from xl up, where the top nav links
+ * take over (Khmer labels need that width before desktop links fit).
  */
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -20,7 +20,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Primary mobile"
-      className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] xl:hidden"
     >
       <ul className="flex items-center gap-1 rounded-full border border-border bg-surface-elevated p-1.5">
         {bottomNavTabs.map(({ href, labelKey, Icon }) => {

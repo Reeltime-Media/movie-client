@@ -12,7 +12,7 @@ export function TopNavAuthLink({ href, label, variant, onNavigate }: TopNavAuthL
     return (
       <Link
         href={href}
-        className="hidden h-10 items-center rounded-lg bg-brand px-4 text-[13px] font-bold text-white shadow-[0_6px_18px_-8px_rgba(229,9,20,0.65)] transition-colors hover:bg-brand-hover md:inline-flex"
+        className="hidden h-10 items-center rounded-lg bg-brand px-4 text-[13px] font-bold leading-none text-white shadow-[0_6px_18px_-8px_rgba(229,9,20,0.65)] transition-colors hover:bg-brand-hover md:inline-flex"
       >
         {label}
       </Link>

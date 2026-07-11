@@ -22,12 +22,16 @@ export function PageShell({
       : "mx-auto w-full max-w-5xl";
 
   return (
-    <div className="flex min-h-full flex-col overflow-x-hidden bg-bg text-text">
+    <>
+      {/* Keep TopNav outside overflow clipping — overflow-x-hidden forces
+          overflow-y to auto and will crop the fixed header (esp. Khmer). */}
       <TopNav />
-      <main className="min-w-0 flex-1 pt-16">
-        <div className={innerClass}>{children}</div>
-      </main>
-      {footer ? <SiteFooter /> : null}
-    </div>
+      <div className="flex min-h-full flex-col overflow-x-hidden bg-bg text-text">
+        <main className="min-w-0 flex-1 pt-18">
+          <div className={innerClass}>{children}</div>
+        </main>
+        {footer ? <SiteFooter /> : null}
+      </div>
+    </>
   );
 }

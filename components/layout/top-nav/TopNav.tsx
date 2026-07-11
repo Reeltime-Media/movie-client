@@ -31,12 +31,12 @@ export function TopNav() {
   return (
     <header
       className={[
-        "fixed top-0 z-50 w-full border-b transition-all duration-400 ease-out",
+        "fixed top-0 z-50 w-full overflow-visible border-b transition-all duration-400 ease-out",
         headerClass,
       ].join(" ")}
     >
-      <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-4 px-5 sm:px-6 md:px-8 lg:gap-5 lg:px-10 xl:px-12">
-        <div className="flex min-w-0 shrink-0 items-center gap-5 lg:gap-8">
+      <div className="mx-auto flex h-18 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 md:px-8 lg:gap-5 lg:px-10 xl:px-12">
+        <div className="flex min-w-0 shrink-0 items-center gap-4 lg:gap-6 xl:gap-8">
           <TopNavLogo />
           <TopNavNavLinks
             links={nav.visibleLinks}
@@ -48,7 +48,7 @@ export function TopNav() {
 
         <div className="min-w-0 flex-1" aria-hidden />
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+        <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2 lg:gap-2.5">
           <TopNavSearchForm
             searchLabel={nav.t("navSearch")}
             placeholder={nav.t("searchPlaceholder")}
@@ -56,7 +56,7 @@ export function TopNav() {
             variant="desktop"
           />
 
-          <div className="hidden h-7 w-px shrink-0 bg-border/80 lg:block" aria-hidden />
+          <div className="hidden h-7 w-px shrink-0 bg-border/80 xl:block" aria-hidden />
 
           <TopNavActions {...nav} />
         </div>
