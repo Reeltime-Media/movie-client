@@ -85,7 +85,6 @@ export interface SubscriptionRead {
   status: string;
   current_period_start: string;
   current_period_end: string;
-  reminder_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }
