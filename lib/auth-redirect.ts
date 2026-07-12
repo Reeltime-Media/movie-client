@@ -1,7 +1,5 @@
 import { clearToken } from "@/lib/auth/token";
 
-export { isUnauthorizedError } from "@/lib/api/errors";
-
 let redirectingToLogin = false;
 
 /** Paths where 401 is expected and should stay on the page (e.g. bad login credentials). */
@@ -14,13 +12,13 @@ export function loginPathWithNext(next: string): string {
   return `/login?next=${encodeURIComponent(next)}`;
 }
 
-export function currentPathForLoginRedirect(): string {
+function currentPathForLoginRedirect(): string {
   if (typeof window === "undefined") return "/";
   return `${window.location.pathname}${window.location.search}`;
 }
 
 /** Clear session and send the user to login, preserving return URL. */
-export function redirectToLogin(next?: string): void {
+function redirectToLogin(next?: string): void {
   if (typeof window === "undefined" || redirectingToLogin) return;
   redirectingToLogin = true;
   clearToken();

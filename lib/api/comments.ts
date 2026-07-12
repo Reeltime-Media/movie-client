@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 
-export type CommentAuthorRead = {
+type CommentAuthorRead = {
   id: string;
   display_name: string;
 };

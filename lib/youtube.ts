@@ -1,4 +1,4 @@
-export function youtubeId(url: string | null | undefined): string | null {
+function youtubeId(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
     const u = new URL(url);

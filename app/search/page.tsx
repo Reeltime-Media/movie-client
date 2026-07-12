@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Search } from "lucide-react";
+import { Play } from "lucide-react";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
@@ -126,23 +126,24 @@ function SearchPageInner() {
   const isAdmin = isAdminUser(user);
   const urlQuery = params.get("q") ?? "";
   const [input, setInput] = useState(urlQuery);
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [fetched, setFetched] = useState<{ q: string; results: SearchResult[] } | null>(null);
 
-  useEffect(() => {
+  // Sync the input box when the ?q= param changes (adjust-state-during-render pattern).
+  const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
+  if (prevUrlQuery !== urlQuery) {
+    setPrevUrlQuery(urlQuery);
     setInput(urlQuery);
-  }, [urlQuery]);
+  }
+
+  const trimmedQuery = urlQuery.trim();
+  const results = fetched && fetched.q === trimmedQuery ? fetched.results : [];
+  const loading = Boolean(trimmedQuery) && (!fetched || fetched.q !== trimmedQuery);
 
   useEffect(() => {
     const q = urlQuery.trim();
-    if (!q) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
+    if (!q) return;
 
     let cancelled = false;
-    setLoading(true);
 
     const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
 
@@ -165,7 +166,7 @@ function SearchPageInner() {
           ),
         );
 
-        const movieResults: SearchResult[] = movies.map((m, i) => {
+        const movieResults: SearchResult[] = movies.map((m) => {
           const isFree = !m.price_usd || parseFloat(m.price_usd) === 0;
           const isOwned = isFree || ownedIds.has(m.id);
           return {
@@ -181,13 +182,10 @@ function SearchPageInner() {
           episodeCount: episodeCounts[i],
         }));
 
-        if (!cancelled) setResults([...movieResults, ...seriesResults]);
+        if (!cancelled) setFetched({ q, results: [...movieResults, ...seriesResults] });
       })
       .catch(() => {
-        if (!cancelled) setResults([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setFetched({ q, results: [] });
       });
 
     return () => {

@@ -1,6 +1,6 @@
 import { apiFetch, getApiUrl } from "./client";
 
-export interface PlaybackAuth {
+interface PlaybackAuth {
   /** Master playlist path, relative to the API, carrying a scoped playback token. */
   master_url: string;
   expires_in: number;

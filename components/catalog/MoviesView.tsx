@@ -32,7 +32,6 @@ const ALL_GENRES = "";
 
 type MoviesViewProps = {
   movies: ContentListItemRead[];
-  initialPosters: PosterCardProps[];
   /** Raw genre label from ?genre= (e.g. "Action"), or empty for all. */
   initialGenreLabel?: string;
 };
@@ -92,7 +91,6 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
 
 export function MoviesView({
   movies,
-  initialPosters,
   initialGenreLabel = ALL_GENRES,
 }: MoviesViewProps) {
   const { t } = useI18n();
@@ -104,10 +102,14 @@ export function MoviesView({
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
   const [page, setPage] = useState(0);
 
-  // Sync when navigating from a home genre rail (e.g. /movies?genre=Thriller).
-  useEffect(() => {
+  // Sync when navigating from a home genre rail (e.g. /movies?genre=Thriller)
+  // using the adjust-state-during-render pattern.
+  const [prevInitialGenre, setPrevInitialGenre] = useState(initialGenreLabel);
+  if (prevInitialGenre !== initialGenreLabel) {
+    setPrevInitialGenre(initialGenreLabel);
     setActiveGenre(initialGenreLabel);
-  }, [initialGenreLabel]);
+    setPage(0);
+  }
 
   const genreOptions = useMemo(() => {
     const labels = collectGenreLabels(movies);
@@ -147,9 +149,6 @@ export function MoviesView({
   const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES;
-
-  // Reset page on filter change
-  useEffect(() => { setPage(0); }, [searchQuery, activeGenre]);
 
   useEffect(() => {
     if (!loggedIn || !movies.length) return;
@@ -191,13 +190,19 @@ export function MoviesView({
             label={t("moviesSearchLabel")}
             placeholder={t("moviesSearchPlaceholder")}
             value={searchQuery}
-            onValueChange={setSearchQuery}
+            onValueChange={(value) => {
+              setSearchQuery(value);
+              setPage(0);
+            }}
           />
           <GenreFilterSelect
             className="w-full sm:w-44"
             label={t("moviesFilterGenre")}
             value={activeGenre}
-            onChange={setActiveGenre}
+            onChange={(genre) => {
+              setActiveGenre(genre);
+              setPage(0);
+            }}
             options={genreOptions}
           />
         </div>

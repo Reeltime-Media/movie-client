@@ -2,7 +2,7 @@ const DEFAULT_ORIGIN = "http://localhost:3000";
 export const PENDING_INTENT_KEY = "rt_pending_intent_id";
 
 /** Public site origin sent to Baray as `custom_success_url` (must be absolute). */
-export function getAppOrigin(): string {
+function getAppOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
   if (configured) return configured;
   if (typeof window !== "undefined") return window.location.origin;

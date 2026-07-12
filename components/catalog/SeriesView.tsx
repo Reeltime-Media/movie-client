@@ -111,8 +111,6 @@ export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
   const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
   const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== "genreAll";
 
-  useEffect(() => { setPage(0); }, [searchQuery, activeGenre]);
-
   useEffect(() => {
     if (!loggedIn || !seriesList.length) return;
     let cancelled = false;
@@ -153,13 +151,19 @@ export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
             label={t("seriesSearchLabel")}
             placeholder={t("seriesSearchPlaceholder")}
             value={searchQuery}
-            onValueChange={setSearchQuery}
+            onValueChange={(value) => {
+              setSearchQuery(value);
+              setPage(0);
+            }}
           />
           <GenreFilterSelect
             className="w-full sm:w-44"
             label={t("moviesFilterGenre")}
             value={activeGenre}
-            onChange={setActiveGenre}
+            onChange={(genre) => {
+              setActiveGenre(genre);
+              setPage(0);
+            }}
             options={CATALOG_GENRE_KEYS.map((key) => ({ value: key, label: t(key) }))}
           />
         </div>

@@ -10,8 +10,6 @@ import {
   WATCH_PROGRESS_SAVE_INTERVAL_MS,
 } from "@/lib/watch/progress";
 
-export { qualifiesAsWatch } from "@/lib/watch/progress";
-
 export function useWatchProgressSync({
   contentId,
   getPosition,

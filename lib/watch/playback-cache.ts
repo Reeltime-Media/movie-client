@@ -7,10 +7,6 @@ export function getCachedPlaybackUrl(contentId: string): string | undefined {
   return cache.get(contentId);
 }
 
-export function setCachedPlaybackUrl(contentId: string, url: string): void {
-  cache.set(contentId, url);
-}
-
 /** Best-effort warmup — dedupes concurrent requests for the same content. */
 export function prefetchPlaybackUrl(contentId: string): Promise<string | null> {
   const hit = cache.get(contentId);

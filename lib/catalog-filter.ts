@@ -14,7 +14,7 @@ export const CATALOG_GENRE_KEYS = [
 export type CatalogGenreKey = (typeof CATALOG_GENRE_KEYS)[number];
 
 /** English genre labels stored in the API (matches en dictionary). */
-export const GENRE_KEY_TO_LABEL: Partial<Record<TranslationKey, string>> = {
+const GENRE_KEY_TO_LABEL: Partial<Record<TranslationKey, string>> = {
   genreAction: "Action",
   genreDrama: "Drama",
   genreThriller: "Thriller",
@@ -30,7 +30,7 @@ export type CatalogSearchable = {
   genres: string[];
 };
 
-export function normalizeSearchQuery(query: string): string {
+function normalizeSearchQuery(query: string): string {
   return query.trim().toLowerCase();
 }
 
@@ -43,12 +43,8 @@ export function matchesSearch(item: CatalogSearchable, query: string): boolean {
   return false;
 }
 
-export function normalizeGenreLabel(label: string): string {
+function normalizeGenreLabel(label: string): string {
   return label.trim().toLowerCase().replace(/[-\s]/g, "");
-}
-
-export function genreLabelFromKey(genreKey: TranslationKey): string | undefined {
-  return GENRE_KEY_TO_LABEL[genreKey];
 }
 
 /** Map an API/catalog genre label (e.g. "Thriller") to a filter key. */
@@ -80,24 +76,12 @@ export function matchesGenreLabel(
   return item.genres.some((g) => normalizeGenreLabel(g) === needle);
 }
 
-export function filterByGenre<T extends CatalogSearchable>(
-  items: readonly T[],
-  genreKey: TranslationKey,
-): T[] {
-  if (genreKey === "genreAll") return [...items];
-  return items.filter((item) => matchesGenre(item, genreKey));
-}
-
 export function filterByGenreLabel<T extends CatalogSearchable>(
   items: readonly T[],
   label: string | null | undefined,
 ): T[] {
   if (!label?.trim()) return [...items];
   return items.filter((item) => matchesGenreLabel(item, label));
-}
-
-export function genreLabelForKey(genreKey: TranslationKey): string | undefined {
-  return GENRE_KEY_TO_LABEL[genreKey];
 }
 
 /**

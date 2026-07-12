@@ -49,6 +49,16 @@ export function useSeriesWatch({
   const [playbackLoading, setPlaybackLoading] = useState(false);
   const [resumeTime, setResumeTime] = useState<number | null>(null);
 
+  // Reset content state when the series changes (adjust-state-during-render pattern).
+  const [prevSeriesSlug, setPrevSeriesSlug] = useState(seriesSlug);
+  if (prevSeriesSlug !== seriesSlug) {
+    setPrevSeriesSlug(seriesSlug);
+    setSeries(isSeeded ? initialSeries : null);
+    setSeasons(isSeeded ? initialSeasons : []);
+    setLoading(!isSeeded);
+    setNotFound(false);
+  }
+
   useEffect(() => {
     if (playback.length === 0) {
       router.replace(`/watch/series/${seriesSlug}/1/1`);
@@ -59,10 +69,6 @@ export function useSeriesWatch({
     const subsPromise = loggedIn ? listMySubscriptions().catch(() => []) : Promise.resolve([]);
 
     if (initialSeries && initialSeries.slug === seriesSlug) {
-      setSeries(initialSeries);
-      setSeasons(initialSeasons);
-      setNotFound(false);
-      setLoading(false);
       subsPromise.then((subs) => {
         if (cancelled) return;
         setHasSubscription(subs.some((sub) => sub.status === "active"));
@@ -72,12 +78,12 @@ export function useSeriesWatch({
       };
     }
 
-    setLoading(true);
     Promise.all([getSeries(seriesSlug), listEpisodes(seriesSlug), subsPromise])
       .then(([s, seasonList, subs]) => {
         if (cancelled) return;
         setSeries(s);
         setSeasons(seasonList);
+        setNotFound(false);
         setHasSubscription(subs.some((sub) => sub.status === "active"));
       })
       .catch(() => !cancelled && setNotFound(true))
@@ -121,25 +127,28 @@ export function useSeriesWatch({
     [loggedIn, hasSubscription, isAdmin, activeSeason],
   );
 
+  // Reset playback state when the target episode or entitlement inputs change
+  // (adjust-state-during-render pattern; the sentinel makes it run on mount so
+  // seeded pages pick up cached playback immediately). The effect below then
+  // re-resolves playback asynchronously.
+  const playbackEntitled = Boolean(
+    episode && loggedIn && (isAdmin || episode.is_free === true || hasSubscription),
+  );
+  const playbackKey = `${episode?.id ?? "none"}|${playbackEntitled}`;
+  const [prevPlaybackKey, setPrevPlaybackKey] = useState<string | null>(null);
+  if (prevPlaybackKey !== playbackKey) {
+    setPrevPlaybackKey(playbackKey);
+    const cached = playbackEntitled && episode ? getCachedPlaybackUrl(episode.id) : undefined;
+    setPlaybackUrl(cached ?? null);
+    setPlaybackLoading(playbackEntitled && !cached);
+    setResumeTime(null);
+  }
+
   useEffect(() => {
-    const entitled = Boolean(episode && (isAdmin || episode.is_free === true || hasSubscription));
-    if (!episode || !entitled || !loggedIn) {
-      setPlaybackUrl(null);
-      setPlaybackLoading(false);
-      setResumeTime(null);
-      return;
-    }
+    if (!episode || !playbackEntitled) return;
 
     let cancelled = false;
     const isFree = episode.is_free === true;
-    const cached = getCachedPlaybackUrl(episode.id);
-
-    if (cached) {
-      setPlaybackUrl(cached);
-      setPlaybackLoading(false);
-    } else {
-      setPlaybackLoading(true);
-    }
 
     const progressPromise = getWatchProgress(episode.id).catch(() => null);
 
@@ -186,7 +195,7 @@ export function useSeriesWatch({
     return () => {
       cancelled = true;
     };
-  }, [episode, hasSubscription, isAdmin, loggedIn, seriesSlug, seasonNum, episodeNum]);
+  }, [episode, playbackEntitled, hasSubscription, isAdmin, loggedIn, seriesSlug, seasonNum, episodeNum]);
 
   useEffect(() => {
     if (!activeSeason || !episode) return;

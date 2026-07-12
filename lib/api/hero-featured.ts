@@ -1,4 +1,4 @@
-import { apiFetch, catalogCache } from "./client";
+import { apiFetch } from "./client";
 
 export type HeroFeaturedSlide = {
   id: string;
@@ -17,7 +17,7 @@ export type HeroFeaturedSlide = {
 };
 
 /** Admin-curated hero — revalidate often so picks show up quickly after edits. */
-export const heroFeaturedCache: RequestInit = {
+const heroFeaturedCache: RequestInit = {
   next: { revalidate: 30 },
 } as RequestInit;
 

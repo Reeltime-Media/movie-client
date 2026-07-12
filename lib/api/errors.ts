@@ -21,12 +21,3 @@ export function parseApiErrorMessage(
   }
   return fallback;
 }
-
-export function isUnauthorizedError(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "status" in err &&
-    (err as { status: number }).status === 401
-  );
-}

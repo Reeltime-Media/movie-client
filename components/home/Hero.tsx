@@ -87,9 +87,12 @@ export function Hero({
   const [active, setActive] = useState(0);
   const [featuredSlides, setFeaturedSlides] = useState(initialFeaturedSlides);
 
-  useEffect(() => {
+  // Sync when the server-provided slides change (adjust-state-during-render pattern).
+  const [prevInitialSlides, setPrevInitialSlides] = useState(initialFeaturedSlides);
+  if (prevInitialSlides !== initialFeaturedSlides) {
+    setPrevInitialSlides(initialFeaturedSlides);
     setFeaturedSlides(initialFeaturedSlides);
-  }, [initialFeaturedSlides]);
+  }
 
   useEffect(() => {
     if (initialFeaturedSlides.length > 0) return;
@@ -116,9 +119,12 @@ export function Hero({
   const total = slides.length;
   const hasBannerBackground = slides.some((s) => Boolean(s.bannerSrc));
 
-  useEffect(() => {
+  // Jump back to the first slide when the slide set changes.
+  const [prevSlides, setPrevSlides] = useState(slides);
+  if (prevSlides !== slides) {
+    setPrevSlides(slides);
     setActive(0);
-  }, [slides]);
+  }
 
   const goNext = useCallback(() => {
     setActive((i) => (i + 1) % Math.max(total, 1));

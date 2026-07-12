@@ -109,34 +109,65 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
 
   const hasMore = page < pages;
 
-  const loadPage = useCallback(
-    async (targetPage: number, append: boolean) => {
-      if (targetPage === 1) setLoading(true);
-      else setLoadingMore(true);
-      setError(null);
-      try {
-        const res = await listComments(contentId, targetPage, COMMENTS_PAGE_SIZE);
-        setComments((prev) => (append ? [...prev, ...res.items] : res.items));
+  // Reset when switching to a different movie (adjust-state-during-render pattern).
+  const [prevContentId, setPrevContentId] = useState(contentId);
+  if (prevContentId !== contentId) {
+    setPrevContentId(contentId);
+    setComments([]);
+    setTotal(0);
+    setPage(1);
+    setPages(1);
+    setLoading(true);
+    setError(null);
+  }
+
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const res = await listComments(contentId, page + 1, COMMENTS_PAGE_SIZE);
+      setComments((prev) => [...prev, ...res.items]);
+      setTotal(res.total);
+      setPage(res.page);
+      setPages(res.pages);
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : t("commentsLoadError"),
+      );
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [contentId, page, t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listComments(contentId, 1, COMMENTS_PAGE_SIZE)
+      .then((res) => {
+        if (cancelled) return;
+        setComments(res.items);
         setTotal(res.total);
         setPage(res.page);
         setPages(res.pages);
-      } catch (err) {
-        setError(
-          err instanceof Error && err.message
-            ? err.message
-            : t("commentsLoadError"),
-        );
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [contentId, t],
-  );
-
-  useEffect(() => {
-    void loadPage(1, false);
-  }, [loadPage]);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(
+            err instanceof Error && err.message
+              ? err.message
+              : t("commentsLoadError"),
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [contentId, t]);
 
   async function handleTopLevelSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -303,7 +334,7 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
         {!loading && !error && hasMore && (
           <button
             type="button"
-            onClick={() => void loadPage(page + 1, true)}
+            onClick={() => void loadMore()}
             disabled={loadingMore}
             className="mt-6 w-full rounded-md border border-border bg-bg py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover disabled:opacity-50"
           >

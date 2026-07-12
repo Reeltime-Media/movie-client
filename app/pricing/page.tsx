@@ -107,7 +107,7 @@ function PricingPageInner() {
         }),
       );
       sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
-      window.location.href = safeCheckoutUrl(intent.checkout_url);
+      window.location.assign(safeCheckoutUrl(intent.checkout_url));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t("pricingLoadError");
       setError(msg);

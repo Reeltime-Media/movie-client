@@ -1,5 +1,5 @@
 /** DOM play() rejects with AbortError when src/load changes mid-request — safe to ignore. */
-export function isBenignPlayError(err: unknown): boolean {
+function isBenignPlayError(err: unknown): boolean {
   if (!(err instanceof DOMException)) return false;
   return err.name === "AbortError" || err.name === "NotAllowedError";
 }

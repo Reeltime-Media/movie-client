@@ -39,9 +39,3 @@ export function clientCached<T>(key: string, ttlMs: number, fn: () => Promise<T>
   inflight.set(key, p);
   return p;
 }
-
-/** Drop a cached entry (e.g. after a mutation invalidates catalog data). */
-export function invalidateClientCache(key: string): void {
-  store.delete(key);
-  inflight.delete(key);
-}

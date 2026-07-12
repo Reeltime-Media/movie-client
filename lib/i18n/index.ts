@@ -8,4 +8,4 @@ export {
 } from "./locale-store";
 
 export type { TranslationKey } from "./dictionaries/en";
-export { messages, translate } from "./messages";
+export { translate } from "./messages";

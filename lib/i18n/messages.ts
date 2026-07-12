@@ -5,7 +5,7 @@ import { km } from "./dictionaries/km";
 
 export type { TranslationKey };
 
-export const messages: Record<Locale, { [K in TranslationKey]: string }> = {
+const messages: Record<Locale, { [K in TranslationKey]: string }> = {
   en,
   km,
 };

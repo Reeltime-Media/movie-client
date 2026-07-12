@@ -17,7 +17,7 @@ export function useAutoScroll(
   const timerRef        = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Rhythm cycle
   const phaseRef        = useRef<"scrolling" | "paused">("scrolling");
-  const phaseStartRef   = useRef<number>(performance.now());
+  const phaseStartRef   = useRef<number>(0);
 
   const userPause = useCallback(() => {
     userPausedRef.current = true;
@@ -38,6 +38,8 @@ export function useAutoScroll(
 
     const el = ref.current;
     if (!el) return;
+
+    phaseStartRef.current = performance.now();
 
     const half = () => el.scrollWidth / 2;
 

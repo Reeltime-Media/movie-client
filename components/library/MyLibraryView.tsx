@@ -114,6 +114,14 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
 
+  // Reset to a fresh loading pass when auth changes (adjust-state-during-render pattern).
+  const [prevLoggedIn, setPrevLoggedIn] = useState(loggedIn);
+  if (prevLoggedIn !== loggedIn) {
+    setPrevLoggedIn(loggedIn);
+    setLoadError(null);
+    setDataLoading(true);
+  }
+
   useEffect(() => {
     if (!loggedIn) {
       router.replace(`/login?next=${encodeURIComponent("/my-library")}`);
@@ -121,8 +129,6 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
     }
 
     let cancelled = false;
-    setLoadError(null);
-    setDataLoading(true);
 
     // Only the small, user-specific data is fetched client-side; the public
     // catalog comes from the server (cached) via the `catalogMovies` prop.
@@ -143,6 +149,7 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
       const favMovies = catalogMovies.filter((m) => favIds.has(m.id));
       setFavoritePosters(favMovies.map((m, i) => movieToPoster(m, i, purchasedIds)));
 
+      setLoadError(null);
       setDataLoading(false);
     })().catch(() => {
       if (!cancelled) {

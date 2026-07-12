@@ -1,9 +1,9 @@
-export type PosterBadge =
+type PosterBadge =
   | { kind: "hd"; label: "HD" }
   | { kind: "owned"; label: "OWNED" }
   | { kind: "none" };
 
-export type PosterEntitlement =
+type PosterEntitlement =
   | { kind: "price"; value: string }
   | { kind: "subscribed"; value: string }
   | { kind: "continue"; value: string }

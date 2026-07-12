@@ -33,7 +33,7 @@ export function createSeriesSubscriptionIntent(
   });
 }
 
-export function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
+function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
   return apiFetch<PaymentIntentRead>(`/payments/intents/${intentId}`);
 }
 

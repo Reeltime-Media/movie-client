@@ -25,9 +25,12 @@ export function useTopNav() {
   const visibleLinks = navLinks.filter((link) => !link.requiresAuth || loggedIn);
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
-  useEffect(() => {
+  // Close the account menu on navigation (adjust-state-during-render pattern).
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setAccountOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     if (!accountOpen) return;

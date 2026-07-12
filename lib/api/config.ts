@@ -5,7 +5,7 @@ export function getApiUrl(): string {
   return resolveApiUrl();
 }
 
-export const R2_PUBLIC_URL =
+const R2_PUBLIC_URL =
   (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? "").replace(/\/$/, "");
 
 /**
@@ -13,7 +13,7 @@ export const R2_PUBLIC_URL =
  * revalidating. The catalog changes rarely, so a few minutes is plenty and
  * makes navigation feel instant. No effect on client-side fetches.
  */
-export const CATALOG_REVALIDATE_SECONDS = 300;
+const CATALOG_REVALIDATE_SECONDS = 300;
 
 /** Fetch init that enables Next.js catalog caching/ISR (server-side only). */
 export const catalogCache: RequestInit = {
@@ -51,12 +51,4 @@ export function posterThumbUrl(
 export function isR2ImageUrl(src: string): boolean {
   if (R2_PUBLIC_URL && src.startsWith(R2_PUBLIC_URL)) return true;
   return /\.r2\.dev\//.test(src);
-}
-
-export function mediaUrl(key: string | null | undefined): string | undefined {
-  if (!key) return undefined;
-  if (/^https?:\/\//i.test(key)) return key;
-  if (key.startsWith("/")) return key;
-  if (!R2_PUBLIC_URL) return undefined;
-  return `${R2_PUBLIC_URL}/${key}`;
 }

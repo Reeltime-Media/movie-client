@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 
-export type PaginatedResponse<T> = {
+type PaginatedResponse<T> = {
   items: T[];
   total: number;
   page: number;

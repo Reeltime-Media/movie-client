@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Infinity, ShieldCheck, Star } from "lucide-react";
+import { Infinity, ShieldCheck, Star } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
@@ -8,9 +8,6 @@ import { CdnImage } from "@/components/ui/CdnImage";
 import Image from "next/image";
 import { MovieComments } from "@/components/comments/MovieComments";
 import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
-import { OrderSummaryPanel } from "@/components/pay/OrderSummaryPanel";
-import { PayPageHero } from "@/components/pay/PayPageHero";
-import { TrustPanel } from "@/components/pay/TrustPanel";
 import { PageShell } from "@/components/layout/PageShell";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { getMovie, listMovies } from "@/lib/api/movies";
@@ -23,7 +20,6 @@ import { isAdminUser } from "@/lib/auth/is-admin";
 import { movieCardHref, movieWatchHref } from "@/lib/movie-routes";
 import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
-import { metaPillClassName } from "@/lib/ui/surfaces";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import { BannerCard } from "@/components/catalog/BannerCard";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
@@ -43,17 +39,13 @@ function MoviePayInner() {
   const [topMovies, setTopMovies] = useState<ContentListItemRead[]>([]);
   const [recommendedPosters, setRecommendedPosters] = useState<PosterCardProps[]>([]);
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(slug));
   const [error, setError] = useState("");
   const [paying, setPaying] = useState(false);
 
   useEffect(() => {
-    if (!slug) {
-      setError("Missing movie slug.");
-      setLoading(false);
-      return;
-    }
-    
+    if (!slug) return;
+
     let cancelled = false;
     const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
 
@@ -63,16 +55,21 @@ function MoviePayInner() {
         setMovie(m);
         const userOwnedIds = new Set(purchases.map(p => p.content_id));
         setOwnedIds(userOwnedIds);
-        
+
         const others = all.filter((x) => x.slug !== m.slug);
         setTopMovies(others.slice(0, 10));
         setRecommendedPosters(others.slice(10, 22).map((x, i) => movieToPoster(x, i, userOwnedIds, isAdmin)));
         setLoading(false);
       })
       .catch(() => {
+        if (cancelled) return;
         setError("Movie not found.");
         setLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug, loggedIn, isAdmin]);
 
   useEffect(() => {
@@ -94,7 +91,7 @@ function MoviePayInner() {
         moviePaymentSuccessUrl(movie.slug),
       );
       sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
-      window.location.href = safeCheckoutUrl(intent.checkout_url);
+      window.location.assign(safeCheckoutUrl(intent.checkout_url));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Payment failed. Please try again.";
       setError(msg);
@@ -107,10 +104,11 @@ function MoviePayInner() {
   }
 
   if (!movie || (error && !movie)) {
+    const shownError = slug ? error : "Missing movie slug.";
     return (
       <PageShell fullWidth>
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6">
-          <p className="text-[15px] text-danger">{error || "Something went wrong."}</p>
+          <p className="text-[15px] text-danger">{shownError || "Something went wrong."}</p>
           <Link
             href="/movies"
             className="text-[13px] font-medium text-text-muted transition-colors hover:text-text"
@@ -127,8 +125,6 @@ function MoviePayInner() {
     : "$0.00";
   const poster = posterUrl(movie.poster_key);
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
-
-  const banner = posterUrl(movie.banner_key) ?? poster;
 
   return (
     <PageShell fullWidth>

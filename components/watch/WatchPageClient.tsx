@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { posterThumbUrl } from "@/lib/api/client";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
@@ -36,6 +36,8 @@ type WatchPageClientProps = {
   initialMovie?: ContentRead | null;
 };
 
+const subscribeToNothing = () => () => {};
+
 function ShareButton({ href, label, children }: { href: string; label: string; children: ReactNode }) {
   return (
     <a
@@ -60,7 +62,6 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     playbackLoading,
     resumeTime,
     loggedIn,
-    isFree,
     priceLabel,
     loginNext,
     payHref,
@@ -68,11 +69,12 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
 
   // Keep all hooks above the early returns below so hook order stays stable
   // across the loading → loaded transition.
-  const [shareUrl, setShareUrl] = useState("");
-
-  useEffect(() => {
-    setShareUrl(window.location.href);
-  }, []);
+  // Client-only value: empty during SSR/hydration, real URL right after.
+  const shareUrl = useSyncExternalStore(
+    subscribeToNothing,
+    () => window.location.href,
+    () => "",
+  );
 
   if (loading) {
     return (

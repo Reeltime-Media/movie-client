@@ -22,7 +22,7 @@ function notifyThemeSubscribers() {
   themeSubscribers.forEach((fn) => fn());
 }
 
-export function applyTheme(theme: "dark" | "light") {
+function applyTheme(theme: "dark" | "light") {
   document.documentElement.dataset.theme = theme;
   try {
     localStorage.setItem("reeltime-theme", theme);

@@ -21,6 +21,27 @@ function isMovieFree(movie: ContentRead) {
   return !movie.price_usd || parseFloat(movie.price_usd) === 0;
 }
 
+/**
+ * Playback state to show while entitlement is being (re)resolved for the given
+ * inputs: instant playback when a free/admin-viewable movie is already cached,
+ * a loading pass when the movie is known, idle otherwise.
+ */
+function startingPlaybackState(
+  movie: ContentRead | null,
+  loggedIn: boolean,
+  isAdmin: boolean,
+): { canPlay: boolean; playbackUrl: string | null; playbackLoading: boolean } {
+  if (!movie || !loggedIn) {
+    return { canPlay: false, playbackUrl: null, playbackLoading: false };
+  }
+  const free = isMovieFree(movie);
+  const cached = getCachedPlaybackUrl(movie.id);
+  if ((free || isAdmin) && cached) {
+    return { canPlay: true, playbackUrl: cached, playbackLoading: false };
+  }
+  return { canPlay: free || isAdmin, playbackUrl: null, playbackLoading: true };
+}
+
 type UseMovieWatchOptions = {
   /** When provided (e.g. from Server Component), skips the initial metadata fetch. */
   initialMovie?: ContentRead | null;
@@ -32,14 +53,38 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
   const { initialMovie = null } = options;
-  const isSeeded = initialMovie && initialMovie.slug === slug;
-  const [movie, setMovie] = useState<ContentRead | null>(isSeeded ? initialMovie : null);
+  const isSeeded = Boolean(initialMovie && initialMovie.slug === slug);
+  const seedMovie = isSeeded ? initialMovie : null;
+  const seedPlayback = startingPlaybackState(seedMovie, loggedIn, isAdmin);
+
+  const [movie, setMovie] = useState<ContentRead | null>(seedMovie);
   const [loading, setLoading] = useState(!isSeeded && Boolean(slug));
-  const [canPlay, setCanPlay] = useState(false);
-  const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
-  const [playbackLoading, setPlaybackLoading] = useState(false);
+  const [canPlay, setCanPlay] = useState(seedPlayback.canPlay);
+  const [playbackUrl, setPlaybackUrl] = useState<string | null>(seedPlayback.playbackUrl);
+  const [playbackLoading, setPlaybackLoading] = useState(seedPlayback.playbackLoading);
   const [resumeTime, setResumeTime] = useState<number | null>(null);
   const [notFound, setNotFound] = useState(false);
+
+  // Reset content state when the slug changes (adjust-state-during-render pattern).
+  const [prevSlug, setPrevSlug] = useState(slug);
+  if (prevSlug !== slug) {
+    setPrevSlug(slug);
+    setMovie(seedMovie);
+    setNotFound(false);
+    setLoading(!isSeeded && Boolean(slug));
+  }
+
+  // Reset playback state when the entitlement inputs change; the effect below
+  // re-resolves entitlement asynchronously after each such change.
+  const playbackKey = `${slug}|${loggedIn}|${isAdmin}`;
+  const [prevPlaybackKey, setPrevPlaybackKey] = useState(playbackKey);
+  if (prevPlaybackKey !== playbackKey) {
+    setPrevPlaybackKey(playbackKey);
+    setCanPlay(seedPlayback.canPlay);
+    setPlaybackUrl(seedPlayback.playbackUrl);
+    setPlaybackLoading(seedPlayback.playbackLoading);
+    setResumeTime(null);
+  }
 
   const prefetchPlayback = useCallback(
     (contentId: string) => {
@@ -58,33 +103,18 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     let cancelled = false;
 
     async function resolveEntitlement(m: ContentRead) {
-      if (!loggedIn) {
-        setCanPlay(false);
-        setPlaybackUrl(null);
-        setPlaybackLoading(false);
-        setResumeTime(null);
-        return;
-      }
+      if (!loggedIn) return;
 
       const free = isMovieFree(m);
-      const adminEntitled = isAdmin;
-      const cachedUrl = getCachedPlaybackUrl(m.id);
 
-      if (free || adminEntitled) {
-        setCanPlay(true);
-        if (cachedUrl) {
-          setPlaybackUrl(cachedUrl);
-          setPlaybackLoading(false);
-        } else {
-          setPlaybackLoading(true);
-        }
-
+      if (free || isAdmin) {
         const progressPromise = getWatchProgress(m.id).catch(() => null);
         const playbackPromise = resolvePlaybackUrl(m.id);
 
         try {
           const [progress, url] = await Promise.all([progressPromise, playbackPromise]);
           if (cancelled) return;
+          setCanPlay(true);
           if (progress && !progress.completed && progress.position_seconds > 0) {
             setResumeTime(progress.position_seconds);
           } else {
@@ -99,7 +129,6 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
         return;
       }
 
-      setPlaybackLoading(true);
       const purchasesPromise = listPurchases().catch(() => []);
       const playbackPromise = getCachedPlaybackUrl(m.id)
         ? resolvePlaybackUrl(m.id)
@@ -138,20 +167,11 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     }
 
     if (initialMovie && initialMovie.slug === slug) {
-      setMovie(initialMovie);
-      setNotFound(false);
-      setLoading(false);
       void resolveEntitlement(initialMovie);
       return () => {
         cancelled = true;
       };
     }
-
-    setPlaybackUrl(null);
-    setPlaybackLoading(false);
-    setCanPlay(false);
-    setResumeTime(null);
-    setLoading(true);
 
     const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
 
@@ -205,18 +225,15 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
   const derived = useMemo(() => {
     if (!movie) {
       return {
-        isFree: false,
         priceLabel: null as string | null,
         loginNext: "",
         payHref: "",
       };
     }
-    const isFree = isMovieFree(movie);
     const priceLabel = movie.price_usd
       ? `$${parseFloat(movie.price_usd).toFixed(2)}`
       : null;
     return {
-      isFree,
       priceLabel,
       loginNext: movieWatchHref(movie.slug),
       payHref: moviePayHref(movie.slug, movie.title),

@@ -3,24 +3,6 @@ import type { ReactNode } from "react";
 const FULL_BLEED =
   "relative ml-[calc(50%-50vw)] w-screen max-w-[100vw] shrink-0 overflow-x-hidden";
 
-/** Full-bleed block inside a watch/detail page (player, locked preview). */
-export function WatchMediaBleed({ children }: { children: ReactNode }) {
-  return <div className={FULL_BLEED}>{children}</div>;
-}
-
-/** Centered movie player with comfortable side margins (single-movie watch). */
-export function WatchMovieTheater({ children }: { children: ReactNode }) {
-  return (
-    <section className="border-b border-border py-5 md:py-8">
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 md:px-8">
-        <div className="overflow-hidden rounded-lg border border-border bg-black">
-          {children}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /** Player + episode sidebar with viewport-height theater and side/top gutters. */
 export function WatchSeriesTheater({
   media,
