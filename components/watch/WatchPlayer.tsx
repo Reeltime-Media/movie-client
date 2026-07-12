@@ -36,6 +36,7 @@ export function WatchPlayer({
   title,
   attribution,
   bleed = false,
+  fill = false,
   initialTime = 0,
 }: {
   contentId?: string;
@@ -44,6 +45,8 @@ export function WatchPlayer({
   title: string;
   attribution?: string;
   bleed?: boolean;
+  /** Stretch to parent height instead of locking to 16:9 (series theater). */
+  fill?: boolean;
   /** Resume position in seconds (skipped when 0). */
   initialTime?: number;
 }) {
@@ -75,6 +78,8 @@ export function WatchPlayer({
   const [autoLevel, setAutoLevel] = useState(-1);
   const [showQuality, setShowQuality] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  /** CSS immersive fallback when Fullscreen API isn't available (e.g. iOS Safari). */
+  const [cssFullscreen, setCssFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preloadMode, setPreloadMode] = useState<"metadata" | "auto">("metadata");
 
@@ -302,29 +307,46 @@ export function WatchPlayer({
 
   useEffect(() => {
     const update = () => {
-      if (typeof document !== "undefined" && "fullscreenElement" in document) {
-        setIsFullscreen(!!document.fullscreenElement);
-        return;
-      }
-      setIsFullscreen(false);
+      const nativeFs =
+        typeof document !== "undefined" &&
+        !!(
+          document.fullscreenElement ||
+          (document as Document & { webkitFullscreenElement?: Element | null })
+            .webkitFullscreenElement
+        );
+      setIsFullscreen(nativeFs || cssFullscreen);
     };
 
     const onDocChange = () => update();
     document.addEventListener("fullscreenchange", onDocChange);
-
-    const v = videoRef.current;
-    const onWebkitBegin = () => setIsFullscreen(true);
-    const onWebkitEnd = () => setIsFullscreen(false);
-    v?.addEventListener?.("webkitbeginfullscreen" as any, onWebkitBegin as any);
-    v?.addEventListener?.("webkitendfullscreen" as any, onWebkitEnd as any);
+    document.addEventListener("webkitfullscreenchange", onDocChange as EventListener);
 
     update();
     return () => {
       document.removeEventListener("fullscreenchange", onDocChange);
-      v?.removeEventListener?.("webkitbeginfullscreen" as any, onWebkitBegin as any);
-      v?.removeEventListener?.("webkitendfullscreen" as any, onWebkitEnd as any);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        onDocChange as EventListener,
+      );
     };
-  }, []);
+  }, [cssFullscreen]);
+
+  // Lock page scroll while using CSS immersive fullscreen (iOS / no FS API).
+  useEffect(() => {
+    if (!cssFullscreen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [cssFullscreen]);
+
+  // When entering fullscreen, let hls.js pick higher rungs (player is now viewport-sized).
+  useEffect(() => {
+    const hls = hlsRef.current;
+    if (!hls) return;
+    hls.capLevelToPlayerSize = !isFullscreen;
+  }, [isFullscreen]);
 
   const resetHideTimer = useCallback(() => {
     setShowControls(true);
@@ -376,30 +398,45 @@ export function WatchPlayer({
   }, []);
 
   const toggleFullscreen = useCallback(() => {
-    const v = videoRef.current;
     const el = containerRef.current;
-    if (!v || !el) return;
+    if (!el) return;
 
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-      return;
-    }
-
-    const anyVideo = v as HTMLVideoElement & {
-      webkitEnterFullscreen?: () => void;
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => void;
     };
-    if (typeof v.requestFullscreen === "function") {
-      void v.requestFullscreen();
+    const nativeFs = document.fullscreenElement || doc.webkitFullscreenElement;
+
+    // Exit either native or CSS immersive mode.
+    if (nativeFs) {
+      if (document.exitFullscreen) void document.exitFullscreen();
+      else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
       return;
     }
-    if (typeof anyVideo.webkitEnterFullscreen === "function") {
-      anyVideo.webkitEnterFullscreen();
+    if (cssFullscreen) {
+      setCssFullscreen(false);
       return;
     }
+
+    // Always fullscreen the player SHELL (not the <video>).
+    // Video-element fullscreen swaps to native OS controls and drops quality UI.
+    const anyEl = el as HTMLElement & {
+      webkitRequestFullscreen?: () => void;
+    };
     if (typeof el.requestFullscreen === "function") {
-      void el.requestFullscreen();
+      void el.requestFullscreen().catch(() => setCssFullscreen(true));
+      return;
     }
-  }, []);
+    if (typeof anyEl.webkitRequestFullscreen === "function") {
+      try {
+        anyEl.webkitRequestFullscreen();
+        return;
+      } catch {
+        /* fall through to CSS immersive */
+      }
+    }
+    setCssFullscreen(true);
+  }, [cssFullscreen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -415,10 +452,11 @@ export function WatchPlayer({
       if (e.code === "ArrowLeft") v.currentTime = Math.max(0, v.currentTime - 10);
       if (e.code === "KeyF") toggleFullscreen();
       if (e.code === "KeyM") toggleMute();
+      if (e.code === "Escape" && cssFullscreen) setCssFullscreen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePlay, toggleFullscreen, toggleMute]);
+  }, [togglePlay, toggleFullscreen, toggleMute, cssFullscreen]);
 
   const qualityLabel =
     selectedLevel === -1
@@ -430,12 +468,22 @@ export function WatchPlayer({
         : "Auto";
 
   return (
-    <figure className="m-0">
+    <figure className={fill ? "m-0 h-full" : "m-0"}>
       <div
         ref={containerRef}
         className={[
-          "relative aspect-video w-full overflow-hidden bg-black",
-          bleed ? "" : "rounded-md",
+          "relative w-full overflow-hidden bg-black",
+          // Native :fullscreen / CSS immersive: fill the viewport and keep custom controls.
+          fill
+            ? "h-full aspect-auto"
+            : "aspect-video",
+          "[:fullscreen]:aspect-auto [:fullscreen]:h-full [:fullscreen]:w-full",
+          "[:-webkit-full-screen]:aspect-auto [:-webkit-full-screen]:h-full [:-webkit-full-screen]:w-full",
+          cssFullscreen
+            ? "fixed inset-0 z-[100] h-dvh w-screen aspect-auto rounded-none"
+            : bleed || fill
+              ? ""
+              : "rounded-md",
         ].join(" ")}
         onMouseMove={resetHideTimer}
         onMouseLeave={() => {
@@ -478,7 +526,10 @@ export function WatchPlayer({
         />
 
         <div
-          className="absolute inset-x-0 bottom-0 px-4 pb-3 transition-opacity duration-300"
+          className={[
+            "absolute inset-x-0 bottom-0 px-4 pb-3 transition-opacity duration-300",
+            showControls ? "pointer-events-auto" : "pointer-events-none",
+          ].join(" ")}
           style={{ opacity: showControls ? 1 : 0 }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -640,9 +691,14 @@ export function WatchPlayer({
 }
 
 /** Inline skeleton shown while the hls.js chunk loads. */
-export function WatchPlayerSkeleton() {
+export function WatchPlayerSkeleton({ fill = false }: { fill?: boolean } = {}) {
   return (
-    <div className="flex aspect-video w-full items-center justify-center bg-black">
+    <div
+      className={[
+        "flex w-full items-center justify-center bg-black",
+        fill ? "h-full" : "aspect-video",
+      ].join(" ")}
+    >
       <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
       <span className="sr-only">Loading player</span>
     </div>

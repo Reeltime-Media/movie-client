@@ -5,7 +5,7 @@ import { PosterCard } from "@/components/catalog/PosterCard";
 import type { PosterCardProps } from "@/types/poster-card";
 
 const GUTTER = {
-  sm: "px-4 md:px-8",
+  sm: "px-4 sm:px-6 md:px-8",
   md: "-mx-6 px-6 md:-mx-8 md:px-8",
 } as const;
 

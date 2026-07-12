@@ -88,7 +88,7 @@ export function HomeView({
         subtitle: t("homePlusDesc"),
         image_key: null,
         cta_label: t("homePlusCta"),
-        cta_href: "/pay/subscription?title=Reeltime%20Plus",
+        cta_href: "/pricing",
         placement: "home",
         is_active: true,
         sort_order: 0,

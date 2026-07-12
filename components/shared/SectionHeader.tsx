@@ -6,7 +6,7 @@ export function SectionHeader({
   showSeeAll = false,
   seeAllHref,
   seeAllLabel = "See all",
-  paddingX = "px-4 md:px-8",
+  paddingX = "px-4 sm:px-6 md:px-8",
 }: {
   title: string;
   showSeeAll?: boolean;

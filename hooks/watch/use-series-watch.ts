@@ -10,6 +10,7 @@ import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { ContentRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/watch-progress";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { seriesPricingHref } from "@/lib/series-pricing";
 import {
   getCachedPlaybackUrl,
   prefetchPlaybackUrl,
@@ -199,8 +200,13 @@ export function useSeriesWatch({
   const derived = useMemo(() => {
     const loginNext = `/watch/series/${seriesSlug}/${seasonNum}/${episodeNum}`;
     const payHref = series
-      ? `/pay/subscription?slug=${series.slug}&title=${encodeURIComponent(series.title)}&season=${seasonNum}&episode=${episodeNum}`
-      : "";
+      ? seriesPricingHref({
+          slug: series.slug,
+          season: seasonNum,
+          episode: episodeNum,
+          title: series.title,
+        })
+      : "/pricing";
     const isFree = episode?.is_free === true;
     const entitled = Boolean(episode && (isAdmin || isFree || hasSubscription));
     const canPlay = loggedIn && entitled;

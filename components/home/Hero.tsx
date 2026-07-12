@@ -135,7 +135,9 @@ export function Hero({
   }, [goNext, total]);
 
   return (
-    <section className="hero-featured relative ml-[calc(50%-50vw)] aspect-video sm:aspect-auto sm:h-[min(58vh,520px)] sm:min-h-96 md:min-h-110 w-screen max-w-none shrink-0 overflow-hidden bg-black">
+    // Banners are ultrawide (~1920x788 / 12:5). Match that ratio so object-cover
+    // keeps the full width of the artwork instead of clipping the sides.
+    <section className="hero-featured relative mx-4 mt-4 aspect-[12/5] shrink-0 overflow-hidden rounded-md bg-black sm:mx-6 sm:mt-6 md:mx-8">
       {hasBannerBackground ? (
         slides.map((s, i) => (
           <div
@@ -147,17 +149,15 @@ export function Hero({
             aria-hidden={i !== active}
           >
             {s.bannerSrc ? (
-              <div className={`absolute inset-0 overflow-hidden${i === active ? " rt-ken-burns-active" : ""}`}>
-                <CdnImage
-                  src={s.bannerSrc}
-                  alt=""
-                  fill
-                  priority={i === 0}
-                  sizes="100vw"
-                  quality={90}
-                  className="rt-parallax-bg object-contain sm:object-cover object-center sm:object-[center_15%]"
-                />
-              </div>
+              <CdnImage
+                src={s.bannerSrc}
+                alt=""
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                quality={90}
+                className="object-cover object-center"
+              />
             ) : (
               <div className="absolute inset-0 bg-surface-elevated" />
             )}

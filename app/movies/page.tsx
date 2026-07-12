@@ -1,7 +1,6 @@
 import { MoviesView } from "@/components/catalog/MoviesView";
 import { listMovies } from "@/lib/api/movies";
 import { movieToPoster } from "@/lib/api/to-poster";
-import { genreKeyFromLabel } from "@/lib/catalog-filter";
 
 // Public catalog is cached/revalidated on the server (ISR). Must be a literal —
 // Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
@@ -22,7 +21,7 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
     <MoviesView
       movies={movies}
       initialPosters={initialPosters}
-      initialGenre={genreKeyFromLabel(genre)}
+      initialGenreLabel={genre?.trim() ?? ""}
     />
   );
 }

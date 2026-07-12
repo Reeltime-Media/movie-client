@@ -98,6 +98,7 @@ export const en = {
   homeFilterFamilyNight: "Family night",
   homeCuratedKicker: "Curated for Reeltime",
   homeBrowseByMood: "Browse by mood",
+  homeBrowseByGenre: "Browse by genre",
   homeExploreMovies: "Explore movies",
   homeEd1Eyebrow: "Staff picks",
   homeEd1Title: "Made for tonight",

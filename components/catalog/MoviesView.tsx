@@ -16,9 +16,9 @@ import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import {
-  CATALOG_GENRE_KEYS,
-  type CatalogGenreKey,
-  matchesGenre,
+  collectGenreLabels,
+  genreKeyFromLabel,
+  matchesGenreLabel,
   matchesSearch,
 } from "@/lib/catalog-filter";
 import type { PosterCardProps } from "@/types/poster-card";
@@ -28,11 +28,13 @@ const COLS = 5;
 const ROWS = 4;
 const PAGE_SIZE = COLS * ROWS; // 20
 const TOP_COUNT = 10;
+const ALL_GENRES = "";
 
 type MoviesViewProps = {
   movies: ContentListItemRead[];
   initialPosters: PosterCardProps[];
-  initialGenre?: CatalogGenreKey;
+  /** Raw genre label from ?genre= (e.g. "Action"), or empty for all. */
+  initialGenreLabel?: string;
 };
 
 function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
@@ -91,24 +93,41 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
 export function MoviesView({
   movies,
   initialPosters,
-  initialGenre = "genreAll",
+  initialGenreLabel = ALL_GENRES,
 }: MoviesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
-  const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>(initialGenre);
+  const [activeGenre, setActiveGenre] = useState(initialGenreLabel);
   const [searchQuery, setSearchQuery] = useState("");
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
   const [page, setPage] = useState(0);
 
   // Sync when navigating from a home genre rail (e.g. /movies?genre=Thriller).
   useEffect(() => {
-    setActiveGenre(initialGenre);
-  }, [initialGenre]);
+    setActiveGenre(initialGenreLabel);
+  }, [initialGenreLabel]);
+
+  const genreOptions = useMemo(() => {
+    const labels = collectGenreLabels(movies);
+    return [
+      { value: ALL_GENRES, label: t("genreAll") },
+      ...labels.map((label) => {
+        const knownKey = genreKeyFromLabel(label);
+        return {
+          value: label,
+          label: knownKey !== "genreAll" ? t(knownKey) : label,
+        };
+      }),
+    ];
+  }, [movies, t]);
 
   const filteredMovies = useMemo(
-    () => movies.filter((m) => matchesSearch(m, searchQuery) && matchesGenre(m, activeGenre)),
+    () =>
+      movies.filter(
+        (m) => matchesSearch(m, searchQuery) && matchesGenreLabel(m, activeGenre || null),
+      ),
     [movies, searchQuery, activeGenre],
   );
 
@@ -127,7 +146,7 @@ export function MoviesView({
   const safePage = Math.min(page, totalPages - 1);
   const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
-  const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== "genreAll";
+  const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES;
 
   // Reset page on filter change
   useEffect(() => { setPage(0); }, [searchQuery, activeGenre]);
@@ -179,7 +198,7 @@ export function MoviesView({
             label={t("moviesFilterGenre")}
             value={activeGenre}
             onChange={setActiveGenre}
-            options={CATALOG_GENRE_KEYS.map((key) => ({ value: key, label: t(key) }))}
+            options={genreOptions}
           />
         </div>
       </div>

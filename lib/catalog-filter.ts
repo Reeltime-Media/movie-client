@@ -67,6 +67,15 @@ export function matchesGenre(item: CatalogSearchable, genreKey: TranslationKey):
   if (genreKey === "genreAll") return true;
   const label = GENRE_KEY_TO_LABEL[genreKey];
   if (!label) return true;
+  return matchesGenreLabel(item, label);
+}
+
+/** Match against a raw API genre label (e.g. "Adventure", "Sci-Fi"). */
+export function matchesGenreLabel(
+  item: CatalogSearchable,
+  label: string | null | undefined,
+): boolean {
+  if (!label?.trim()) return true;
   const needle = normalizeGenreLabel(label);
   return item.genres.some((g) => normalizeGenreLabel(g) === needle);
 }
@@ -79,6 +88,45 @@ export function filterByGenre<T extends CatalogSearchable>(
   return items.filter((item) => matchesGenre(item, genreKey));
 }
 
+export function filterByGenreLabel<T extends CatalogSearchable>(
+  items: readonly T[],
+  label: string | null | undefined,
+): T[] {
+  if (!label?.trim()) return [...items];
+  return items.filter((item) => matchesGenreLabel(item, label));
+}
+
 export function genreLabelForKey(genreKey: TranslationKey): string | undefined {
   return GENRE_KEY_TO_LABEL[genreKey];
+}
+
+/**
+ * Unique genre labels present on catalog items, ordered by frequency (desc)
+ * then name. Preserves the first-seen casing for display.
+ */
+export function collectGenreLabels(
+  items: readonly CatalogSearchable[],
+): string[] {
+  const counts = new Map<string, { label: string; count: number }>();
+
+  for (const item of items) {
+    const seen = new Set<string>();
+    for (const raw of item.genres ?? []) {
+      const label = raw.trim();
+      if (!label) continue;
+      const key = normalizeGenreLabel(label);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const existing = counts.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        counts.set(key, { label, count: 1 });
+      }
+    }
+  }
+
+  return [...counts.values()]
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    .map((entry) => entry.label);
 }

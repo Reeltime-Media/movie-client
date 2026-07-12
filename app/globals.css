@@ -36,21 +36,6 @@
   --rt-text-disabled: #a3a3a3;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    color-scheme: light;
-
-    --rt-bg: #f7f7f7;
-    --rt-surface: #ffffff;
-    --rt-surface-elevated: #f0f0f0;
-    --rt-border: #e5e5e5;
-    --rt-border-hover: #d4d4d4;
-    --rt-text: #0a0a0a;
-    --rt-text-muted: #525252;
-    --rt-text-disabled: #a3a3a3;
-  }
-}
-
 /* Home hero stays cinematic (dark tokens) while the rest of the app is light */
 [data-theme="light"] .hero-featured {
   color-scheme: dark;
@@ -64,22 +49,6 @@
   --rt-text-disabled: #525252;
   --background: #0a0a0a;
   --foreground: #fafafa;
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) .hero-featured {
-    color-scheme: dark;
-    --rt-bg: #0a0a0a;
-    --rt-surface: #141414;
-    --rt-surface-elevated: #1f1f1f;
-    --rt-border: #2a2a2a;
-    --rt-border-hover: #3a3a3a;
-    --rt-text: #fafafa;
-    --rt-text-muted: #a3a3a3;
-    --rt-text-disabled: #525252;
-    --background: #0a0a0a;
-    --foreground: #fafafa;
-  }
 }
 
 /* Checkout / pay hero — always cinematic (poster readable in light app theme) */
@@ -97,17 +66,6 @@
   --rt-text-disabled: #525252;
   --rt-border: #2a2a2a;
   --rt-border-hover: #3a3a3a;
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) .cinematic-banner {
-    color-scheme: dark;
-    --rt-text: #fafafa;
-    --rt-text-muted: #a3a3a3;
-    --rt-text-disabled: #525252;
-    --rt-border: #2a2a2a;
-    --rt-border-hover: #3a3a3a;
-  }
 }
 
 @theme inline {

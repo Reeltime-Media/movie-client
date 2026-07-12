@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Lock, PlayCircle } from "lucide-react";
 import type { SeasonRead } from "@/lib/api/types";
+import { seriesPricingHref } from "@/lib/series-pricing";
 
 export function WatchSeriesEpisodeSidebar({
   seriesSlug,
@@ -78,7 +79,12 @@ export function WatchSeriesEpisodeSidebar({
             const canPrefetch = isAdmin || isFree || hasSubscription;
             const href = isFree || hasSubscription || isAdmin
               ? `/watch/series/${seriesSlug}/${activeSeason}/${epNum}`
-              : `/pay/subscription?slug=${encodeURIComponent(seriesSlug)}&title=${encodeURIComponent(seriesTitle)}&season=${activeSeason}&episode=${epNum}`;
+              : seriesPricingHref({
+                  slug: seriesSlug,
+                  title: seriesTitle,
+                  season: activeSeason,
+                  episode: epNum,
+                });
             return (
               <li key={epNum}>
                 <Link

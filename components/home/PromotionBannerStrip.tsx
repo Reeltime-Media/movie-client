@@ -39,7 +39,7 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
   const hasImageBackground = banners.some((banner) => Boolean(posterUrl(banner.image_key)));
 
   return (
-    <section className="hero-featured relative ml-[calc(50%-50vw)] aspect-video sm:aspect-auto sm:h-115 w-screen max-w-none shrink-0 overflow-hidden bg-black">
+    <section className="hero-featured relative mx-4 mt-4 aspect-[12/5] shrink-0 overflow-hidden rounded-md bg-black sm:mx-6 sm:mt-6 md:mx-8">
       {hasImageBackground ? (
         banners.map((banner, i) => {
           const imageSrc = posterUrl(banner.image_key);
@@ -61,7 +61,7 @@ export function PromotionBannerStrip({ banners }: { banners: PromotionBannerRead
                   priority={i === 0}
                   sizes="100vw"
                   quality={90}
-                  className="object-contain sm:object-cover object-center sm:object-[center_15%]"
+                  className="object-cover object-center"
                 />
               ) : (
                 <div className="absolute inset-0 bg-surface-elevated" />

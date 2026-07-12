@@ -1,23 +1,33 @@
-import type { TranslationKey } from "@/lib/i18n";
+import type { PosterCardProps } from "@/types/poster-card";
+import type { ContentListItemRead } from "@/lib/api/types";
+import { movieToPoster } from "@/lib/api/to-poster";
+import { collectGenreLabels, filterByGenreLabel } from "./catalog-filter";
 
-import { genreLabelFromKey, type CatalogGenreKey } from "./catalog-filter";
-
-export type HomeGenreRailConfig = {
-  genreKey: Exclude<CatalogGenreKey, "genreAll">;
-  titleKey: TranslationKey;
+export type HomeGenreRail = {
+  /** Raw API genre label, e.g. "Action". */
+  label: string;
+  posters: PosterCardProps[];
 };
 
-/** Home page poster rails — each maps to a real catalog genre filter. */
-export const HOME_GENRE_RAILS: readonly HomeGenreRailConfig[] = [
-  { genreKey: "genreAction", titleKey: "homeGenreAction" },
-  { genreKey: "genreComedy", titleKey: "homeGenreComedy" },
-  { genreKey: "genreDrama", titleKey: "homeGenreDrama" },
-  { genreKey: "genreThriller", titleKey: "homeLateNightThrillers" },
-  { genreKey: "genreHorror", titleKey: "homeGenreHorror" },
-  { genreKey: "genreSciFi", titleKey: "homeGenreSciFi" },
-] as const;
+const RAIL_LIMIT = 12;
 
-export function moviesGenreHref(genreKey: TranslationKey): string {
-  const label = genreLabelFromKey(genreKey);
-  return label ? `/movies?genre=${encodeURIComponent(label)}` : "/movies";
+/** Build home poster rails from genres that actually appear on movies. */
+export function buildHomeGenreRails(
+  movies: ContentListItemRead[],
+  ownedIds: Set<string>,
+  isAdmin: boolean,
+): HomeGenreRail[] {
+  return collectGenreLabels(movies)
+    .map((label) => {
+      const posters = filterByGenreLabel(movies, label)
+        .slice(0, RAIL_LIMIT)
+        .map((movie, index) => movieToPoster(movie, index, ownedIds, isAdmin));
+      return { label, posters };
+    })
+    .filter((rail) => rail.posters.length > 0);
+}
+
+export function moviesGenreHref(label: string): string {
+  const trimmed = label.trim();
+  return trimmed ? `/movies?genre=${encodeURIComponent(trimmed)}` : "/movies";
 }

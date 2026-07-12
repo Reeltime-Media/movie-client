@@ -28,7 +28,7 @@ export function BannerScrollRail({
     <div
       ref={scrollRef}
       className={[
-        "mt-3 overflow-x-auto overflow-y-visible pb-2 pt-0.5 px-4 md:px-8",
+        "mt-3 overflow-x-auto overflow-y-visible pb-2 pt-0.5 px-4 sm:px-6 md:px-8",
         autoScroll ? "rt-scroll-rail" : "",
         className ?? "",
       ].join(" ")}

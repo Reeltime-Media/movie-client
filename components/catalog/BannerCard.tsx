@@ -34,12 +34,13 @@ export function BannerCard({
           <CdnImage
             src={imageSrc}
             alt={imageAlt ?? title}
-            width={640}
-            height={360}
+            width={720}
+            height={300}
             sizes="(min-width: 1024px) 380px, (min-width: 640px) 340px, 80vw"
             className={[
-              "w-full aspect-video block",
-              imageContain ? "object-contain" : "object-cover object-top",
+              // Match uploaded banners (~12:5 ultrawide), not 16:9 — avoids side crop.
+              "w-full aspect-[12/5] block",
+              imageContain ? "object-contain" : "object-cover object-center",
             ].join(" ")}
             priority={imagePriority}
             loading={imagePriority ? "eager" : "lazy"}

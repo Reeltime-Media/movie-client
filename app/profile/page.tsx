@@ -324,7 +324,7 @@ export default function ProfilePage() {
                 Renews on {formatRenewalDate(activeSub.current_period_end)}
               </p>
               <Link
-                href="/pay/subscription"
+                href="/pricing"
                 className="mt-1 flex w-full items-center justify-center rounded-md border border-border py-2 text-[12px] font-semibold text-text-muted transition-colors hover:border-border-hover hover:text-text"
               >
                 Manage subscription
@@ -344,7 +344,7 @@ export default function ProfilePage() {
                 ))}
               </ul>
               <Link
-                href="/pay/subscription"
+                href="/pricing"
                 className="mt-1 flex w-full items-center justify-center rounded-md bg-brand py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
               >
                 Subscribe · $6.99/mo

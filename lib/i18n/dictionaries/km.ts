@@ -94,6 +94,7 @@ export const km = {
   homeFilterFamilyNight: "យប់គ្រួសារ",
   homeCuratedKicker: "ជ្រើសសម្រាប់ Reeltime",
   homeBrowseByMood: "រកតាមអារម្មណ៍",
+  homeBrowseByGenre: "រកតាមប្រភេទ",
   homeExploreMovies: "រកមើលភាពយន្ត",
   homeEd1Eyebrow: "ជ្រើសពិសេស",
   homeEd1Title: "សម្រាប់យប់នេះ",
