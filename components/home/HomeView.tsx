@@ -17,6 +17,7 @@ import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/to-poste
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
 import type { PromotionBannerRead } from "@/lib/api/promotion-banners";
@@ -69,7 +70,7 @@ export function HomeView({
     if (!loggedIn) return;
     let cancelled = false;
     listPurchases()
-      .catch(() => [])
+      .catch(swallow("home: load purchases", []))
       .then((purchases) => {
         if (cancelled) return;
         setOwnedIds(new Set(purchases.map((p) => p.content_id)));

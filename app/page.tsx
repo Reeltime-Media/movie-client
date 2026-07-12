@@ -5,6 +5,7 @@ import { listPromotionBanners } from "@/lib/api/promotion-banners";
 import { listSeries, listEpisodes } from "@/lib/api/series";
 import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
 import type { SeasonRead } from "@/lib/api/types";
+import { swallow } from "@/lib/log";
 
 /** Cap episode prefetch — each series was a separate API + DB round-trip. */
 const SERIES_EPISODE_PREFETCH_LIMIT = 12;
@@ -15,10 +16,10 @@ export const revalidate = 300;
 
 export default async function Home() {
   const [movies, seriesList, promotionBanners, heroFeatured] = await Promise.all([
-    listMovies().catch(() => []),
-    listSeries().catch(() => []),
-    listPromotionBanners("home").catch(() => []),
-    listHeroFeatured("home").catch(() => []),
+    listMovies().catch(swallow("home: load movies", [])),
+    listSeries().catch(swallow("home: load series", [])),
+    listPromotionBanners("home").catch(swallow("home: load promotion banners", [])),
+    listHeroFeatured("home").catch(swallow("home: load hero featured", [])),
   ]);
 
   const seasons = await Promise.all(

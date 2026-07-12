@@ -20,6 +20,7 @@ import { isAdminUser } from "@/lib/auth/is-admin";
 import { movieCardHref, movieWatchHref } from "@/lib/movie-routes";
 import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
+import { swallow } from "@/lib/log";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import { BannerCard } from "@/components/catalog/BannerCard";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
@@ -47,7 +48,9 @@ function MoviePayInner() {
     if (!slug) return;
 
     let cancelled = false;
-    const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
+    const purchasesPromise = loggedIn
+      ? listPurchases().catch(swallow("pay: load purchases", []))
+      : Promise.resolve([]);
 
     Promise.all([getMovie(slug), listMovies(), purchasesPromise])
       .then(([m, all, purchases]) => {

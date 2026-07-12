@@ -17,6 +17,7 @@ import type { SeriesRead, SubscriptionPlanRead } from "@/lib/api/types";
 import { marketingImages } from "@/lib/marketing-images";
 import { PENDING_INTENT_KEY, seriesSubscriptionSuccessUrl } from "@/lib/payment-success-urls";
 import { safeCheckoutUrl } from "@/lib/safe-redirect";
+import { swallow } from "@/lib/log";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
 
@@ -53,7 +54,7 @@ function PricingPageInner() {
 
   useEffect(() => {
     const subsPromise = loggedIn
-      ? listMySubscriptions().catch(() => [])
+      ? listMySubscriptions().catch(swallow("pricing: load subscriptions", []))
       : Promise.resolve([]);
 
     Promise.all([listSubscriptionPlans(), listSeries(), subsPromise])

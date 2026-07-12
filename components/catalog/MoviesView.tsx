@@ -15,6 +15,7 @@ import { movieToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { swallow } from "@/lib/log";
 import {
   collectGenreLabels,
   genreKeyFromLabel,
@@ -154,7 +155,7 @@ export function MoviesView({
     if (!loggedIn || !movies.length) return;
     let cancelled = false;
     listPurchases()
-      .catch(() => [])
+      .catch(swallow("movies: load purchases", []))
       .then((purchases) => {
         if (cancelled) return;
         setOwnedIds(new Set(purchases.map((p) => p.content_id)));

@@ -10,6 +10,7 @@ import { listPurchases } from "@/lib/api/purchases";
 import type { ContentRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/watch-progress";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { swallow } from "@/lib/log";
 import { moviePayHref, movieWatchHref } from "@/lib/movie-routes";
 import {
   getCachedPlaybackUrl,
@@ -129,7 +130,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
         return;
       }
 
-      const purchasesPromise = listPurchases().catch(() => []);
+      const purchasesPromise = listPurchases().catch(swallow("watch: load purchases", []));
       const playbackPromise = getCachedPlaybackUrl(m.id)
         ? resolvePlaybackUrl(m.id)
         : prefetchPlaybackUrl(m.id).then((url) => url ?? resolvePlaybackUrl(m.id));
@@ -173,7 +174,9 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       };
     }
 
-    const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
+    const purchasesPromise = loggedIn
+      ? listPurchases().catch(swallow("watch: load purchases", []))
+      : Promise.resolve([]);
 
     Promise.all([getMovie(slug), purchasesPromise])
       .then(async ([m, purchases]) => {

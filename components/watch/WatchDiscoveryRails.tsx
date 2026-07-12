@@ -13,6 +13,7 @@ import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
 
 /** Defer discovery rails so they do not compete with watch page / player requests. */
@@ -42,8 +43,12 @@ export function WatchDiscoveryRails({ movieSlug, seriesSlug, genres = [] }: Watc
   useEffect(() => {
     if (!enabled) return;
 
-    const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
-    const subsPromise = loggedIn ? listMySubscriptions().catch(() => []) : Promise.resolve([]);
+    const purchasesPromise = loggedIn
+      ? listPurchases().catch(swallow("watch rails: load purchases", []))
+      : Promise.resolve([]);
+    const subsPromise = loggedIn
+      ? listMySubscriptions().catch(swallow("watch rails: load subscriptions", []))
+      : Promise.resolve([]);
 
     if (movieSlug) {
       Promise.all([getRelatedMovies(movieSlug, 8), purchasesPromise])

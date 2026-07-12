@@ -20,6 +20,7 @@ import {
   matchesGenre,
   matchesSearch,
 } from "@/lib/catalog-filter";
+import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 
@@ -115,7 +116,7 @@ export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
     if (!loggedIn || !seriesList.length) return;
     let cancelled = false;
     listMySubscriptions()
-      .catch(() => [])
+      .catch(swallow("series: load subscriptions", []))
       .then((subs) => {
         if (cancelled) return;
         setHasSubscription(subs.some((s) => s.status === "active"));

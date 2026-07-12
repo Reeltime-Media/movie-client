@@ -1,6 +1,7 @@
 import { SeriesView } from "@/components/catalog/SeriesView";
 import { listSeries, listEpisodes } from "@/lib/api/series";
 import type { SeasonRead } from "@/lib/api/types";
+import { swallow } from "@/lib/log";
 
 const SERIES_EPISODE_PREFETCH_LIMIT = 12;
 
@@ -9,7 +10,7 @@ const SERIES_EPISODE_PREFETCH_LIMIT = 12;
 export const revalidate = 300;
 
 export default async function SeriesPage() {
-  const seriesList = await listSeries().catch(() => []);
+  const seriesList = await listSeries().catch(swallow("series: load series", []));
   const seasons = await Promise.all(
     seriesList.map((s, index) =>
       index < SERIES_EPISODE_PREFETCH_LIMIT

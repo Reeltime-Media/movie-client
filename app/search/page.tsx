@@ -15,6 +15,7 @@ import { movieCardHref } from "@/lib/movie-routes";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { swallow } from "@/lib/log";
 import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 
 
@@ -145,7 +146,9 @@ function SearchPageInner() {
 
     let cancelled = false;
 
-    const purchasesPromise = loggedIn ? listPurchases().catch(() => []) : Promise.resolve([]);
+    const purchasesPromise = loggedIn
+      ? listPurchases().catch(swallow("search: load purchases", []))
+      : Promise.resolve([]);
 
     Promise.all([
       listMovies({ search: q }),

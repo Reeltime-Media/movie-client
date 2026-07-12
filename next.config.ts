@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Auto-memoize components/hooks; the codebase passes the compiler's lint rules.
+  reactCompiler: true,
   experimental: {
     // R2 posters are large originals; allow more time when optimization is used.
     imgOptTimeoutInSeconds: 30,

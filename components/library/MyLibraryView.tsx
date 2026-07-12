@@ -12,6 +12,7 @@ import { listFavorites } from "@/lib/api/favorites";
 import { listOwnedMovies } from "@/lib/api/purchases";
 import { movieToPoster } from "@/lib/api/to-poster";
 import { useAuth } from "@/hooks/auth/use-auth";
+import { swallow } from "@/lib/log";
 import type { TranslationKey } from "@/lib/i18n";
 import type { ContentListItemRead } from "@/lib/api/types";
 import type { PosterCardProps } from "@/types/poster-card";
@@ -134,8 +135,8 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
     // catalog comes from the server (cached) via the `catalogMovies` prop.
     (async () => {
       const [ownedMovies, favorites] = await Promise.all([
-        listOwnedMovies().catch(() => []),
-        listFavorites().catch(() => []),
+        listOwnedMovies().catch(swallow("my-library: load owned movies", [])),
+        listFavorites().catch(swallow("my-library: load favorites", [])),
       ]);
 
       if (cancelled) return;

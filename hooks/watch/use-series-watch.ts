@@ -10,6 +10,7 @@ import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { ContentRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/watch-progress";
 import { isAdminUser } from "@/lib/auth/is-admin";
+import { swallow } from "@/lib/log";
 import { seriesPricingHref } from "@/lib/series-pricing";
 import {
   getCachedPlaybackUrl,
@@ -66,7 +67,9 @@ export function useSeriesWatch({
     }
 
     let cancelled = false;
-    const subsPromise = loggedIn ? listMySubscriptions().catch(() => []) : Promise.resolve([]);
+    const subsPromise = loggedIn
+      ? listMySubscriptions().catch(swallow("watch: load subscriptions", []))
+      : Promise.resolve([]);
 
     if (initialSeries && initialSeries.slug === seriesSlug) {
       subsPromise.then((subs) => {
