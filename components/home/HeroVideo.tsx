@@ -27,15 +27,22 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const endedRef = useRef(false);
+  // Once-only guard shared by onEnded/onError: whichever fires first wins.
+  const settledRef = useRef(false);
 
   const embedUrl = videoSrc ? null : youtubeHeroEmbedUrl(youtubeUrl);
 
   const fireEnded = useCallback(() => {
-    if (endedRef.current) return;
-    endedRef.current = true;
+    if (settledRef.current) return;
+    settledRef.current = true;
     onEnded();
   }, [onEnded]);
+
+  const fireError = useCallback(() => {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    onError();
+  }, [onError]);
 
   useEffect(() => {
     const id = window.setTimeout(() => setVisible(true), FADE_IN_DELAY_MS);
@@ -47,7 +54,8 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
     return () => window.clearTimeout(id);
   }, [fireEnded]);
 
-  // YouTube IFrame messaging: subscribe to state events, detect video end (state 0).
+  // YouTube IFrame messaging: subscribe to state events, detect video end
+  // (state 0) and player errors (embedding disabled, video removed, etc.).
   useEffect(() => {
     if (!embedUrl) return;
 
@@ -59,6 +67,10 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
           event?: string;
           info?: number | { playerState?: number };
         };
+        if (data.event === "onError") {
+          fireError();
+          return;
+        }
         const state =
           data.event === "onStateChange"
             ? data.info
@@ -73,7 +85,7 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [embedUrl, fireEnded]);
+  }, [embedUrl, fireEnded, fireError]);
 
   const postToYoutube = useCallback((func: string) => {
     iframeRef.current?.contentWindow?.postMessage(
@@ -114,7 +126,7 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
           playsInline
           preload="auto"
           onEnded={fireEnded}
-          onError={onError}
+          onError={fireError}
           className="h-full w-full object-cover object-center"
         />
       ) : (
@@ -126,7 +138,7 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
             title="Hero video"
             allow="autoplay; encrypted-media"
             onLoad={subscribeToYoutube}
-            onError={onError}
+            onError={fireError}
             className="absolute left-1/2 top-1/2 aspect-video h-[140%] -translate-x-1/2 -translate-y-1/2 border-0"
           />
         </div>
