@@ -2,7 +2,7 @@ import { apiFetch } from "./client";
 
 export type HeroFeaturedSlide = {
   id: string;
-  content_type: "movie" | "series";
+  content_type: "movie" | "series" | "custom";
   title: string;
   slug: string;
   description: string | null;
@@ -12,8 +12,10 @@ export type HeroFeaturedSlide = {
   runtime: string | null;
   poster_key: string | null;
   banner_key: string | null;
-  watch_href: string;
+  watch_href: string | null;
   sort_order: number;
+  video_key: string | null;
+  youtube_url: string | null;
 };
 
 /** Admin-curated hero — revalidate often so picks show up quickly after edits. */

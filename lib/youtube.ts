@@ -23,3 +23,19 @@ export function youtubeEmbedUrl(
   if (opts?.autoplay) params.set("autoplay", "1");
   return `https://www.youtube.com/embed/${id}?${params}`;
 }
+
+/** Hero-specific embed: muted autoplay, no controls/branding, on the privacy-enhanced domain. */
+export function youtubeHeroEmbedUrl(url: string | null | undefined): string | null {
+  const id = youtubeId(url);
+  if (!id) return null;
+  const params = new URLSearchParams({
+    autoplay: "1",
+    mute: "1",
+    controls: "0",
+    playsinline: "1",
+    modestbranding: "1",
+    rel: "0",
+    enablejsapi: "1",
+  });
+  return `https://www.youtube-nocookie.com/embed/${id}?${params}`;
+}

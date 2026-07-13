@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { youtubeEmbedUrl } from "@/lib/youtube";
+import { youtubeEmbedUrl, youtubeHeroEmbedUrl } from "@/lib/youtube";
 
 describe("youtubeEmbedUrl", () => {
   it("handles youtu.be short links", () => {
@@ -25,5 +25,21 @@ describe("youtubeEmbedUrl", () => {
     expect(youtubeEmbedUrl("not a url")).toBeNull();
     expect(youtubeEmbedUrl(null)).toBeNull();
     expect(youtubeEmbedUrl(undefined)).toBeNull();
+  });
+});
+
+describe("youtubeHeroEmbedUrl", () => {
+  it("builds a muted autoplay nocookie embed", () => {
+    const url = youtubeHeroEmbedUrl("https://www.youtube.com/watch?v=abc123");
+    expect(url).toContain("https://www.youtube-nocookie.com/embed/abc123?");
+    expect(url).toContain("autoplay=1");
+    expect(url).toContain("mute=1");
+    expect(url).toContain("controls=0");
+    expect(url).toContain("enablejsapi=1");
+  });
+
+  it("returns null for non-youtube urls", () => {
+    expect(youtubeHeroEmbedUrl("https://vimeo.com/123")).toBeNull();
+    expect(youtubeHeroEmbedUrl(null)).toBeNull();
   });
 });
