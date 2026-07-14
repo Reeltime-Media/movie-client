@@ -49,6 +49,11 @@ describe("slideFromFeatured", () => {
     expect(slide.youtubeUrl).toBe("https://youtu.be/abc");
   });
 
+  it("drops youtubeUrl values that are not parseable YouTube links", () => {
+    const slide = slideFromFeatured(featured({ youtube_url: "https://vimeo.com/123" }));
+    expect(slide.youtubeUrl).toBeNull();
+  });
+
   it("marks catalog slides as not custom", () => {
     const slide = slideFromFeatured(
       featured({ content_type: "movie", slug: "test", watch_href: "/watch?slug=test" }),

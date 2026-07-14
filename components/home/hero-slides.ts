@@ -1,6 +1,7 @@
 import { posterUrl } from "@/lib/api/client";
 import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
 import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
+import { youtubeHeroEmbedUrl } from "@/lib/youtube";
 
 export type HeroSlide = {
   id: string;
@@ -34,7 +35,12 @@ export function slideFromFeatured(slide: HeroFeaturedSlide): HeroSlide {
     watchHref: slide.watch_href,
     isCustom: slide.content_type === "custom",
     videoSrc: posterUrl(slide.video_key) ?? null,
-    youtubeUrl: slide.video_key ? null : slide.youtube_url,
+    // Catalog trailer URLs flow in unvalidated — keep only parseable YouTube
+    // links so the carousel never waits on a video that can't render.
+    youtubeUrl:
+      slide.video_key || !youtubeHeroEmbedUrl(slide.youtube_url)
+        ? null
+        : slide.youtube_url,
   };
 }
 
