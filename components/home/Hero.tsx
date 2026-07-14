@@ -229,7 +229,8 @@ export function Hero({
 
                     {s.watchHref ? (
                       <div className="mt-4 flex items-center gap-2.5">
-                        {s.watchHref.startsWith("http") ? (
+                        {/* "//host" is protocol-relative — off-site, never an internal route */}
+                        {s.watchHref.startsWith("http") || s.watchHref.startsWith("//") ? (
                           <a
                             href={s.watchHref}
                             target="_blank"
