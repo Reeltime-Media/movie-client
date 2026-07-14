@@ -7,8 +7,6 @@ import { youtubeHeroEmbedUrl } from "@/lib/youtube";
 
 /** Hard cap so the carousel never stalls if end events are missed. */
 const MAX_PLAY_MS = 120_000;
-/** Delay before the video fades in over the banner image. */
-const FADE_IN_DELAY_MS = 1_000;
 
 type HeroVideoProps = {
   videoSrc: string | null;
@@ -44,9 +42,10 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
     onError();
   }, [onError]);
 
+  // Fade in from black right away — video slides render no banner behind them.
   useEffect(() => {
-    const id = window.setTimeout(() => setVisible(true), FADE_IN_DELAY_MS);
-    return () => window.clearTimeout(id);
+    const id = window.requestAnimationFrame(() => setVisible(true));
+    return () => window.cancelAnimationFrame(id);
   }, []);
 
   useEffect(() => {

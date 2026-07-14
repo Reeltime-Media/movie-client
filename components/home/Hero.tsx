@@ -133,7 +133,8 @@ export function Hero({
             ].join(" ")}
             aria-hidden={i !== active}
           >
-            {s.bannerSrc ? (
+            {/* Video slides show the video only — no banner behind it */}
+            {i === active && activeHasVideo ? null : s.bannerSrc ? (
               <CdnImage
                 src={s.bannerSrc}
                 alt=""
