@@ -67,6 +67,11 @@ export function PosterCard({
               {badge.label}
             </span>
           ) : null}
+          {badge.kind === "free" ? (
+            <span className="rounded-sm bg-success px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
+              {badge.label}
+            </span>
+          ) : null}
           {subtitle ? (
             <span
               className="rounded-sm px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white"

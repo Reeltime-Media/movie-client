@@ -1,6 +1,7 @@
 type PosterBadge =
   | { kind: "hd"; label: "HD" }
   | { kind: "owned"; label: "OWNED" }
+  | { kind: "free"; label: "FREE" }
   | { kind: "none" };
 
 type PosterEntitlement =

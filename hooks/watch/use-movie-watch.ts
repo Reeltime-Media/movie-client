@@ -19,6 +19,8 @@ import {
 } from "@/lib/watch/playback-cache";
 
 function isMovieFree(movie: ContentRead) {
+  // "Free movies today" picks are free regardless of their normal price.
+  if (movie.is_free_today) return true;
   return !movie.price_usd || parseFloat(movie.price_usd) === 0;
 }
 

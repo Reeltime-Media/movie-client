@@ -1,4 +1,5 @@
 import { HomeView } from "@/components/home/HomeView";
+import { listFreeToday } from "@/lib/api/free-today";
 import { listHeroFeatured } from "@/lib/api/hero-featured";
 import { listMovies } from "@/lib/api/movies";
 import { listPromotionBanners } from "@/lib/api/promotion-banners";
@@ -15,11 +16,12 @@ const SERIES_EPISODE_PREFETCH_LIMIT = 12;
 export const revalidate = 300;
 
 export default async function Home() {
-  const [movies, seriesList, promotionBanners, heroFeatured] = await Promise.all([
+  const [movies, seriesList, promotionBanners, heroFeatured, freeToday] = await Promise.all([
     listMovies().catch(swallow("home: load movies", [])),
     listSeries().catch(swallow("home: load series", [])),
     listPromotionBanners("home").catch(swallow("home: load promotion banners", [])),
     listHeroFeatured("home").catch(swallow("home: load hero featured", [])),
+    listFreeToday().catch(swallow("home: load free today", [])),
   ]);
 
   const seasons = await Promise.all(
@@ -33,6 +35,13 @@ export default async function Home() {
   // Public (signed-out) posters, rendered into the initial HTML for a fast LCP.
   // HomeView re-derives entitlement badges client-side once the user is known.
   const initialTrending = movies.map((m, i) => movieToPoster(m, i, new Set<string>()));
+  // Everything in this rail is free while listed — FREE badge, no price.
+  const initialFreeToday = freeToday.map((m, i) => ({
+    ...movieToPoster(m, i, new Set<string>()),
+    badge: { kind: "free", label: "FREE" } as const,
+    entitlement: { kind: "none" } as const,
+    watchHref: `/watch?slug=${m.slug}`,
+  }));
   const initialSubscribe = seriesList.map((s, i) =>
     seriesToPoster(s, i, { hasSubscription: false, seasons: seasons[i] ?? [] }),
   );
@@ -43,6 +52,7 @@ export default async function Home() {
       seriesList={seriesList}
       seasons={seasons}
       initialTrending={initialTrending}
+      initialFreeToday={initialFreeToday}
       initialSubscribe={initialSubscribe}
       promotionBanners={promotionBanners}
       heroFeatured={heroFeatured}

@@ -118,6 +118,7 @@ export const km = {
   homeGenreHorror: "រន្ធត់ខ្លាំង",
   homeGenreSciFi: "វិទ្យាសាស្ត្រក្នុងនាដី",
   homeLibrarySpotlight: "បញ្ចាំងបណ្ណាល័យ",
+  homeFreeTodayTitle: "ភាពយន្តមើលឥតគិតថ្លៃថ្ងៃនេះ",
   homeMostWatchedTitle: "ភាពយន្តពេញនិយម ១០ កំពូលប្រចាំសប្តាហ៍",
   watchMoreLikeThis: "ស្រដៀងនេះ",
   watchSeriesPicks: "រឿងភាគសម្រាប់អ្នក",

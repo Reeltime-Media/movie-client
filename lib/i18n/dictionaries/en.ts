@@ -122,6 +122,7 @@ export const en = {
   homeGenreHorror: "Horror & chills",
   homeGenreSciFi: "Sci-fi adventures",
   homeLibrarySpotlight: "Library spotlight",
+  homeFreeTodayTitle: "Free movies today",
   homeMostWatchedTitle: "Top 10 movies of the week",
   watchMoreLikeThis: "More like this",
   watchSeriesPicks: "Series picks for you",

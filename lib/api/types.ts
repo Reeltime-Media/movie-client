@@ -41,6 +41,8 @@ export interface ContentRead extends ContentListItemRead {
   hls_master_key: string | null;
   status: string;
   is_published: boolean;
+  /** True while the movie is in the admin-curated "Free movies today" list. */
+  is_free_today?: boolean;
   transcode_status: string;
   created_at: string;
   updated_at: string;

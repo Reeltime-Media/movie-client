@@ -28,6 +28,7 @@ type HomeViewProps = {
   seriesList: SeriesRead[];
   seasons: SeasonRead[][];
   initialTrending: PosterCardProps[];
+  initialFreeToday: PosterCardProps[];
   initialSubscribe: PosterCardProps[];
   promotionBanners: PromotionBannerRead[];
   heroFeatured: HeroFeaturedSlide[];
@@ -39,6 +40,7 @@ export function HomeView({
   movies,
   seriesList,
   initialTrending,
+  initialFreeToday,
   promotionBanners,
   heroFeatured,
 }: HomeViewProps) {
@@ -110,6 +112,13 @@ export function HomeView({
           fallbackSeries={seriesList}
         />
       </div>
+
+      {initialFreeToday.length > 0 && (
+        <ScrollReveal as="section" className="pt-8 pb-6">
+          <SectionHeader title={t("homeFreeTodayTitle")} />
+          <PosterScrollRail posters={initialFreeToday} gutter="sm" />
+        </ScrollReveal>
+      )}
 
       <ScrollReveal as="section" className="pt-8 pb-6">
         <SectionHeader title={t("homeMostWatchedTitle")} showSeeAll seeAllHref="/movies" seeAllLabel={t("sectionSeeAll")} />
