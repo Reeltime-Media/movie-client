@@ -172,10 +172,15 @@ export function Hero({
         </>
       )}
 
-      {/* Bottom gradient for text readability */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[60%] bg-linear-to-t from-black/90 via-black/50 to-transparent sm:h-[50%] sm:from-black/85 sm:via-black/40" />
-      {/* Left gradient — ends at 65% so description text stays legible over busy posters */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-1 w-[65%] bg-linear-to-r from-black/85 via-black/40 to-transparent" />
+      {/* Text-legibility gradients — skipped for video-only slides with nothing to read */}
+      {(activeSlide?.title || activeSlide?.description || activeSlide?.watchHref) && (
+        <>
+          {/* Bottom gradient for text readability */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[60%] bg-linear-to-t from-black/90 via-black/50 to-transparent sm:h-[50%] sm:from-black/85 sm:via-black/40" />
+          {/* Left gradient — ends at 65% so description text stays legible over busy posters */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-1 w-[65%] bg-linear-to-r from-black/85 via-black/40 to-transparent" />
+        </>
+      )}
 
       <div className="pointer-events-none relative z-2 h-full">
         <div className="flex h-full w-full items-end justify-between px-4 pb-6 sm:px-6 sm:pb-8 md:px-12 md:pb-10">
@@ -198,9 +203,12 @@ export function Hero({
                   aria-hidden={i !== active}
                 >
                   <div className={i === active ? "rt-hero-text-in" : ""}>
-                    <h1 className="text-[20px] font-black leading-tight tracking-[-0.02em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-[34px] md:text-[38px]">
-                      {s.title}
-                    </h1>
+                    {/* Video-only custom slides have no title — render no text block */}
+                    {s.title && (
+                      <h1 className="text-[20px] font-black leading-tight tracking-[-0.02em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-[34px] md:text-[38px]">
+                        {s.title}
+                      </h1>
+                    )}
 
                     <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-medium text-white/70 sm:mt-1.5 sm:gap-x-2 sm:text-[13px]">
                       {s.year && <span>{s.year}</span>}
