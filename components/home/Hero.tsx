@@ -172,8 +172,8 @@ export function Hero({
         </>
       )}
 
-      {/* Text-legibility gradients — skipped for video-only slides with nothing to read */}
-      {(activeSlide?.title || activeSlide?.description || activeSlide?.watchHref) && (
+      {/* Text-legibility gradients — skipped for custom video slides with no title */}
+      {activeSlide && (!activeSlide.isCustom || activeSlide.title) && (
         <>
           {/* Bottom gradient for text readability */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[60%] bg-linear-to-t from-black/90 via-black/50 to-transparent sm:h-[50%] sm:from-black/85 sm:via-black/40" />
@@ -229,13 +229,14 @@ export function Hero({
                       )}
                     </div>
 
-                    {s.description && (
+                    {/* Custom video slides show the title only — no description, no buttons */}
+                    {!s.isCustom && s.description && (
                       <p className="mt-2 hidden max-w-[420px] text-[13px] leading-relaxed text-white/70 line-clamp-2 sm:block">
                         {s.description}
                       </p>
                     )}
 
-                    {s.watchHref ? (
+                    {!s.isCustom && s.watchHref ? (
                       <div className="mt-4 flex items-center gap-2.5">
                         {/* "//host" is protocol-relative — off-site, never an internal route */}
                         {s.watchHref.startsWith("http") || s.watchHref.startsWith("//") ? (
