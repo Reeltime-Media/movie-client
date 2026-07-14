@@ -36,6 +36,12 @@ export function youtubeHeroEmbedUrl(url: string | null | undefined): string | nu
     modestbranding: "1",
     rel: "0",
     enablejsapi: "1",
+    // Suppress every piece of player chrome YouTube lets us: keyboard,
+    // fullscreen button, annotations, captions.
+    disablekb: "1",
+    fs: "0",
+    iv_load_policy: "3",
+    cc_load_policy: "0",
   });
   return `https://www.youtube-nocookie.com/embed/${id}?${params}`;
 }

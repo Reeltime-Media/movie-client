@@ -94,9 +94,11 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
   if (!videoSrc && !embedUrl) return null;
 
   return (
+    // pointer-events-none: nothing inside is interactive, and taps must never
+    // reach the YouTube iframe (its tap UI would show play/pause chrome).
     <div
       className={[
-        "absolute inset-0 transition-opacity duration-700 ease-out",
+        "pointer-events-none absolute inset-0 transition-opacity duration-700 ease-out",
         visible ? "opacity-100" : "opacity-0",
       ].join(" ")}
     >
