@@ -1,6 +1,5 @@
 "use client";
 
-import { Volume2, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { youtubeHeroEmbedUrl } from "@/lib/youtube";
@@ -17,13 +16,12 @@ type HeroVideoProps = {
 
 /**
  * Video layer for the active hero slide. Renders an uploaded MP4/WebM via a
- * native <video>, or a YouTube nocookie embed. Autoplays muted; reports when
- * playback finishes or fails so the carousel can advance or fall back.
+ * native <video>, or a YouTube nocookie embed. Always muted — there is no
+ * unmute control by design. Reports when playback finishes or fails so the
+ * carousel can advance or fall back.
  */
 export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoProps) {
   const [visible, setVisible] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   // Once-only guard shared by onEnded/onError: whichever fires first wins.
   const settledRef = useRef(false);
@@ -86,26 +84,12 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
     return () => window.removeEventListener("message", handleMessage);
   }, [embedUrl, fireEnded, fireError]);
 
-  const postToYoutube = useCallback((func: string) => {
-    iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: "command", func, args: [] }),
-      "*",
-    );
-  }, []);
-
   const subscribeToYoutube = useCallback(() => {
     iframeRef.current?.contentWindow?.postMessage(
       JSON.stringify({ event: "listening", id: "rt-hero" }),
       "*",
     );
   }, []);
-
-  const toggleMute = () => {
-    const next = !muted;
-    setMuted(next);
-    if (videoRef.current) videoRef.current.muted = next;
-    if (embedUrl) postToYoutube(next ? "mute" : "unMute");
-  };
 
   if (!videoSrc && !embedUrl) return null;
 
@@ -118,7 +102,6 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
     >
       {videoSrc ? (
         <video
-          ref={videoRef}
           src={videoSrc}
           autoPlay
           muted
@@ -142,15 +125,6 @@ export function HeroVideo({ videoSrc, youtubeUrl, onEnded, onError }: HeroVideoP
           />
         </div>
       )}
-
-      <button
-        type="button"
-        onClick={toggleMute}
-        aria-label={muted ? "Unmute video" : "Mute video"}
-        className="absolute bottom-4 right-4 z-10 flex size-9 items-center justify-center rounded-full border border-white/25 bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70 sm:bottom-6 sm:right-6"
-      >
-        {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-      </button>
     </div>
   );
 }
