@@ -5,6 +5,8 @@ export type BannerCardProps = {
   imageSrc?: string;
   imageAlt?: string;
   title: string;
+  /** Khmer title shown above the English title when present. */
+  titleKm?: string | null;
   year?: number | null;
   badgeLabel?: string;
   watchHref?: string;
@@ -17,23 +19,27 @@ export function BannerCard({
   imageSrc,
   imageAlt,
   title,
+  titleKm,
   year,
   badgeLabel,
   watchHref = "#",
   imagePriority = false,
   imageContain = false,
 }: BannerCardProps) {
+  const hasKm = Boolean(titleKm?.trim());
+  const cardLabel = `${hasKm ? `${titleKm} · ` : ""}${title}${year ? ` (${year})` : ""}`;
+
   return (
     <Link
       href={watchHref}
-      aria-label={`${title}${year ? ` (${year})` : ""}`}
+      aria-label={cardLabel}
       className="group block cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
       <div className="rt-card-hover relative overflow-hidden rounded-md border border-transparent group-hover:border-white/20 bg-surface-elevated">
         {imageSrc ? (
           <CdnImage
             src={imageSrc}
-            alt={imageAlt ?? title}
+            alt={imageAlt ?? (hasKm ? `${titleKm} · ${title}` : title)}
             width={720}
             height={300}
             sizes="(min-width: 1024px) 380px, (min-width: 640px) 340px, 80vw"
@@ -62,9 +68,20 @@ export function BannerCard({
         {/* Title + year bottom-left, badge bottom-right */}
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3">
           <div className="min-w-0">
-            <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white">
-              {title}
-            </p>
+            {hasKm ? (
+              <>
+                <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white">
+                  {titleKm}
+                </p>
+                <p className="mt-0.5 line-clamp-1 text-[13px] font-bold leading-snug text-white">
+                  {title}
+                </p>
+              </>
+            ) : (
+              <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white">
+                {title}
+              </p>
+            )}
             {year ? (
               <p className="mt-0.5 text-[11px] font-medium text-white/65">{year}</p>
             ) : null}

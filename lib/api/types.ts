@@ -21,6 +21,7 @@ export interface ContentListItemRead {
   type: string;
   slug: string;
   title: string;
+  title_km?: string | null;
   description: string | null;
   genres: string[];
   poster_key: string | null;
@@ -54,6 +55,7 @@ export interface SeriesRead {
   id: string;
   slug: string;
   title: string;
+  title_km?: string | null;
   description: string | null;
   genres: string[];
   release_year: number | null;

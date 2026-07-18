@@ -125,12 +125,20 @@ function PosterFace({
   );
 }
 
-function TitleBelow({ titleBelow, year, entitlement }: PosterCardProps) {
+function TitleBelow({ titleBelow, titleKm, year, entitlement }: PosterCardProps) {
+  const hasKm = Boolean(titleKm?.trim());
+  const titleClass =
+    "truncate text-[15px] font-semibold leading-snug text-text group-hover:text-text/90";
   return (
     <div className="mt-2 min-w-0">
-      <p className="truncate text-[15px] font-semibold leading-snug text-text group-hover:text-text/90">
-        {titleBelow}
-      </p>
+      {hasKm ? (
+        <>
+          <p className={titleClass}>{titleKm}</p>
+          <p className={`mt-0.5 ${titleClass}`}>{titleBelow}</p>
+        </>
+      ) : (
+        <p className={titleClass}>{titleBelow}</p>
+      )}
       {year ? (
         <p className="mt-0.5 text-[11px] font-medium text-text-muted">{year}</p>
       ) : entitlement?.kind === "subscribed" ? (
@@ -194,8 +202,8 @@ function TrailerModal({
 
 /** Classic card — whole poster is a link (series and other non-flip uses). */
 function FlatPosterCard(props: PosterCardProps) {
-  const { titleBelow, watchHref = "#", year } = props;
-  const cardLabel = `${titleBelow}${year ? ` (${year})` : ""}`;
+  const { titleBelow, titleKm, watchHref = "#", year } = props;
+  const cardLabel = `${titleKm?.trim() ? `${titleKm} · ` : ""}${titleBelow}${year ? ` (${year})` : ""}`;
 
   return (
     <Link
@@ -214,6 +222,7 @@ function FlipPosterCard(props: PosterCardProps) {
   const {
     contentId,
     titleBelow,
+    titleKm,
     watchHref = "#",
     year,
     entitlement,
@@ -229,12 +238,14 @@ function FlipPosterCard(props: PosterCardProps) {
   const flipped = activeId === flipId;
   const [trailerOpen, setTrailerOpen] = useState(false);
 
-  const cardLabel = `${titleBelow}${year ? ` (${year})` : ""}`;
+  const cardLabel = `${titleKm?.trim() ? `${titleKm} · ` : ""}${titleBelow}${year ? ` (${year})` : ""}`;
   const embedUrl = youtubeEmbedUrl(trailerUrl, { autoplay: true });
   const buyLabel =
     entitlement?.kind === "price"
       ? `${t("cardBuy")} · ${entitlement.value}`
       : t("heroWatchNow");
+  const hasKm = Boolean(titleKm?.trim());
+  const trailerTitle = hasKm ? `${titleKm} · ${titleBelow}` : titleBelow;
 
   return (
     <div className="group">
@@ -276,9 +287,20 @@ function FlipPosterCard(props: PosterCardProps) {
             ].join(" ")}
           >
             <div className="min-w-0">
-              <p className="line-clamp-3 text-[13px] font-bold leading-snug text-text">
-                {titleBelow}
-              </p>
+              {hasKm ? (
+                <>
+                  <p className="line-clamp-2 text-[13px] font-bold leading-snug text-text">
+                    {titleKm}
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-[13px] font-bold leading-snug text-text">
+                    {titleBelow}
+                  </p>
+                </>
+              ) : (
+                <p className="line-clamp-3 text-[13px] font-bold leading-snug text-text">
+                  {titleBelow}
+                </p>
+              )}
               {year ? (
                 <p className="mt-0.5 text-[11px] font-medium text-text-muted">{year}</p>
               ) : null}
@@ -315,7 +337,7 @@ function FlipPosterCard(props: PosterCardProps) {
       {trailerOpen && embedUrl ? (
         <TrailerModal
           embedUrl={embedUrl}
-          title={titleBelow}
+          title={trailerTitle}
           onClose={() => setTrailerOpen(false)}
         />
       ) : null}

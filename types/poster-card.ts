@@ -17,7 +17,10 @@ export type PosterCardProps = {
   imageAlt?: string;
   imagePriority?: boolean;
   posterTitle: string;
+  /** English title shown under the poster (or alone when no Khmer title). */
   titleBelow: string;
+  /** Khmer title shown above the English title when present. */
+  titleKm?: string | null;
   posterGradient: string;
   accentColor: string;
   badge?: PosterBadge;

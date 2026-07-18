@@ -52,6 +52,7 @@ export function movieToPoster(
     imageSrc: posterThumbUrl(movie.poster_key, 400) ?? posterUrl(movie.poster_key),
     posterTitle: movie.title.toUpperCase(),
     titleBelow: movie.title,
+    titleKm: movie.title_km ?? null,
     posterGradient: gradient,
     accentColor: accent,
     badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
@@ -92,6 +93,7 @@ export function seriesToPoster(
     imageSrc: posterThumbUrl(series.poster_key, 400) ?? posterUrl(series.poster_key),
     posterTitle: series.title.toUpperCase(),
     titleBelow: series.title,
+    titleKm: series.title_km ?? null,
     posterGradient: gradient,
     accentColor: accent,
     subtitle: { text: "A SERIES", color: accent },
@@ -113,8 +115,9 @@ export function movieToBanner(
     !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
   return {
     imageSrc: posterUrl(movie.banner_key) ?? posterUrl(movie.poster_key),
-    imageAlt: movie.title,
+    imageAlt: movie.title_km ? `${movie.title_km} · ${movie.title}` : movie.title,
     title: movie.title,
+    titleKm: movie.title_km ?? null,
     year: movie.release_year,
     badgeLabel: price,
     watchHref: movieCardHref(movie, owned, isAdmin),
@@ -124,8 +127,9 @@ export function movieToBanner(
 export function seriesToBanner(series: SeriesRead, badgeLabel = "រឿងភាគ"): BannerCardProps {
   return {
     imageSrc: posterUrl(series.banner_key) ?? posterUrl(series.poster_key),
-    imageAlt: series.title,
+    imageAlt: series.title_km ? `${series.title_km} · ${series.title}` : series.title,
     title: series.title,
+    titleKm: series.title_km ?? null,
     year: series.release_year,
     badgeLabel,
     watchHref: `/watch/series/${series.slug}/1/1`,
