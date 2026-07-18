@@ -67,6 +67,8 @@ export const en = {
   seriesPopularSub: "Trending with viewers in Cambodia",
 
   heroFeatured: "Featured",
+  cardBuy: "Buy",
+  cardViewTrailer: "View trailer",
   heroWatchNow: "Watch now",
   heroMoreInfo: "More info",
   heroFeaturedTitlesAria: "Featured titles",

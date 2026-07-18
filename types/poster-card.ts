@@ -28,4 +28,8 @@ export type PosterCardProps = {
   watchHref?: string;
   watchLabel?: string;
   year?: number | null;
+  /** Click flips the card to a Buy / View-trailer back face (movie cards). */
+  flipActions?: boolean;
+  /** YouTube trailer for the back face's "View trailer" popup. */
+  trailerUrl?: string | null;
 };

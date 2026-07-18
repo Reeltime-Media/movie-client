@@ -58,6 +58,8 @@ export function movieToPoster(
     entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
     watchHref: movieCardHref(movie, Boolean(isOwned), isAdmin),
     year: movie.release_year,
+    flipActions: true,
+    trailerUrl: movie.trailer_url ?? null,
   };
 }
 

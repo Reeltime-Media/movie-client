@@ -63,6 +63,8 @@ export const km = {
   seriesPopularSub: "កំពុងត្រូវបានមើលច្រើននៅកម្ពុជា",
 
   heroFeatured: "ណែនាំ",
+  cardBuy: "ទិញ",
+  cardViewTrailer: "មើល Trailer",
   heroWatchNow: "មើលឥឡូវនេះ",
   heroMoreInfo: "ព័ត៌មានបន្ថែម",
   heroFeaturedTitlesAria: "ចំណងជើងណែនាំ",
