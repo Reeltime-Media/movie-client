@@ -69,7 +69,6 @@ export function HomeView({
   const trendingPosters = moviePosters.length > 0 ? moviePosters : initialTrending.slice(0, RAIL_LIMIT);
 
   useEffect(() => {
-    if (!loggedIn) return;
     let cancelled = false;
     listPurchases()
       .catch(swallow("home: load purchases", []))

@@ -72,7 +72,7 @@ export interface SeasonRead {
 
 export interface PurchaseRead {
   id: string;
-  user_id: string;
+  user_id: string | null;
   content_id: string;
   intent_id: string;
   order_id: string;

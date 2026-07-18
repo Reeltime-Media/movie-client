@@ -146,9 +146,7 @@ function SearchPageInner() {
 
     let cancelled = false;
 
-    const purchasesPromise = loggedIn
-      ? listPurchases().catch(swallow("search: load purchases", []))
-      : Promise.resolve([]);
+    const purchasesPromise = listPurchases().catch(swallow("search: load purchases", []));
 
     Promise.all([
       listMovies({ search: q }),

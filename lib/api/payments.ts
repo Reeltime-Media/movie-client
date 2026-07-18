@@ -3,7 +3,7 @@ import { apiFetch } from "./client";
 export interface PaymentIntentRead {
   intent_id: string;
   order_id: string;
-  user_id: string;
+  user_id: string | null;
   kind: string;
   content_id: string | null;
   amount_usd: string;

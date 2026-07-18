@@ -7,6 +7,23 @@ const nextConfig: NextConfig = {
     // R2 posters are large originals; allow more time when optimization is used.
     imgOptTimeoutInSeconds: 30,
   },
+  async headers() {
+    return [
+      {
+        // Build-hashed — safe to cache forever.
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        // /public media (logo, sample images/video, payment badge) — filenames
+        // aren't hashed, so keep a shorter cache with revalidation.
+        source: "/:path*.(svg|jpg|jpeg|png|webp|avif|gif|ico|woff|woff2|ttf|mp4|webm)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
+      },
+    ];
+  },
   images: {
     // Serve modern, smaller formats; the browser picks the best it supports.
     formats: ["image/avif", "image/webp"],

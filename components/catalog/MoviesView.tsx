@@ -152,7 +152,7 @@ export function MoviesView({
   const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES;
 
   useEffect(() => {
-    if (!loggedIn || !movies.length) return;
+    if (!movies.length) return;
     let cancelled = false;
     listPurchases()
       .catch(swallow("movies: load purchases", []))

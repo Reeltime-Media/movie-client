@@ -48,9 +48,7 @@ function MoviePayInner() {
     if (!slug) return;
 
     let cancelled = false;
-    const purchasesPromise = loggedIn
-      ? listPurchases().catch(swallow("pay: load purchases", []))
-      : Promise.resolve([]);
+    const purchasesPromise = listPurchases().catch(swallow("pay: load purchases", []));
 
     Promise.all([getMovie(slug), listMovies(), purchasesPromise])
       .then(([m, all, purchases]) => {
@@ -82,10 +80,6 @@ function MoviePayInner() {
 
   async function handlePay() {
     if (!movie) return;
-    if (!loggedIn) {
-      router.push(`/login?next=${encodeURIComponent(`/pay/movie?slug=${movie.slug}`)}`);
-      return;
-    }
     setPaying(true);
     setError("");
     try {

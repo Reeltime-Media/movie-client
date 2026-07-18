@@ -43,9 +43,7 @@ export function WatchDiscoveryRails({ movieSlug, seriesSlug, genres = [] }: Watc
   useEffect(() => {
     if (!enabled) return;
 
-    const purchasesPromise = loggedIn
-      ? listPurchases().catch(swallow("watch rails: load purchases", []))
-      : Promise.resolve([]);
+    const purchasesPromise = listPurchases().catch(swallow("watch rails: load purchases", []));
     const subsPromise = loggedIn
       ? listMySubscriptions().catch(swallow("watch rails: load subscriptions", []))
       : Promise.resolve([]);

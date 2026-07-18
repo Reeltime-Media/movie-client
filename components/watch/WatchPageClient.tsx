@@ -61,9 +61,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     playbackUrl,
     playbackLoading,
     resumeTime,
-    loggedIn,
     priceLabel,
-    loginNext,
     payHref,
   } = useMovieWatch(slug, { initialMovie });
 
@@ -178,11 +176,11 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                   {!canPlay ? (
                     <div className="pt-1">
                       <Link
-                        href={loggedIn ? payHref : `/login?next=${encodeURIComponent(loginNext)}`}
+                        href={payHref}
                         className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
                       >
                         <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
-                        {loggedIn ? (priceLabel ? `Buy · ${priceLabel}` : "Buy to watch") : "Sign in to watch"}
+                        {priceLabel ? `Buy · ${priceLabel}` : "Buy to watch"}
                       </Link>
                     </div>
                   ) : null}

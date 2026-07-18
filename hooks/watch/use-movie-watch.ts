@@ -27,14 +27,14 @@ function isMovieFree(movie: ContentRead) {
 /**
  * Playback state to show while entitlement is being (re)resolved for the given
  * inputs: instant playback when a free/admin-viewable movie is already cached,
- * a loading pass when the movie is known, idle otherwise.
+ * a loading pass when the movie is known, idle otherwise. Free movies play for
+ * anyone (guest or logged in), so this never needs login state.
  */
 function startingPlaybackState(
   movie: ContentRead | null,
-  loggedIn: boolean,
   isAdmin: boolean,
 ): { canPlay: boolean; playbackUrl: string | null; playbackLoading: boolean } {
-  if (!movie || !loggedIn) {
+  if (!movie) {
     return { canPlay: false, playbackUrl: null, playbackLoading: false };
   }
   const free = isMovieFree(movie);
@@ -58,7 +58,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
   const { initialMovie = null } = options;
   const isSeeded = Boolean(initialMovie && initialMovie.slug === slug);
   const seedMovie = isSeeded ? initialMovie : null;
-  const seedPlayback = startingPlaybackState(seedMovie, loggedIn, isAdmin);
+  const seedPlayback = startingPlaybackState(seedMovie, isAdmin);
 
   const [movie, setMovie] = useState<ContentRead | null>(seedMovie);
   const [loading, setLoading] = useState(!isSeeded && Boolean(slug));
@@ -89,13 +89,9 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     setResumeTime(null);
   }
 
-  const prefetchPlayback = useCallback(
-    (contentId: string) => {
-      if (!loggedIn) return;
-      void prefetchPlaybackUrl(contentId);
-    },
-    [loggedIn],
-  );
+  const prefetchPlayback = useCallback((contentId: string) => {
+    void prefetchPlaybackUrl(contentId);
+  }, []);
 
   useEffect(() => {
     if (!slug) {
@@ -106,12 +102,15 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     let cancelled = false;
 
     async function resolveEntitlement(m: ContentRead) {
-      if (!loggedIn) return;
-
       const free = isMovieFree(m);
 
       if (free || isAdmin) {
-        const progressPromise = getWatchProgress(m.id).catch(() => null);
+        // Guests have no watch-progress row — and the endpoint requires login,
+        // so calling it unconditionally would 401 and trip the global
+        // redirect-to-login interceptor before our own .catch() ever runs.
+        const progressPromise = loggedIn
+          ? getWatchProgress(m.id).catch(() => null)
+          : Promise.resolve(null);
         const playbackPromise = resolvePlaybackUrl(m.id);
 
         try {
@@ -141,7 +140,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
         const [purchases, url, progress] = await Promise.all([
           purchasesPromise,
           playbackPromise,
-          getWatchProgress(m.id).catch(() => null),
+          loggedIn ? getWatchProgress(m.id).catch(() => null) : Promise.resolve(null),
         ]);
         if (cancelled) return;
 
@@ -176,9 +175,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       };
     }
 
-    const purchasesPromise = loggedIn
-      ? listPurchases().catch(swallow("watch: load purchases", []))
-      : Promise.resolve([]);
+    const purchasesPromise = listPurchases().catch(swallow("watch: load purchases", []));
 
     Promise.all([getMovie(slug), purchasesPromise])
       .then(async ([m, purchases]) => {
@@ -187,9 +184,9 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
 
         const free = isMovieFree(m);
         const entitled = isAdmin || free || purchases.some((p) => p.content_id === m.id);
-        setCanPlay(loggedIn && entitled);
+        setCanPlay(entitled);
 
-        if (!loggedIn || !entitled) {
+        if (!entitled) {
           setPlaybackUrl(null);
           setResumeTime(null);
           return;
@@ -205,7 +202,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
 
         try {
           const [progress, url] = await Promise.all([
-            getWatchProgress(m.id).catch(() => null),
+            loggedIn ? getWatchProgress(m.id).catch(() => null) : Promise.resolve(null),
             resolvePlaybackUrl(m.id),
           ]);
           if (cancelled) return;

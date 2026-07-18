@@ -23,6 +23,7 @@ export async function apiFetch<T>(
 
   const res = await fetch(`${getApiUrl()}${path}`, {
     ...rest,
+    credentials: "include",
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
@@ -51,6 +52,7 @@ export async function apiFormPost<T>(
   const body = new URLSearchParams(fields);
   const res = await fetch(`${getApiUrl()}${path}`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
