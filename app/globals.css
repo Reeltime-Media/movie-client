@@ -384,9 +384,71 @@ html[lang="km"] body {
   transition: transform 200ms ease;
 }
 
-.rt-card-hover:hover,
-.rt-card-hover:focus-visible {
-  transform: scale(1.03);
-  z-index: 20;
+/* Hover scale only on fine pointers — sticky :hover on touch breaks flip cards. */
+@media (hover: hover) and (pointer: fine) {
+  .rt-card-hover:hover,
+  .rt-card-hover:focus-visible {
+    transform: scale(1.03);
+    z-index: 20;
+  }
+}
+
+/* Poster flip: 3D on desktop; opacity swap on mobile/touch (3D breaks inside overflow rails). */
+.rt-flip-scene {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+}
+
+.rt-flip-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.rt-flip-face {
+  position: absolute;
+  inset: 0;
+}
+
+/* Narrow viewports + touch: crossfade. DevTools mobile width also hits this. */
+@media (max-width: 639px), (hover: none), (pointer: coarse) {
+  .rt-flip-face {
+    transition: opacity 220ms ease;
+  }
+
+  .rt-flip-card.is-flipped .rt-flip-face-front {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rt-flip-card:not(.is-flipped) .rt-flip-face-back {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (min-width: 640px) and (hover: hover) and (pointer: fine) {
+  .rt-flip-scene {
+    perspective: 1000px;
+  }
+
+  .rt-flip-card {
+    transform-style: preserve-3d;
+    transition: transform 500ms;
+  }
+
+  .rt-flip-card.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  .rt-flip-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .rt-flip-face-back {
+    transform: rotateY(180deg);
+  }
 }
 

@@ -64,10 +64,14 @@ function PosterFace({
   subtitle,
   entitlement,
   progressPct,
-}: PosterCardProps) {
+  fill = false,
+}: PosterCardProps & { fill?: boolean }) {
   return (
     <div
-      className="rt-card-hover relative aspect-2/3 overflow-hidden"
+      className={[
+        "rt-card-hover relative overflow-hidden",
+        fill ? "h-full w-full" : "aspect-2/3",
+      ].join(" ")}
       style={{ background: posterGradient, viewTransitionName: contentId ? `poster-${contentId}` : undefined }}
     >
       {imageSrc ? (
@@ -278,14 +282,9 @@ function FlipPosterCard(props: PosterCardProps) {
   const priceLabel = entitlement?.kind === "price" ? entitlement.value : undefined;
 
   return (
-    <div className="group">
-      <div className="perspective-[1000px]">
-        <div
-          className={[
-            "relative transition-transform duration-500 transform-3d",
-            flipped ? "transform-[rotateY(180deg)]" : "",
-          ].join(" ")}
-        >
+    <div className={["group", flipped ? "relative z-30" : ""].join(" ")}>
+      <div className="rt-flip-scene">
+        <div className={["rt-flip-card", flipped ? "is-flipped" : ""].join(" ")}>
           {/* Front — poster; click flips (closes any other open card) */}
           <div
             role="button"
@@ -301,11 +300,11 @@ function FlipPosterCard(props: PosterCardProps) {
             }}
             aria-hidden={flipped}
             className={[
-              "cursor-pointer backface-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+              "rt-flip-face rt-flip-face-front cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
               flipped ? "pointer-events-none" : "",
             ].join(" ")}
           >
-            <PosterFace {...props} />
+            <PosterFace {...props} fill />
           </div>
 
           {/* Back — actions; click background flips back */}
@@ -313,21 +312,21 @@ function FlipPosterCard(props: PosterCardProps) {
             onClick={() => setActiveFlipId(null)}
             aria-hidden={!flipped}
             className={[
-              "absolute inset-0 flex cursor-pointer flex-col justify-between border border-border bg-surface p-3 backface-hidden transform-[rotateY(180deg)]",
+              "rt-flip-face rt-flip-face-back flex cursor-pointer flex-col justify-between gap-2 overflow-hidden border border-border bg-surface p-2.5 sm:p-3",
               flipped ? "" : "pointer-events-none",
             ].join(" ")}
           >
-            <div className="min-w-0">
+            <div className="min-w-0 shrink">
               {km ? (
                 <>
                   <p
-                    className="line-clamp-2 text-[13px] font-bold leading-snug text-text"
+                    className="line-clamp-2 text-[12px] font-bold leading-snug text-text sm:text-[13px]"
                     suppressHydrationWarning
                   >
                     {km}
                   </p>
                   <p
-                    className="mt-0.5 line-clamp-2 text-[13px] font-bold leading-snug text-text"
+                    className="mt-0.5 line-clamp-2 text-[12px] font-bold leading-snug text-text sm:text-[13px]"
                     suppressHydrationWarning
                   >
                     {titleBelow}
@@ -335,7 +334,7 @@ function FlipPosterCard(props: PosterCardProps) {
                 </>
               ) : (
                 <p
-                  className="line-clamp-3 text-[13px] font-bold leading-snug text-text"
+                  className="line-clamp-3 text-[12px] font-bold leading-snug text-text sm:text-[13px]"
                   suppressHydrationWarning
                 >
                   {titleBelow}
@@ -346,7 +345,7 @@ function FlipPosterCard(props: PosterCardProps) {
               ) : null}
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex shrink-0 flex-col gap-1.5 sm:gap-2">
               {needsCheckout && contentId && paySlug ? (
                 <button
                   type="button"
@@ -355,7 +354,7 @@ function FlipPosterCard(props: PosterCardProps) {
                     setActiveFlipId(null);
                     setCheckoutOpen(true);
                   }}
-                  className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md bg-brand px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
+                  className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:px-3 sm:py-2 sm:text-[12px]"
                 >
                   <Play size={13} className="fill-white" aria-hidden />
                   {buyLabel}
@@ -364,7 +363,7 @@ function FlipPosterCard(props: PosterCardProps) {
                 <Link
                   href={watchHref}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-brand px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:px-3 sm:py-2 sm:text-[12px]"
                 >
                   <Play size={13} className="fill-white" aria-hidden />
                   {buyLabel}
@@ -377,7 +376,7 @@ function FlipPosterCard(props: PosterCardProps) {
                     e.stopPropagation();
                     setTrailerOpen(true);
                   }}
-                  className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-border bg-surface-elevated px-3 py-2 text-[12px] font-bold text-text transition-colors hover:border-border-hover hover:bg-border"
+                  className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-border bg-surface-elevated px-2.5 py-1.5 text-[11px] font-bold text-text transition-colors hover:border-border-hover hover:bg-border sm:px-3 sm:py-2 sm:text-[12px]"
                 >
                   {t("cardViewTrailer")}
                 </button>
@@ -387,7 +386,9 @@ function FlipPosterCard(props: PosterCardProps) {
         </div>
       </div>
 
-      <TitleBelow {...props} />
+      <div className={flipped ? "invisible" : undefined} aria-hidden={flipped}>
+        <TitleBelow {...props} />
+      </div>
 
       {trailerOpen && embedUrl ? (
         <TrailerModal
