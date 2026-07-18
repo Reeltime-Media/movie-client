@@ -4,13 +4,24 @@ export interface PaymentIntentRead {
   intent_id: string;
   order_id: string;
   user_id: string | null;
+  method: string;
   kind: string;
   content_id: string | null;
   amount_usd: string;
   status: string;
-  checkout_url: string;
+  /** Baray only — redirect target. Bakong intents poll in place, no redirect. */
+  checkout_url: string | null;
   created_at: string;
   resolved_at: string | null;
+}
+
+export interface BakongPaymentIntentRead {
+  intent_id: string;
+  order_id: string;
+  qr_string: string;
+  amount_usd: string;
+  status: string;
+  created_at: string;
 }
 
 export function createMoviePaymentIntent(
@@ -20,6 +31,14 @@ export function createMoviePaymentIntent(
   return apiFetch<PaymentIntentRead>(`/payments/movies/${contentId}/intent`, {
     method: "POST",
     body: { custom_success_url: customSuccessUrl ?? null },
+  });
+}
+
+/** Inline Bakong KHQR checkout — no redirect. Poll getPaymentIntent(intent_id)
+ * for status; the server actively checks Bakong on each poll (no webhook). */
+export function createMovieBakongIntent(contentId: string): Promise<BakongPaymentIntentRead> {
+  return apiFetch<BakongPaymentIntentRead>(`/payments/movies/${contentId}/bakong-intent`, {
+    method: "POST",
   });
 }
 
@@ -33,7 +52,7 @@ export function createSeriesSubscriptionIntent(
   });
 }
 
-function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
+export function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
   return apiFetch<PaymentIntentRead>(`/payments/intents/${intentId}`);
 }
 

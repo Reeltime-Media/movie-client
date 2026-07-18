@@ -1,8 +1,9 @@
 "use client";
 
-import { Infinity, ShieldCheck, Star } from "lucide-react";
+import { CheckCircle2, Infinity, Loader2, ShieldCheck, Star } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CdnImage } from "@/components/ui/CdnImage";
 import Image from "next/image";
@@ -12,7 +13,12 @@ import { PageShell } from "@/components/layout/PageShell";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { getMovie, listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
-import { createMoviePaymentIntent } from "@/lib/api/payments";
+import {
+  createMovieBakongIntent,
+  createMoviePaymentIntent,
+  getPaymentIntent,
+} from "@/lib/api/payments";
+import { getPlaybackUrl } from "@/lib/api/playback";
 import { posterUrl } from "@/lib/api/client";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
@@ -27,6 +33,20 @@ import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { movieToPoster } from "@/lib/api/to-poster";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { ContentRead, ContentListItemRead } from "@/lib/api/types";
+
+const WatchPlayer = dynamic(
+  () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayer),
+  { ssr: false },
+);
+
+const BAKONG_POLL_MS = 4000;
+const BAKONG_TIMEOUT_MS = 10 * 60 * 1000;
+
+type BakongStatus = "idle" | "loading" | "waiting" | "succeeded" | "expired" | "error";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function MoviePayInner() {
   const router = useRouter();
@@ -43,6 +63,12 @@ function MoviePayInner() {
   const [loading, setLoading] = useState(Boolean(slug));
   const [error, setError] = useState("");
   const [paying, setPaying] = useState(false);
+
+  const [bakongStatus, setBakongStatus] = useState<BakongStatus>("idle");
+  const [bakongQrDataUrl, setBakongQrDataUrl] = useState<string | null>(null);
+  const [bakongError, setBakongError] = useState("");
+  const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
+  const bakongCancelledRef = useRef(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -87,6 +113,7 @@ function MoviePayInner() {
         movie.id,
         moviePaymentSuccessUrl(movie.slug),
       );
+      if (!intent.checkout_url) throw new Error("Payment provider did not return a checkout URL.");
       sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
       window.location.assign(safeCheckoutUrl(intent.checkout_url));
     } catch (err: unknown) {
@@ -95,6 +122,72 @@ function MoviePayInner() {
       setPaying(false);
     }
   }
+
+  const pollBakongIntent = useCallback(async (intentId: string, movieId: string) => {
+    const deadline = Date.now() + BAKONG_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      if (bakongCancelledRef.current) return;
+      await sleep(BAKONG_POLL_MS);
+      if (bakongCancelledRef.current) return;
+
+      let intent;
+      try {
+        intent = await getPaymentIntent(intentId);
+      } catch {
+        continue; // transient network error — keep polling until the deadline
+      }
+      if (bakongCancelledRef.current) return;
+
+      if (intent.status === "succeeded") {
+        try {
+          const url = await getPlaybackUrl(movieId);
+          if (!bakongCancelledRef.current) {
+            setPlaybackUrl(url);
+            setBakongStatus("succeeded");
+          }
+        } catch {
+          setBakongError("Payment succeeded, but we couldn't start playback. Please refresh the page.");
+          setBakongStatus("error");
+        }
+        return;
+      }
+      if (intent.status === "failed" || intent.status === "cancelled") {
+        setBakongError("Payment was not completed.");
+        setBakongStatus("error");
+        return;
+      }
+    }
+    if (!bakongCancelledRef.current) setBakongStatus("expired");
+  }, []);
+
+  async function handleBakongPay() {
+    if (!movie) return;
+    bakongCancelledRef.current = false;
+    setBakongStatus("loading");
+    setBakongError("");
+    setBakongQrDataUrl(null);
+    try {
+      const [intent, QRCode] = await Promise.all([
+        createMovieBakongIntent(movie.id),
+        import("qrcode"),
+      ]);
+      const dataUrl = await QRCode.toDataURL(intent.qr_string, { margin: 1, width: 320 });
+      if (bakongCancelledRef.current) return;
+      setBakongQrDataUrl(dataUrl);
+      setBakongStatus("waiting");
+      void pollBakongIntent(intent.intent_id, movie.id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not start Bakong checkout.";
+      setBakongError(msg);
+      setBakongStatus("error");
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      bakongCancelledRef.current = true;
+    };
+  }, []);
 
   if (loading) {
     return <CheckoutSpinner fullWidth />;
@@ -128,9 +221,13 @@ function MoviePayInner() {
       {/* 1. Top Section: Trailer & Top 10 */}
       <section className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_350px] gap-8 items-start">
-          {/* Left: Trailer */}
+          {/* Left: Trailer, or the movie itself once Bakong payment succeeds — no redirect */}
           <div className="w-full">
-            {trailerEmbed ? (
+            {playbackUrl ? (
+              <div className="w-full aspect-video overflow-hidden bg-black border border-border">
+                <WatchPlayer contentId={movie.id} hlsSrc={playbackUrl} title={movie.title} />
+              </div>
+            ) : trailerEmbed ? (
               <div className="w-full aspect-video overflow-hidden bg-black border border-border">
                 <TrailerEmbed embedUrl={trailerEmbed} title={movie.title} variant="frame-only" />
               </div>
@@ -206,27 +303,80 @@ function MoviePayInner() {
           {/* Right Column: Payment Box */}
           <div className="sticky top-24 rounded-xl border border-border bg-surface p-6">
             <h2 className="text-[18px] font-bold text-text mb-6">Payment</h2>
-            <div className="flex flex-col gap-4">
-              <button
-                type="button"
-                onClick={handlePay}
-                disabled={paying}
-                className="flex w-full items-center justify-center gap-3 rounded-lg bg-brand px-6 py-4 text-[16px] font-bold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {paying ? "Processing..." : `Buy Now for ${price}`}
-              </button>
-              <div className="flex flex-col items-center justify-center gap-2 text-[12px] text-text-muted mt-2">
-                <span className="flex items-center gap-1.5"><Infinity size={14} /> Lifetime Access</span>
-                <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Secure checkout</span>
-              </div>
 
-              <div className="mt-2 pt-6 border-t border-border flex flex-col items-center">
-                <div className="relative aspect-[1/1.1] w-full max-w-[60px] overflow-hidden">
-                  <Image src="/asset/payment/khqr.png" alt="KHQR Payment" fill className="object-contain" />
+            {bakongStatus === "succeeded" ? (
+              <div className="flex flex-col items-center gap-3 py-4 text-center">
+                <div className="grid h-12 w-12 place-items-center rounded-full border border-success/30 bg-success/10 text-success">
+                  <CheckCircle2 size={24} aria-hidden />
                 </div>
-                <p className="mt-3 text-[12px] font-medium text-text-muted">Pay with KHQR</p>
+                <p className="text-[14px] font-semibold text-text">Payment successful</p>
+                <p className="text-[12px] text-text-muted">Enjoy the movie — it&apos;s playing above.</p>
               </div>
-            </div>
+            ) : bakongStatus === "waiting" || bakongStatus === "loading" ? (
+              <div className="flex flex-col items-center gap-3">
+                {bakongQrDataUrl ? (
+                  <>
+                    <div className="relative aspect-square w-full max-w-[220px] overflow-hidden rounded-lg border border-border bg-white p-2">
+                      <Image src={bakongQrDataUrl} alt="Bakong KHQR code" fill className="object-contain" unoptimized />
+                    </div>
+                    <p className="flex items-center gap-1.5 text-[13px] font-medium text-text">
+                      <Loader2 size={14} className="animate-spin" aria-hidden /> Waiting for payment…
+                    </p>
+                    <p className="text-center text-[12px] text-text-muted">
+                      Open your banking app and scan to pay {price}.
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 py-6 text-[13px] text-text-muted">
+                    <Loader2 size={14} className="animate-spin" aria-hidden /> Generating QR code…
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    bakongCancelledRef.current = true;
+                    setBakongStatus("idle");
+                    setBakongQrDataUrl(null);
+                  }}
+                  className="text-[12px] font-medium text-text-muted transition-colors hover:text-text"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <button
+                  type="button"
+                  onClick={handlePay}
+                  disabled={paying}
+                  className="flex w-full items-center justify-center gap-3 rounded-lg bg-brand px-6 py-4 text-[16px] font-bold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {paying ? "Processing..." : `Buy Now for ${price}`}
+                </button>
+                <div className="flex flex-col items-center justify-center gap-2 text-[12px] text-text-muted mt-2">
+                  <span className="flex items-center gap-1.5"><Infinity size={14} /> Lifetime Access</span>
+                  <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Secure checkout</span>
+                </div>
+
+                <div className="mt-2 pt-6 border-t border-border flex flex-col items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleBakongPay}
+                    className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-transparent px-6 py-3 text-[14px] font-bold text-text transition-colors hover:bg-surface-elevated"
+                  >
+                    <div className="relative aspect-[1/1.1] h-6 w-6 overflow-hidden shrink-0">
+                      <Image src="/asset/payment/khqr.png" alt="" fill className="object-contain" aria-hidden />
+                    </div>
+                    Pay with Bakong KHQR
+                  </button>
+                  {bakongStatus === "expired" ? (
+                    <p className="text-[12px] text-danger">QR code expired — try again above.</p>
+                  ) : bakongStatus === "error" ? (
+                    <p className="text-[12px] text-danger">{bakongError}</p>
+                  ) : null}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -249,28 +399,32 @@ function MoviePayInner() {
         )}
       </section>
 
-      {/* Mobile sticky pay bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur-md sm:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
-          <div className="min-w-0 shrink-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-              Lifetime Access
-            </p>
-            <p className="text-[19px] font-extrabold leading-none tracking-tight text-text">
-              {price}
-            </p>
+      {/* Mobile sticky pay bar — hidden while a Bakong QR/checkout is in view above */}
+      {bakongStatus === "idle" || bakongStatus === "expired" || bakongStatus === "error" ? (
+        <>
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur-md sm:hidden">
+            <div className="mx-auto flex max-w-7xl items-center gap-3">
+              <div className="min-w-0 shrink-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+                  Lifetime Access
+                </p>
+                <p className="text-[19px] font-extrabold leading-none tracking-tight text-text">
+                  {price}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handlePay}
+                disabled={paying}
+                className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {paying ? "Processing…" : "Buy Now"}
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={handlePay}
-            disabled={paying}
-            className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {paying ? "Processing…" : "Buy Now"}
-          </button>
-        </div>
-      </div>
-      <div className="h-24 sm:hidden" aria-hidden />
+          <div className="h-24 sm:hidden" aria-hidden />
+        </>
+      ) : null}
     </PageShell>
   );
 }

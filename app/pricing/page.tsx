@@ -107,6 +107,7 @@ function PricingPageInner() {
           episode: lockedEpisode,
         }),
       );
+      if (!intent.checkout_url) throw new Error("Payment provider did not return a checkout URL.");
       sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
       window.location.assign(safeCheckoutUrl(intent.checkout_url));
     } catch (err: unknown) {
