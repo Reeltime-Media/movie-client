@@ -33,6 +33,7 @@ export function BannerCard({
     <Link
       href={watchHref}
       aria-label={cardLabel}
+      suppressHydrationWarning
       className="group block cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
       <div className="rt-card-hover relative overflow-hidden rounded-md border border-transparent group-hover:border-white/20 bg-surface-elevated">
@@ -70,15 +71,15 @@ export function BannerCard({
           <div className="min-w-0">
             {hasKm ? (
               <>
-                <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white">
+                <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white" suppressHydrationWarning>
                   {titleKm}
                 </p>
-                <p className="mt-0.5 line-clamp-1 text-[13px] font-bold leading-snug text-white">
+                <p className="mt-0.5 line-clamp-1 text-[13px] font-bold leading-snug text-white" suppressHydrationWarning>
                   {title}
                 </p>
               </>
             ) : (
-              <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white">
+              <p className="line-clamp-2 text-[13px] font-bold leading-snug text-white" suppressHydrationWarning>
                 {title}
               </p>
             )}

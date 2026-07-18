@@ -22,6 +22,7 @@ export interface BakongPaymentIntentRead {
   amount_usd: string;
   status: string;
   created_at: string;
+  merchant_name: string;
 }
 
 export function createMoviePaymentIntent(

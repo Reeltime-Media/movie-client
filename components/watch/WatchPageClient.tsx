@@ -5,9 +5,10 @@ import Link from "next/link";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { posterThumbUrl } from "@/lib/api/client";
 import dynamic from "next/dynamic";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { PageShell } from "@/components/layout/PageShell";
+import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
@@ -62,8 +63,9 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     playbackLoading,
     resumeTime,
     priceLabel,
-    payHref,
   } = useMovieWatch(slug, { initialMovie });
+
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   // Keep all hooks above the early returns below so hook order stays stable
   // across the loading → loaded transition.
@@ -175,13 +177,14 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
 
                   {!canPlay ? (
                     <div className="pt-1">
-                      <Link
-                        href={payHref}
-                        className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutOpen(true)}
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
                       >
                         <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
                         {priceLabel ? `Buy · ${priceLabel}` : "Buy to watch"}
-                      </Link>
+                      </button>
                     </div>
                   ) : null}
                 </div>
@@ -276,6 +279,16 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
       </section>
 
       <WatchDiscoveryRails movieSlug={movie.slug} genres={movie.genres} />
+
+      {checkoutOpen ? (
+        <BakongCheckoutModal
+          contentId={movie.id}
+          title={title}
+          priceLabel={priceLabel ?? undefined}
+          watchSlug={movie.slug}
+          onClose={() => setCheckoutOpen(false)}
+        />
+      ) : null}
     </PageShell>
   );
 }

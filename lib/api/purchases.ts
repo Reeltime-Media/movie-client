@@ -1,12 +1,18 @@
 import { apiFetch } from "./client";
-import { clientCached, CLIENT_CATALOG_TTL_MS } from "./client-cache";
+import { invalidateClientCache } from "./client-cache";
 import { listMovies } from "./movies";
 import type { ContentListItemRead, PurchaseRead } from "./types";
 
+const PURCHASES_CACHE_KEY = "user:purchases";
+
+/** Fresh every time — entitlement must not lag behind a just-completed payment. */
 export function listPurchases(): Promise<PurchaseRead[]> {
-  return clientCached("user:purchases", CLIENT_CATALOG_TTL_MS, () =>
-    apiFetch<PurchaseRead[]>("/purchases/"),
-  );
+  return apiFetch<PurchaseRead[]>("/purchases/");
+}
+
+/** Clear any legacy cache key after checkout (safe no-op if unused). */
+export function invalidatePurchasesCache(): void {
+  invalidateClientCache(PURCHASES_CACHE_KEY);
 }
 
 /** Movies the signed-in user has purchased. */

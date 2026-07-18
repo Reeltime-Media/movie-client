@@ -12,10 +12,9 @@ import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 import { PageShell } from "@/components/layout/PageShell";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { getMovie, listMovies } from "@/lib/api/movies";
-import { listPurchases } from "@/lib/api/purchases";
+import { invalidatePurchasesCache, listPurchases } from "@/lib/api/purchases";
 import {
   createMovieBakongIntent,
-  createMoviePaymentIntent,
   getPaymentIntent,
 } from "@/lib/api/payments";
 import { getPlaybackUrl } from "@/lib/api/playback";
@@ -24,12 +23,11 @@ import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { movieCardHref, movieWatchHref } from "@/lib/movie-routes";
-import { moviePaymentSuccessUrl, PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
-import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { swallow } from "@/lib/log";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import { BannerCard } from "@/components/catalog/BannerCard";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
+import { KhqrCard } from "@/components/pay/KhqrCard";
 import { movieToPoster } from "@/lib/api/to-poster";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { ContentRead, ContentListItemRead } from "@/lib/api/types";
@@ -62,13 +60,15 @@ function MoviePayInner() {
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(Boolean(slug));
   const [error, setError] = useState("");
-  const [paying, setPaying] = useState(false);
 
   const [bakongStatus, setBakongStatus] = useState<BakongStatus>("idle");
   const [bakongQrDataUrl, setBakongQrDataUrl] = useState<string | null>(null);
+  const [bakongAmountUsd, setBakongAmountUsd] = useState("");
+  const [bakongMerchantName, setBakongMerchantName] = useState("Reeltime Media");
   const [bakongError, setBakongError] = useState("");
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const bakongCancelledRef = useRef(false);
+  const paymentBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -104,25 +104,6 @@ function MoviePayInner() {
     router.replace(movieWatchHref(movie.slug));
   }, [isAdmin, movie, loggedIn, router]);
 
-  async function handlePay() {
-    if (!movie) return;
-    setPaying(true);
-    setError("");
-    try {
-      const intent = await createMoviePaymentIntent(
-        movie.id,
-        moviePaymentSuccessUrl(movie.slug),
-      );
-      if (!intent.checkout_url) throw new Error("Payment provider did not return a checkout URL.");
-      sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
-      window.location.assign(safeCheckoutUrl(intent.checkout_url));
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Payment failed. Please try again.";
-      setError(msg);
-      setPaying(false);
-    }
-  }
-
   const pollBakongIntent = useCallback(async (intentId: string, movieId: string) => {
     const deadline = Date.now() + BAKONG_TIMEOUT_MS;
     while (Date.now() < deadline) {
@@ -139,6 +120,7 @@ function MoviePayInner() {
       if (bakongCancelledRef.current) return;
 
       if (intent.status === "succeeded") {
+        invalidatePurchasesCache();
         try {
           const url = await getPlaybackUrl(movieId);
           if (!bakongCancelledRef.current) {
@@ -166,14 +148,22 @@ function MoviePayInner() {
     setBakongStatus("loading");
     setBakongError("");
     setBakongQrDataUrl(null);
+    paymentBoxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     try {
       const [intent, QRCode] = await Promise.all([
         createMovieBakongIntent(movie.id),
         import("qrcode"),
       ]);
-      const dataUrl = await QRCode.toDataURL(intent.qr_string, { margin: 1, width: 320 });
+      const dataUrl = await QRCode.toDataURL(intent.qr_string, {
+        margin: 1,
+        width: 220,
+        errorCorrectionLevel: "H",
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
       if (bakongCancelledRef.current) return;
       setBakongQrDataUrl(dataUrl);
+      setBakongAmountUsd(String(intent.amount_usd));
+      if (intent.merchant_name?.trim()) setBakongMerchantName(intent.merchant_name.trim());
       setBakongStatus("waiting");
       void pollBakongIntent(intent.intent_id, movie.id);
     } catch (err: unknown) {
@@ -301,7 +291,7 @@ function MoviePayInner() {
           </div>
 
           {/* Right Column: Payment Box */}
-          <div className="sticky top-24 rounded-xl border border-border bg-surface p-6">
+          <div ref={paymentBoxRef} className="sticky top-24 rounded-xl border border-border bg-surface p-6">
             <h2 className="text-[18px] font-bold text-text mb-6">Payment</h2>
 
             {bakongStatus === "succeeded" ? (
@@ -314,23 +304,19 @@ function MoviePayInner() {
               </div>
             ) : bakongStatus === "waiting" || bakongStatus === "loading" ? (
               <div className="flex flex-col items-center gap-3">
-                {bakongQrDataUrl ? (
-                  <>
-                    <div className="relative aspect-square w-full max-w-[220px] overflow-hidden rounded-lg border border-border bg-white p-2">
-                      <Image src={bakongQrDataUrl} alt="Bakong KHQR code" fill className="object-contain" unoptimized />
-                    </div>
-                    <p className="flex items-center gap-1.5 text-[13px] font-medium text-text">
-                      <Loader2 size={14} className="animate-spin" aria-hidden /> Waiting for payment…
-                    </p>
-                    <p className="text-center text-[12px] text-text-muted">
-                      Open your banking app and scan to pay {price}.
-                    </p>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 py-6 text-[13px] text-text-muted">
-                    <Loader2 size={14} className="animate-spin" aria-hidden /> Generating QR code…
-                  </div>
-                )}
+                <KhqrCard
+                  receiverName={bakongMerchantName}
+                  amount={bakongAmountUsd || (movie.price_usd ? String(parseFloat(movie.price_usd)) : "")}
+                  currency="USD"
+                  qrDataUrl={bakongQrDataUrl}
+                />
+                <p className="flex items-center gap-1.5 text-[13px] font-medium text-text">
+                  <Loader2 size={14} className="animate-spin" aria-hidden />
+                  {bakongQrDataUrl ? "Waiting for payment…" : "Generating KHQR…"}
+                </p>
+                <p className="text-center text-[12px] text-text-muted">
+                  Scan with Bakong or any banking app to pay {price}.
+                </p>
                 <button
                   type="button"
                   onClick={() => {
@@ -347,34 +333,23 @@ function MoviePayInner() {
               <div className="flex flex-col gap-4">
                 <button
                   type="button"
-                  onClick={handlePay}
-                  disabled={paying}
-                  className="flex w-full items-center justify-center gap-3 rounded-lg bg-brand px-6 py-4 text-[16px] font-bold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={handleBakongPay}
+                  className="flex w-full items-center justify-center gap-3 rounded-lg bg-brand px-6 py-4 text-[16px] font-bold text-white transition-colors hover:bg-brand-hover"
                 >
-                  {paying ? "Processing..." : `Buy Now for ${price}`}
+                  <div className="relative aspect-[1/1.1] h-6 w-6 overflow-hidden shrink-0">
+                    <Image src="/asset/payment/khqr.png" alt="" fill className="object-contain" aria-hidden />
+                  </div>
+                  Buy Now for {price}
                 </button>
                 <div className="flex flex-col items-center justify-center gap-2 text-[12px] text-text-muted mt-2">
                   <span className="flex items-center gap-1.5"><Infinity size={14} /> Lifetime Access</span>
-                  <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Secure checkout</span>
+                  <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Scan KHQR to pay</span>
                 </div>
-
-                <div className="mt-2 pt-6 border-t border-border flex flex-col items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleBakongPay}
-                    className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-transparent px-6 py-3 text-[14px] font-bold text-text transition-colors hover:bg-surface-elevated"
-                  >
-                    <div className="relative aspect-[1/1.1] h-6 w-6 overflow-hidden shrink-0">
-                      <Image src="/asset/payment/khqr.png" alt="" fill className="object-contain" aria-hidden />
-                    </div>
-                    Pay with Bakong KHQR
-                  </button>
-                  {bakongStatus === "expired" ? (
-                    <p className="text-[12px] text-danger">QR code expired — try again above.</p>
-                  ) : bakongStatus === "error" ? (
-                    <p className="text-[12px] text-danger">{bakongError}</p>
-                  ) : null}
-                </div>
+                {bakongStatus === "expired" ? (
+                  <p className="text-center text-[12px] text-danger">QR code expired — try again above.</p>
+                ) : bakongStatus === "error" ? (
+                  <p className="text-center text-[12px] text-danger">{bakongError}</p>
+                ) : null}
               </div>
             )}
           </div>
@@ -414,11 +389,13 @@ function MoviePayInner() {
               </div>
               <button
                 type="button"
-                onClick={handlePay}
-                disabled={paying}
-                className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={handleBakongPay}
+                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3.5 text-[14px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover"
               >
-                {paying ? "Processing…" : "Buy Now"}
+                <div className="relative aspect-[1/1.1] h-5 w-5 overflow-hidden shrink-0">
+                  <Image src="/asset/payment/khqr.png" alt="" fill className="object-contain" aria-hidden />
+                </div>
+                Buy Now
               </button>
             </div>
           </div>

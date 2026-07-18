@@ -52,7 +52,10 @@ export function movieToPoster(
     imageSrc: posterThumbUrl(movie.poster_key, 400) ?? posterUrl(movie.poster_key),
     posterTitle: movie.title.toUpperCase(),
     titleBelow: movie.title,
-    titleKm: movie.title_km ?? null,
+    // Always pass a string or null (never undefined) so SSR/client props match.
+    titleKm: typeof movie.title_km === "string" && movie.title_km.trim()
+      ? movie.title_km.trim()
+      : null,
     posterGradient: gradient,
     accentColor: accent,
     badge: isOwned && !isFree ? { kind: "owned", label: "OWNED" } : { kind: "none" },
@@ -93,7 +96,9 @@ export function seriesToPoster(
     imageSrc: posterThumbUrl(series.poster_key, 400) ?? posterUrl(series.poster_key),
     posterTitle: series.title.toUpperCase(),
     titleBelow: series.title,
-    titleKm: series.title_km ?? null,
+    titleKm: typeof series.title_km === "string" && series.title_km.trim()
+      ? series.title_km.trim()
+      : null,
     posterGradient: gradient,
     accentColor: accent,
     subtitle: { text: "A SERIES", color: accent },
@@ -117,7 +122,9 @@ export function movieToBanner(
     imageSrc: posterUrl(movie.banner_key) ?? posterUrl(movie.poster_key),
     imageAlt: movie.title_km ? `${movie.title_km} · ${movie.title}` : movie.title,
     title: movie.title,
-    titleKm: movie.title_km ?? null,
+    titleKm: typeof movie.title_km === "string" && movie.title_km.trim()
+      ? movie.title_km.trim()
+      : null,
     year: movie.release_year,
     badgeLabel: price,
     watchHref: movieCardHref(movie, owned, isAdmin),
@@ -129,7 +136,9 @@ export function seriesToBanner(series: SeriesRead, badgeLabel = "រឿងភា
     imageSrc: posterUrl(series.banner_key) ?? posterUrl(series.poster_key),
     imageAlt: series.title_km ? `${series.title_km} · ${series.title}` : series.title,
     title: series.title,
-    titleKm: series.title_km ?? null,
+    titleKm: typeof series.title_km === "string" && series.title_km.trim()
+      ? series.title_km.trim()
+      : null,
     year: series.release_year,
     badgeLabel,
     watchHref: `/watch/series/${series.slug}/1/1`,

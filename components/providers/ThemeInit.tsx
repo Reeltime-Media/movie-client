@@ -1,23 +1,6 @@
-"use client";
-
-import { LOCALE_STORAGE_KEY } from "@/lib/i18n";
-
-export function ThemeInit() {
-  if (typeof document !== "undefined") {
-    try {
-      const stored = localStorage.getItem("reeltime-theme");
-      document.documentElement.dataset.theme =
-        stored === "light" || stored === "dark" ? stored : "dark";
-    } catch {
-      document.documentElement.dataset.theme = "dark";
-    }
-
-    try {
-      const loc = localStorage.getItem(LOCALE_STORAGE_KEY);
-      document.documentElement.lang = loc === "km" ? "km" : "en";
-    } catch {}
-  }
-
-  return null;
-}
-
+/**
+ * Blocking bootstrap for theme + locale on <html>.
+ * Must run before paint (inline in layout) — not during React render —
+ * so SSR HTML and the client's first paint stay aligned.
+ */
+export const THEME_LOCALE_BOOTSTRAP = `(function(){try{var t=localStorage.getItem("reeltime-theme");document.documentElement.dataset.theme=(t==="light"||t==="dark")?t:"dark";var l=localStorage.getItem("reeltime-locale");document.documentElement.lang=l==="km"?"km":"en";}catch(e){document.documentElement.dataset.theme="dark";}})();`;

@@ -39,3 +39,9 @@ export function clientCached<T>(key: string, ttlMs: number, fn: () => Promise<T>
   inflight.set(key, p);
   return p;
 }
+
+/** Drop a cached entry (e.g. purchases right after checkout succeeds). */
+export function invalidateClientCache(key: string): void {
+  store.delete(key);
+  inflight.delete(key);
+}

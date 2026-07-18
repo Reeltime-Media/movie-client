@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Inter, Kantumruy_Pro } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { DevToolsGuard } from "@/components/providers/DevToolsGuard";
 import { FavoritesProvider } from "@/components/providers/FavoritesProvider";
 import { GoogleAuthProvider } from "@/components/providers/GoogleAuthProvider";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
-import { ThemeInit } from "@/components/providers/ThemeInit";
+import { THEME_LOCALE_BOOTSTRAP } from "@/components/providers/ThemeInit";
 
 // Both are variable fonts — omitting `weight` ships a single variable file per
 // family that covers the full weight range (incl. 500), instead of one static
@@ -42,7 +43,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 xl:pb-0">
-        <ThemeInit />
+        <Script
+          id="theme-locale-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_LOCALE_BOOTSTRAP }}
+        />
         <DevToolsGuard />
         <GoogleAuthProvider>
           <LocaleProvider>

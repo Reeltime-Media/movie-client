@@ -1,16 +1,35 @@
 "use client";
+"use no memo";
 
 import { Play, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { useI18n } from "@/components/providers/LocaleProvider";
+import { isMoviePayHref, movieSlugFromPayHref } from "@/lib/movie-routes";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import type { PosterCardProps } from "@/types/poster-card";
 
 export type { PosterCardProps } from "@/types/poster-card";
+
+/** Normalize Khmer title — treat whitespace/ZWSP-only as missing. */
+function kmTitle(titleKm: string | null | undefined): string | null {
+  if (typeof titleKm !== "string") return null;
+  const trimmed = titleKm.replace(/\u200b/g, "").trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function cardAriaLabel(
+  titleKm: string | null | undefined,
+  titleBelow: string,
+  year?: number | null,
+): string {
+  const km = kmTitle(titleKm);
+  return `${km ? `${km} · ` : ""}${titleBelow}${year ? ` (${year})` : ""}`;
+}
 
 /** Only one flip card open at a time across the whole page. */
 let activeFlipId: string | null = null;
@@ -126,18 +145,24 @@ function PosterFace({
 }
 
 function TitleBelow({ titleBelow, titleKm, year, entitlement }: PosterCardProps) {
-  const hasKm = Boolean(titleKm?.trim());
+  const km = kmTitle(titleKm);
   const titleClass =
     "truncate text-[15px] font-semibold leading-snug text-text group-hover:text-text/90";
   return (
     <div className="mt-2 min-w-0">
-      {hasKm ? (
+      {km ? (
         <>
-          <p className={titleClass}>{titleKm}</p>
-          <p className={`mt-0.5 ${titleClass}`}>{titleBelow}</p>
+          <p className={titleClass} suppressHydrationWarning>
+            {km}
+          </p>
+          <p className={`mt-0.5 ${titleClass}`} suppressHydrationWarning>
+            {titleBelow}
+          </p>
         </>
       ) : (
-        <p className={titleClass}>{titleBelow}</p>
+        <p className={titleClass} suppressHydrationWarning>
+          {titleBelow}
+        </p>
       )}
       {year ? (
         <p className="mt-0.5 text-[11px] font-medium text-text-muted">{year}</p>
@@ -203,12 +228,13 @@ function TrailerModal({
 /** Classic card — whole poster is a link (series and other non-flip uses). */
 function FlatPosterCard(props: PosterCardProps) {
   const { titleBelow, titleKm, watchHref = "#", year } = props;
-  const cardLabel = `${titleKm?.trim() ? `${titleKm} · ` : ""}${titleBelow}${year ? ` (${year})` : ""}`;
+  const label = cardAriaLabel(titleKm, titleBelow, year);
 
   return (
     <Link
       href={watchHref}
-      aria-label={cardLabel}
+      aria-label={label}
+      suppressHydrationWarning
       className="group block cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
       <PosterFace {...props} />
@@ -237,15 +263,19 @@ function FlipPosterCard(props: PosterCardProps) {
   );
   const flipped = activeId === flipId;
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  const cardLabel = `${titleKm?.trim() ? `${titleKm} · ` : ""}${titleBelow}${year ? ` (${year})` : ""}`;
+  const km = kmTitle(titleKm);
+  const cardLabel = cardAriaLabel(titleKm, titleBelow, year);
   const embedUrl = youtubeEmbedUrl(trailerUrl, { autoplay: true });
   const buyLabel =
     entitlement?.kind === "price"
       ? `${t("cardBuy")} · ${entitlement.value}`
       : t("heroWatchNow");
-  const hasKm = Boolean(titleKm?.trim());
-  const trailerTitle = hasKm ? `${titleKm} · ${titleBelow}` : titleBelow;
+  const trailerTitle = km ? `${km} · ${titleBelow}` : titleBelow;
+  const paySlug = isMoviePayHref(watchHref) ? movieSlugFromPayHref(watchHref) : null;
+  const needsCheckout = Boolean(contentId && paySlug);
+  const priceLabel = entitlement?.kind === "price" ? entitlement.value : undefined;
 
   return (
     <div className="group">
@@ -261,6 +291,7 @@ function FlipPosterCard(props: PosterCardProps) {
             role="button"
             tabIndex={0}
             aria-label={cardLabel}
+            suppressHydrationWarning
             onClick={() => setActiveFlipId(flipId)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -287,17 +318,26 @@ function FlipPosterCard(props: PosterCardProps) {
             ].join(" ")}
           >
             <div className="min-w-0">
-              {hasKm ? (
+              {km ? (
                 <>
-                  <p className="line-clamp-2 text-[13px] font-bold leading-snug text-text">
-                    {titleKm}
+                  <p
+                    className="line-clamp-2 text-[13px] font-bold leading-snug text-text"
+                    suppressHydrationWarning
+                  >
+                    {km}
                   </p>
-                  <p className="mt-0.5 line-clamp-2 text-[13px] font-bold leading-snug text-text">
+                  <p
+                    className="mt-0.5 line-clamp-2 text-[13px] font-bold leading-snug text-text"
+                    suppressHydrationWarning
+                  >
                     {titleBelow}
                   </p>
                 </>
               ) : (
-                <p className="line-clamp-3 text-[13px] font-bold leading-snug text-text">
+                <p
+                  className="line-clamp-3 text-[13px] font-bold leading-snug text-text"
+                  suppressHydrationWarning
+                >
                   {titleBelow}
                 </p>
               )}
@@ -307,14 +347,29 @@ function FlipPosterCard(props: PosterCardProps) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Link
-                href={watchHref}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center justify-center gap-1.5 rounded-md bg-brand px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
-              >
-                <Play size={13} className="fill-white" aria-hidden />
-                {buyLabel}
-              </Link>
+              {needsCheckout && contentId && paySlug ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveFlipId(null);
+                    setCheckoutOpen(true);
+                  }}
+                  className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md bg-brand px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
+                >
+                  <Play size={13} className="fill-white" aria-hidden />
+                  {buyLabel}
+                </button>
+              ) : (
+                <Link
+                  href={watchHref}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-brand px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
+                >
+                  <Play size={13} className="fill-white" aria-hidden />
+                  {buyLabel}
+                </Link>
+              )}
               {embedUrl ? (
                 <button
                   type="button"
@@ -339,6 +394,16 @@ function FlipPosterCard(props: PosterCardProps) {
           embedUrl={embedUrl}
           title={trailerTitle}
           onClose={() => setTrailerOpen(false)}
+        />
+      ) : null}
+
+      {checkoutOpen && contentId && paySlug ? (
+        <BakongCheckoutModal
+          contentId={contentId}
+          title={trailerTitle}
+          priceLabel={priceLabel}
+          watchSlug={paySlug}
+          onClose={() => setCheckoutOpen(false)}
         />
       ) : null}
     </div>
