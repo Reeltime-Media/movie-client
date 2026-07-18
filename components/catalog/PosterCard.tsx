@@ -2,7 +2,7 @@
 
 import { Play, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
@@ -11,6 +11,27 @@ import { youtubeEmbedUrl } from "@/lib/youtube";
 import type { PosterCardProps } from "@/types/poster-card";
 
 export type { PosterCardProps } from "@/types/poster-card";
+
+/** Only one flip card open at a time across the whole page. */
+let activeFlipId: string | null = null;
+const flipListeners = new Set<() => void>();
+
+function subscribeActiveFlip(listener: () => void): () => void {
+  flipListeners.add(listener);
+  return () => {
+    flipListeners.delete(listener);
+  };
+}
+
+function getActiveFlipId(): string | null {
+  return activeFlipId;
+}
+
+function setActiveFlipId(id: string | null): void {
+  if (activeFlipId === id) return;
+  activeFlipId = id;
+  for (const listener of flipListeners) listener();
+}
 
 /** Poster artwork + badges — shared by the flat card and the flip card front. */
 function PosterFace({
@@ -107,7 +128,7 @@ function PosterFace({
 function TitleBelow({ titleBelow, year, entitlement }: PosterCardProps) {
   return (
     <div className="mt-2 min-w-0">
-      <p className="truncate text-[13px] font-semibold leading-snug text-text group-hover:text-text/90">
+      <p className="truncate text-[15px] font-semibold leading-snug text-text group-hover:text-text/90">
         {titleBelow}
       </p>
       {year ? (
@@ -190,9 +211,22 @@ function FlatPosterCard(props: PosterCardProps) {
 
 /** Movie card — click flips to a back face with Buy / View-trailer actions. */
 function FlipPosterCard(props: PosterCardProps) {
-  const { titleBelow, watchHref = "#", year, entitlement, trailerUrl } = props;
+  const {
+    contentId,
+    titleBelow,
+    watchHref = "#",
+    year,
+    entitlement,
+    trailerUrl,
+  } = props;
   const { t } = useI18n();
-  const [flipped, setFlipped] = useState(false);
+  const flipId = contentId ?? watchHref ?? titleBelow;
+  const activeId = useSyncExternalStore(
+    subscribeActiveFlip,
+    getActiveFlipId,
+    () => null,
+  );
+  const flipped = activeId === flipId;
   const [trailerOpen, setTrailerOpen] = useState(false);
 
   const cardLabel = `${titleBelow}${year ? ` (${year})` : ""}`;
@@ -211,16 +245,16 @@ function FlipPosterCard(props: PosterCardProps) {
             flipped ? "transform-[rotateY(180deg)]" : "",
           ].join(" ")}
         >
-          {/* Front — poster; click flips */}
+          {/* Front — poster; click flips (closes any other open card) */}
           <div
             role="button"
             tabIndex={0}
             aria-label={cardLabel}
-            onClick={() => setFlipped(true)}
+            onClick={() => setActiveFlipId(flipId)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                setFlipped((f) => !f);
+                setActiveFlipId(flipped ? null : flipId);
               }
             }}
             aria-hidden={flipped}
@@ -234,7 +268,7 @@ function FlipPosterCard(props: PosterCardProps) {
 
           {/* Back — actions; click background flips back */}
           <div
-            onClick={() => setFlipped(false)}
+            onClick={() => setActiveFlipId(null)}
             aria-hidden={!flipped}
             className={[
               "absolute inset-0 flex cursor-pointer flex-col justify-between border border-border bg-surface p-3 backface-hidden transform-[rotateY(180deg)]",
