@@ -44,18 +44,6 @@ function formatAmount(amount: string, currency: "USD" | "KHR"): string {
   }).format(n);
 }
 
-export function parsePriceLabel(priceLabel?: string | null): {
-  amount: string;
-  currency: "USD" | "KHR";
-} {
-  if (!priceLabel?.trim()) return { amount: "", currency: "USD" };
-  const raw = priceLabel.trim();
-  if (/khr/i.test(raw) || raw.includes("៛")) {
-    return { amount: raw.replace(/[^\d.]/g, ""), currency: "KHR" };
-  }
-  return { amount: raw.replace(/[^\d.]/g, ""), currency: "USD" };
-}
-
 export function KhqrCard({
   receiverName,
   amount,

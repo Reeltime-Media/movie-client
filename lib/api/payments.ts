@@ -25,16 +25,6 @@ export interface BakongPaymentIntentRead {
   merchant_name: string;
 }
 
-export function createMoviePaymentIntent(
-  contentId: string,
-  customSuccessUrl?: string,
-): Promise<PaymentIntentRead> {
-  return apiFetch<PaymentIntentRead>(`/payments/movies/${contentId}/intent`, {
-    method: "POST",
-    body: { custom_success_url: customSuccessUrl ?? null },
-  });
-}
-
 /** Inline Bakong KHQR checkout — no redirect. Poll getPaymentIntent(intent_id)
  * for status; the server actively checks Bakong on each poll (no webhook). */
 export function createMovieBakongIntent(contentId: string): Promise<BakongPaymentIntentRead> {

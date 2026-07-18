@@ -1,6 +1,5 @@
 export type { Locale } from "./locale-store";
 export {
-  LOCALE_STORAGE_KEY,
   subscribeLocale,
   getServerLocaleSnapshot,
   getLocaleSnapshot,

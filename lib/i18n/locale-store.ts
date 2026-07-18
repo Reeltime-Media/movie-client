@@ -1,6 +1,6 @@
 export type Locale = "en" | "km";
 
-export const LOCALE_STORAGE_KEY = "reeltime-locale";
+const LOCALE_STORAGE_KEY = "reeltime-locale";
 
 const subscribers = new Set<() => void>();
 
