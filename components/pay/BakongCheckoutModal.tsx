@@ -8,6 +8,7 @@ import { KhqrCard } from "@/components/pay/KhqrCard";
 import { createMovieBakongIntent, getPaymentIntent } from "@/lib/api/payments";
 import { invalidatePurchasesCache } from "@/lib/api/purchases";
 import { movieWatchHref } from "@/lib/movie-routes";
+import { qrStringToDataUrl, warmQrCodeModule } from "@/lib/pay/khqr-image";
 import { prefetchPlaybackUrl } from "@/lib/watch/playback-cache";
 
 const BAKONG_POLL_MS = 4000;
@@ -77,20 +78,13 @@ export function BakongCheckoutModal({
   useEffect(() => {
     closedRef.current = false;
     const gen = ++genRef.current;
+    void warmQrCodeModule();
 
     (async () => {
       try {
-        const [intent, QRCode] = await Promise.all([
-          createMovieBakongIntent(contentId),
-          import("qrcode"),
-        ]);
+        const intent = await createMovieBakongIntent(contentId);
         if (closedRef.current || gen !== genRef.current) return;
-        const dataUrl = await QRCode.toDataURL(intent.qr_string, {
-          margin: 1,
-          width: 220,
-          errorCorrectionLevel: "H",
-          color: { dark: "#000000", light: "#FFFFFF" },
-        });
+        const dataUrl = await qrStringToDataUrl(intent.qr_string);
         if (closedRef.current || gen !== genRef.current) return;
         setQrDataUrl(dataUrl);
         setAmountUsd(String(intent.amount_usd));
@@ -99,7 +93,15 @@ export function BakongCheckoutModal({
         void pollIntent(intent.intent_id, gen);
       } catch (err: unknown) {
         if (closedRef.current || gen !== genRef.current) return;
-        setError(err instanceof Error ? err.message : "Could not start Bakong checkout.");
+        const statusCode =
+          err && typeof err === "object" && "status" in err
+            ? Number((err as { status: unknown }).status)
+            : 0;
+        if (statusCode === 429) {
+          setError("Too many checkout attempts. Please wait a moment and try again.");
+        } else {
+          setError(err instanceof Error ? err.message : "Could not start Bakong checkout.");
+        }
         setStatus("error");
       }
     })();

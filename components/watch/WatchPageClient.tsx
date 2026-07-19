@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { posterThumbUrl } from "@/lib/api/core";
 import dynamic from "next/dynamic";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
@@ -15,6 +15,7 @@ import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody } from "@/components/watch/WatchPageSection";
 import { useMovieWatch } from "@/hooks/watch/use-movie-watch";
 import type { ContentRead } from "@/lib/api/types";
+import { warmQrCodeModule } from "@/lib/pay/khqr-image";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 
 const WatchPlayerSkeleton = dynamic(
@@ -66,6 +67,10 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   } = useMovieWatch(slug, { initialMovie });
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  useEffect(() => {
+    if (!canPlay && !loading) void warmQrCodeModule();
+  }, [canPlay, loading]);
 
   // Keep all hooks above the early returns below so hook order stays stable
   // across the loading → loaded transition.

@@ -10,6 +10,7 @@ import { CdnImage } from "@/components/ui/CdnImage";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { isMoviePayHref, movieSlugFromPayHref } from "@/lib/movie-routes";
+import { warmQrCodeModule } from "@/lib/pay/khqr-image";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import type { PosterCardProps } from "@/types/poster-card";
 
@@ -280,6 +281,10 @@ function FlipPosterCard(props: PosterCardProps) {
   const paySlug = isMoviePayHref(watchHref) ? movieSlugFromPayHref(watchHref) : null;
   const needsCheckout = Boolean(contentId && paySlug);
   const priceLabel = entitlement?.kind === "price" ? entitlement.value : undefined;
+
+  useEffect(() => {
+    if (flipped && needsCheckout) void warmQrCodeModule();
+  }, [flipped, needsCheckout]);
 
   return (
     <div className={["group", flipped ? "relative z-30" : ""].join(" ")}>
