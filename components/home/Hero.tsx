@@ -238,17 +238,17 @@ export function Hero({
                             href={s.watchHref}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
+                            className="group inline-flex items-center gap-1.5 rounded-md bg-success px-3 py-1.5 text-[11px] font-bold text-white transition-colors duration-200 hover:bg-[#16a34a] sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
                           >
-                            <PlayCircle size={15} className="fill-white text-brand" />
+                            <PlayCircle size={15} className="fill-white text-success" />
                             {t("heroWatchNow")}
                           </a>
                         ) : (
                           <Link
                             href={s.watchHref}
-                            className="group inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition-colors duration-200 hover:bg-brand-hover sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
+                            className="group inline-flex items-center gap-1.5 rounded-md bg-success px-3 py-1.5 text-[11px] font-bold text-white transition-colors duration-200 hover:bg-[#16a34a] sm:gap-2 sm:px-5 sm:py-2.5 sm:text-[13px]"
                           >
-                            <PlayCircle size={15} className="fill-white text-brand" />
+                            <PlayCircle size={15} className="fill-white text-success" />
                             {t("heroWatchNow")}
                           </Link>
                         )}

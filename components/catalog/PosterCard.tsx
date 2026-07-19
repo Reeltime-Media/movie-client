@@ -368,7 +368,7 @@ function FlipPosterCard(props: PosterCardProps) {
                 <Link
                   href={watchHref}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:px-3 sm:py-2 sm:text-[12px]"
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-success px-2.5 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-[#16a34a] sm:px-3 sm:py-2 sm:text-[12px]"
                 >
                   <Play size={13} className="fill-white" aria-hidden />
                   {buyLabel}

@@ -11,8 +11,14 @@ import { movieWatchHref } from "@/lib/movie-routes";
 import { qrStringToDataUrl, warmQrCodeModule } from "@/lib/pay/khqr-image";
 import { prefetchPlaybackUrl } from "@/lib/watch/playback-cache";
 
-const BAKONG_POLL_MS = 4000;
 const BAKONG_TIMEOUT_MS = 10 * 60 * 1000;
+
+/** Bakong settle latency is mostly poll wait — start fast, then back off. */
+function nextPollDelayMs(elapsedMs: number): number {
+  if (elapsedMs < 60_000) return 1500;
+  if (elapsedMs < 180_000) return 2500;
+  return 4000;
+}
 
 type BakongStatus = "loading" | "waiting" | "succeeded" | "expired" | "error";
 
@@ -46,16 +52,20 @@ export function BakongCheckoutModal({
   const [error, setError] = useState("");
 
   const pollIntent = useCallback(async (intentId: string, gen: number) => {
-    const deadline = Date.now() + BAKONG_TIMEOUT_MS;
+    const startedAt = Date.now();
+    const deadline = startedAt + BAKONG_TIMEOUT_MS;
+    // First check almost immediately — don't burn 4s before looking for payment.
+    let delayMs = 400;
     while (Date.now() < deadline) {
       if (closedRef.current || gen !== genRef.current) return;
-      await sleep(BAKONG_POLL_MS);
+      await sleep(delayMs);
       if (closedRef.current || gen !== genRef.current) return;
 
       let intent;
       try {
         intent = await getPaymentIntent(intentId);
       } catch {
+        delayMs = nextPollDelayMs(Date.now() - startedAt);
         continue;
       }
       if (closedRef.current || gen !== genRef.current) return;
@@ -71,6 +81,7 @@ export function BakongCheckoutModal({
         setStatus("error");
         return;
       }
+      delayMs = nextPollDelayMs(Date.now() - startedAt);
     }
     if (!closedRef.current && gen === genRef.current) setStatus("expired");
   }, [contentId]);
@@ -129,7 +140,7 @@ export function BakongCheckoutModal({
     if (status !== "succeeded") return;
     const id = window.setTimeout(() => {
       router.push(movieWatchHref(watchSlug));
-    }, 900);
+    }, 450);
     return () => window.clearTimeout(id);
   }, [status, router, watchSlug]);
 
