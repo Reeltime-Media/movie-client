@@ -12,7 +12,7 @@ import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
-import { WatchDetailBody } from "@/components/watch/WatchPageSection";
+import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
 import { useMovieWatch } from "@/hooks/watch/use-movie-watch";
 import type { ContentRead } from "@/lib/api/types";
 import { warmQrCodeModule } from "@/lib/pay/khqr-image";
@@ -25,7 +25,7 @@ const WatchPlayerSkeleton = dynamic(
 
 const WatchPlayer = dynamic(
   () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayer),
-  { ssr: false, loading: () => <WatchPlayerSkeleton /> },
+  { ssr: false, loading: () => <WatchPlayerSkeleton fill /> },
 );
 
 const MovieComments = dynamic(
@@ -113,33 +113,28 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
 
   return (
     <PageShell fullWidth>
-      {/* Cinematic video band — its height tracks the 16:9 player and is capped
-          to the viewport on large screens. On phones the cap doesn't bind, so the
-          band collapses to a tight player at the top instead of a tall box with
-          empty space above and below. */}
       {canPlay || trailerEmbed ? (
-        <div className="relative ml-[calc(50%-50vw)] flex w-screen max-w-none shrink-0 items-center justify-center border-b border-border px-2 py-2 sm:px-6 sm:py-6 lg:px-10">
-          <div className="w-full max-w-[calc((100dvh-7rem)*16/9)]">
-            {canPlay ? (
-              playbackLoading || !playbackUrl ? (
-                <div className="flex aspect-video w-full items-center justify-center bg-black">
-                  <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
-                  <span className="sr-only">Loading stream</span>
-                </div>
-              ) : (
-                <WatchPlayer
-                  key={playbackUrl}
-                  contentId={movie.id}
-                  hlsSrc={playbackUrl}
-                  title={title}
-                  initialTime={resumeTime ?? 0}
-                />
-              )
+        <WatchPlayerBand>
+          {canPlay ? (
+            playbackLoading || !playbackUrl ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black">
+                <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
+                <span className="sr-only">Loading stream</span>
+              </div>
             ) : (
-              <TrailerEmbed embedUrl={trailerEmbed!} title={title} />
-            )}
-          </div>
-        </div>
+              <WatchPlayer
+                key={playbackUrl}
+                contentId={movie.id}
+                hlsSrc={playbackUrl}
+                title={title}
+                initialTime={resumeTime ?? 0}
+                fill
+              />
+            )
+          ) : (
+            <TrailerEmbed embedUrl={trailerEmbed!} title={title} variant="frame-only" />
+          )}
+        </WatchPlayerBand>
       ) : null}
 
       {/* Details below video */}

@@ -7,7 +7,7 @@ export default function WatchSeriesLoading() {
     <PageShell fullWidth>
       <section>
         <WatchSeriesTheater
-          media={<div className="h-full w-full animate-pulse bg-surface-elevated" />}
+          media={<div className="absolute inset-0 animate-pulse bg-surface-elevated" />}
           sidebar={
             <div className="flex h-full flex-col">
               <div className="border-b border-border px-4 py-3">

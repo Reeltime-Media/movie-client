@@ -157,7 +157,7 @@ export function WatchSeriesClient({
         <WatchSeriesTheater
           media={
             playbackLoading || !playbackUrl ? (
-              <div className="flex h-full w-full items-center justify-center bg-black">
+              <div className="absolute inset-0 flex items-center justify-center bg-black">
                 <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
                 <span className="sr-only">Loading stream</span>
               </div>

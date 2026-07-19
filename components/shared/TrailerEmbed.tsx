@@ -21,7 +21,17 @@ export function TrailerEmbed({ embedUrl, title, variant = "bare" }: TrailerEmbed
   );
 
   if (variant === "frame-only") {
-    return player;
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-black">
+        <iframe
+          src={embedUrl}
+          title={`${title} trailer`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      </div>
+    );
   }
 
   if (variant === "card") {

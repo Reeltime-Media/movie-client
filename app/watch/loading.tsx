@@ -1,15 +1,13 @@
 import { PageShell } from "@/components/layout/PageShell";
-import { WatchDetailBody } from "@/components/watch/WatchPageSection";
+import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
 
 /** Skeleton matching the movie watch layout so navigation shows an instant shell. */
 export default function WatchLoading() {
   return (
     <PageShell fullWidth>
-      <div className="relative ml-[calc(50%-50vw)] flex w-screen max-w-none shrink-0 items-center justify-center border-b border-border px-2 py-2 sm:px-6 sm:py-6 lg:px-10">
-        <div className="w-full max-w-[calc((100dvh-7rem)*16/9)]">
-          <div className="aspect-video w-full animate-pulse bg-surface-elevated" />
-        </div>
-      </div>
+      <WatchPlayerBand>
+        <div className="absolute inset-0 animate-pulse bg-surface-elevated" />
+      </WatchPlayerBand>
 
       <section className="relative border-b border-border py-6 md:py-8">
         <WatchDetailBody>

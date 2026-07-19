@@ -468,19 +468,19 @@ export function WatchPlayer({
         : "Auto";
 
   return (
-    <figure className={fill ? "m-0 h-full" : "m-0"}>
+    <figure className={fill ? "absolute inset-0 m-0" : "relative m-0 w-full"}>
       <div
         ref={containerRef}
         className={[
           "relative w-full overflow-hidden bg-black",
           // Native :fullscreen / CSS immersive: fill the viewport and keep custom controls.
           fill
-            ? "h-full aspect-auto"
+            ? "h-full w-full aspect-auto"
             : "aspect-video",
           "[:fullscreen]:aspect-auto [:fullscreen]:h-full [:fullscreen]:w-full",
           "[:-webkit-full-screen]:aspect-auto [:-webkit-full-screen]:h-full [:-webkit-full-screen]:w-full",
           cssFullscreen
-            ? "fixed inset-0 z-[100] h-dvh w-screen aspect-auto rounded-none"
+            ? "fixed inset-0 z-[100] h-dvh w-screen max-w-[100vw] aspect-auto rounded-none"
             : bleed || fill
               ? ""
               : "rounded-md",
@@ -696,7 +696,7 @@ export function WatchPlayerSkeleton({ fill = false }: { fill?: boolean } = {}) {
     <div
       className={[
         "flex w-full items-center justify-center bg-black",
-        fill ? "h-full" : "aspect-video",
+        fill ? "absolute inset-0 h-full w-full" : "aspect-video",
       ].join(" ")}
     >
       <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
