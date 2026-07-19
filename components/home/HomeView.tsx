@@ -104,7 +104,10 @@ export function HomeView({
 
   return (
     <PageShell fullWidth footer>
-      <div className="rt-page-fade-in" style={{ "--rt-enter-delay": "0ms" } as CSSProperties}>
+      <div
+        className="rt-page-fade-in hidden md:block"
+        style={{ "--rt-enter-delay": "0ms" } as CSSProperties}
+      >
         <Hero
           featuredSlides={heroFeatured}
           fallbackMovies={movies}

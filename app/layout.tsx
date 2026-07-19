@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Kantumruy_Pro } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
-import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { MobileBottomNavHost } from "@/components/layout/mobile-bottom-nav";
 import { DevToolsGuard } from "@/components/providers/DevToolsGuard";
 import { FavoritesProvider } from "@/components/providers/FavoritesProvider";
 import { GoogleAuthProvider } from "@/components/providers/GoogleAuthProvider";
@@ -42,17 +41,19 @@ export default function RootLayout({
       className={`${inter.variable} ${kantumruy.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 xl:pb-0">
-        <Script
-          id="theme-locale-bootstrap"
-          strategy="beforeInteractive"
+      <head>
+        {/* Inline in <head> (not next/script) so theme/locale apply before paint
+            without React 19's "script tag in component" client warning. */}
+        <script
           dangerouslySetInnerHTML={{ __html: THEME_LOCALE_BOOTSTRAP }}
         />
+      </head>
+      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 xl:pb-0">
         <DevToolsGuard />
         <GoogleAuthProvider>
           <LocaleProvider>
             <FavoritesProvider>{children}</FavoritesProvider>
-            <MobileBottomNav />
+            <MobileBottomNavHost />
           </LocaleProvider>
         </GoogleAuthProvider>
       </body>
