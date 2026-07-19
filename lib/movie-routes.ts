@@ -6,7 +6,7 @@ export function movieWatchHref(slug: string): string {
  * Marker href for unpaid movies. Flip cards detect this and open the Bakong
  * modal instead of navigating. Visiting the URL redirects to `/watch`.
  */
-export function moviePayHref(slug: string, title: string): string {
+function moviePayHref(slug: string, title: string): string {
   return `/pay/movie?slug=${encodeURIComponent(slug)}&title=${encodeURIComponent(title)}`;
 }
 

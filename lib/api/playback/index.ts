@@ -4,4 +4,3 @@ export {
   listWatchProgress,
   upsertWatchProgress,
 } from "./watch-progress";
-export type { WatchProgressUpdate } from "./watch-progress";
