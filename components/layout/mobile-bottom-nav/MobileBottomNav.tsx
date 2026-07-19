@@ -17,6 +17,10 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { t } = useI18n();
 
+  // Watch pages need the full short-edge for the player — hide the floating
+  // dock so it does not sit on top of the frame in landscape.
+  if (pathname.startsWith("/watch")) return null;
+
   return (
     <nav
       aria-label="Primary mobile"
