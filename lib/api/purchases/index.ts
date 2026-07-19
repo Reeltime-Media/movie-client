@@ -1,7 +1,7 @@
-import { apiFetch } from "./client";
-import { invalidateClientCache } from "./client-cache";
-import { listMovies } from "./movies";
-import type { ContentListItemRead, PurchaseRead } from "./types";
+import { apiFetch } from "../core/client";
+import { invalidateClientCache } from "../core/client-cache";
+import { listMovies } from "../movies";
+import type { ContentListItemRead, PurchaseRead } from "../types";
 
 const PURCHASES_CACHE_KEY = "user:purchases";
 

@@ -1,4 +1,4 @@
-import type { SeasonRead } from "./types";
+import type { SeasonRead } from "../types";
 
 export type FreeEpisodePlayback = {
   season: number;

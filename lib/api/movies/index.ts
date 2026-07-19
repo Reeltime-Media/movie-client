@@ -1,7 +1,7 @@
-import { fetchAllPages } from "./pagination";
-import { apiFetch, catalogCache } from "./client";
-import { clientCached, CLIENT_CATALOG_TTL_MS } from "./client-cache";
-import type { ContentListItemRead, ContentRead } from "./types";
+import { fetchAllPages } from "../core/pagination";
+import { apiFetch, catalogCache } from "../core/client";
+import { clientCached, CLIENT_CATALOG_TTL_MS } from "../core/client-cache";
+import type { ContentListItemRead, ContentRead } from "../types";
 
 export type CatalogListParams = {
   search?: string;

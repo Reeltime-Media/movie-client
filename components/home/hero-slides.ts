@@ -1,5 +1,5 @@
-import { posterUrl } from "@/lib/api/client";
-import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
+import { posterUrl } from "@/lib/api/core";
+import type { HeroFeaturedSlide } from "@/lib/api/catalog";
 import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
 import { youtubeHeroEmbedUrl } from "@/lib/youtube";
 

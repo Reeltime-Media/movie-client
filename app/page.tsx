@@ -1,10 +1,10 @@
 import { HomeView } from "@/components/home/HomeView";
-import { listFreeToday } from "@/lib/api/free-today";
-import { listHeroFeatured } from "@/lib/api/hero-featured";
+import { listFreeToday } from "@/lib/api/catalog";
+import { listHeroFeatured } from "@/lib/api/catalog";
 import { listMovies } from "@/lib/api/movies";
-import { listPromotionBanners } from "@/lib/api/promotion-banners";
+import { listPromotionBanners } from "@/lib/api/catalog";
 import { listSeries, listEpisodes } from "@/lib/api/series";
-import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
+import { movieToPoster, seriesToPoster } from "@/lib/api/mappers";
 import type { SeasonRead } from "@/lib/api/types";
 import { swallow } from "@/lib/log";
 

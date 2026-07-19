@@ -3,7 +3,7 @@
 import { Clock, Link2, Loader2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import { CdnImage } from "@/components/ui/CdnImage";
-import { posterThumbUrl } from "@/lib/api/client";
+import { posterThumbUrl } from "@/lib/api/core";
 import dynamic from "next/dynamic";
 import { useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";

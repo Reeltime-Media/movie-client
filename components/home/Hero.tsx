@@ -5,7 +5,7 @@ import { CdnImage } from "@/components/ui/CdnImage";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { listHeroFeatured, type HeroFeaturedSlide } from "@/lib/api/hero-featured";
+import { listHeroFeatured, type HeroFeaturedSlide } from "@/lib/api/catalog";
 import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
 import { HeroBackground } from "@/components/home/HeroBackground";
 import { HeroVideo } from "@/components/home/HeroVideo";

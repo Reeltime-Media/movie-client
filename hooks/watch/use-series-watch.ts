@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/auth/use-user";
 import { getSeries, listEpisodes } from "@/lib/api/series";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { ContentRead, SeasonRead, SeriesRead } from "@/lib/api/types";
-import { getWatchProgress } from "@/lib/api/watch-progress";
+import { getWatchProgress } from "@/lib/api/playback";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
 import { seriesPricingHref } from "@/lib/series-pricing";

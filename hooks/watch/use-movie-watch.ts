@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/auth/use-user";
 import { getMovie } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
 import type { ContentRead } from "@/lib/api/types";
-import { getWatchProgress } from "@/lib/api/watch-progress";
+import { getWatchProgress } from "@/lib/api/playback";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
 import {

@@ -1,4 +1,4 @@
-import { apiFetch, getApiUrl } from "./client";
+import { apiFetch, getApiUrl } from "../core/client";
 
 interface PlaybackAuth {
   /** Master playlist path, relative to the API, carrying a scoped playback token. */

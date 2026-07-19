@@ -1,13 +1,13 @@
 import { movieCardHref } from "@/lib/movie-routes";
 import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import type { PosterCardProps } from "@/types/poster-card";
-import { posterThumbUrl, posterUrl } from "./config";
+import { posterThumbUrl, posterUrl } from "../core/config";
 import {
   findFirstFreeEpisode,
   freeEpisodeWatchHref,
   seasonsHaveFreeEpisodes,
-} from "./series-free";
-import type { ContentListItemRead, SeasonRead, SeriesRead } from "./types";
+} from "../series/series-free";
+import type { ContentListItemRead, SeasonRead, SeriesRead } from "../types";
 
 export type SeriesPosterOptions = {
   hasSubscription?: boolean;

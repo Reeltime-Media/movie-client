@@ -1,6 +1,6 @@
-import { apiFetch, getToken, isLoggedIn } from "./client";
-import { resolveApiUrl } from "./resolve-api-url";
-import type { WatchProgressRead } from "./types";
+import { apiFetch, getToken, isLoggedIn } from "../core/client";
+import { resolveApiUrl } from "../core/resolve-api-url";
+import type { WatchProgressRead } from "../types";
 
 export type WatchProgressUpdate = {
   position_seconds: number;

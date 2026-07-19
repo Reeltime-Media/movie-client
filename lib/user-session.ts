@@ -1,4 +1,4 @@
-import type { UserRead } from "./api/types";
+import type { UserRead } from "@/lib/api/types";
 
 const USER_KEY = "rt_user";
 

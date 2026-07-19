@@ -5,8 +5,8 @@ import { CdnImage } from "@/components/ui/CdnImage";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-import { posterUrl } from "@/lib/api/client";
-import type { PromotionBannerRead } from "@/lib/api/promotion-banners";
+import { posterUrl } from "@/lib/api/core";
+import type { PromotionBannerRead } from "@/lib/api/catalog";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { HeroBackground } from "@/components/home/HeroBackground";
 import { useI18n } from "@/components/providers/LocaleProvider";

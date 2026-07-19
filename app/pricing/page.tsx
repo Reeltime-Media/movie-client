@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/auth/use-auth";
 // BARAY DISABLED — subscription checkout via Baray is paused.
 // import { createSeriesSubscriptionIntent } from "@/lib/api/payments";
 import { listSeries } from "@/lib/api/series";
-import { listSubscriptionPlans } from "@/lib/api/subscription-plans";
+import { listSubscriptionPlans } from "@/lib/api/subscriptions";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { SeriesRead, SubscriptionPlanRead } from "@/lib/api/types";
 import { marketingImages } from "@/lib/marketing-images";

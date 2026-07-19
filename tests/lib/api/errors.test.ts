@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseApiErrorMessage } from "@/lib/api/errors";
+import { parseApiErrorMessage } from "@/lib/api/core";
 
 describe("parseApiErrorMessage", () => {
   it("passes through non-empty strings", () => {

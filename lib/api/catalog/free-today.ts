@@ -1,5 +1,5 @@
-import { apiFetch } from "./client";
-import type { ContentListItemRead } from "./types";
+import { apiFetch } from "../core/client";
+import type { ContentListItemRead } from "../types";
 
 /** Admin-curated picks — revalidate often so changes show up quickly. */
 const freeTodayCache: RequestInit = {

@@ -1,5 +1,5 @@
 import Image, { type ImageProps } from "next/image";
-import { isR2ImageUrl } from "@/lib/api/config";
+import { isR2ImageUrl } from "@/lib/api/core";
 
 /**
  * next/image wrapper that skips server optimization for R2 CDN URLs.

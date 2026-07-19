@@ -9,7 +9,7 @@ import { getRelatedMovies } from "@/lib/api/movies";
 import { getRelatedSeries, listSeriesPage } from "@/lib/api/series";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
-import { movieToPoster, seriesToPoster } from "@/lib/api/to-poster";
+import { movieToPoster, seriesToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";

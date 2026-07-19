@@ -10,7 +10,7 @@ import { useFavorites } from "@/components/providers/FavoritesProvider";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { listFavorites } from "@/lib/api/favorites";
 import { listOwnedMovies } from "@/lib/api/purchases";
-import { movieToPoster } from "@/lib/api/to-poster";
+import { movieToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { swallow } from "@/lib/log";
 import type { TranslationKey } from "@/lib/i18n";

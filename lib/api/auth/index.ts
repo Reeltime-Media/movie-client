@@ -1,7 +1,7 @@
 import { saveToken } from "@/lib/auth/token";
-import { apiFetch, apiFormPost } from "./client";
-import type { TokenResponse, UserRead } from "./types";
-import { saveUserSnapshot } from "../user-session";
+import { apiFetch, apiFormPost } from "../core/client";
+import type { TokenResponse, UserRead } from "../types";
+import { saveUserSnapshot } from "@/lib/user-session";
 
 export async function refreshUserSession(): Promise<UserRead> {
   const user = await getMe();

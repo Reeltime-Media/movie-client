@@ -7,7 +7,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { PageSearchBar } from "@/components/catalog/PageSearchBar";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
-import { posterUrl } from "@/lib/api/config";
+import { posterUrl } from "@/lib/api/core";
 import { listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
 import { listEpisodes, listSeries } from "@/lib/api/series";

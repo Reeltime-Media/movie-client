@@ -26,7 +26,7 @@ import { getMe, updateMe } from "@/lib/api/auth";
 import { saveUserSnapshot } from "@/lib/user-session";
 import { listPurchases } from "@/lib/api/purchases";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
-import { listWatchProgress } from "@/lib/api/watch-progress";
+import { listWatchProgress } from "@/lib/api/playback";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { clearToken } from "@/lib/auth/token";
 import type { UserRead, SubscriptionRead, PurchaseRead, WatchProgressRead } from "@/lib/api/types";

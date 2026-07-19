@@ -1,4 +1,4 @@
-import { apiFetch } from "./client";
+import { apiFetch } from "../core/client";
 
 export type HeroFeaturedSlide = {
   id: string;

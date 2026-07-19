@@ -1,6 +1,6 @@
-import { apiFetch } from "./client";
-import { clientCached, CLIENT_CATALOG_TTL_MS } from "./client-cache";
-import type { SubscriptionRead } from "./types";
+import { apiFetch } from "../core/client";
+import { clientCached, CLIENT_CATALOG_TTL_MS } from "../core/client-cache";
+import type { SubscriptionRead } from "../types";
 
 const SUBSCRIPTIONS_CACHE_KEY = "user:subscriptions";
 

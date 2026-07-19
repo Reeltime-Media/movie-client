@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-import { upsertWatchProgress } from "@/lib/api/watch-progress";
-import { isLoggedIn } from "@/lib/api/client";
+import { upsertWatchProgress } from "@/lib/api/playback";
+import { isLoggedIn } from "@/lib/api/core";
 import {
   isWatchCompleted,
   qualifiesAsWatch,

@@ -1,6 +1,6 @@
 import type { PosterCardProps } from "@/types/poster-card";
 import type { ContentListItemRead } from "@/lib/api/types";
-import { movieToPoster } from "@/lib/api/to-poster";
+import { movieToPoster } from "@/lib/api/mappers";
 import { collectGenreLabels, filterByGenreLabel } from "./catalog-filter";
 
 export type HomeGenreRail = {

@@ -1,4 +1,4 @@
-import { apiFetch, catalogCache } from "./client";
+import { apiFetch, catalogCache } from "../core/client";
 
 export type PromotionBannerRead = {
   id: string;

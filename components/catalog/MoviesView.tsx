@@ -11,7 +11,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listPurchases } from "@/lib/api/purchases";
-import { movieToPoster } from "@/lib/api/to-poster";
+import { movieToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";

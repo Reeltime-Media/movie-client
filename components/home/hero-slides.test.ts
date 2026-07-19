@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
+import type { HeroFeaturedSlide } from "@/lib/api/catalog";
 import { buildFallbackSlides, slideFromFeatured } from "./hero-slides";
 
 function featured(overrides: Partial<HeroFeaturedSlide> = {}): HeroFeaturedSlide {

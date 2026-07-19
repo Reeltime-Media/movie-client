@@ -1,8 +1,8 @@
-import { fetchAllPages, fetchPage } from "./pagination";
-import { apiFetch, catalogCache } from "./client";
-import { clientCached, CLIENT_CATALOG_TTL_MS } from "./client-cache";
-import type { SeasonRead, SeriesRead } from "./types";
-import type { CatalogListParams } from "./movies";
+import { fetchAllPages, fetchPage } from "../core/pagination";
+import { apiFetch, catalogCache } from "../core/client";
+import { clientCached, CLIENT_CATALOG_TTL_MS } from "../core/client-cache";
+import type { SeasonRead, SeriesRead } from "../types";
+import type { CatalogListParams } from "../movies";
 
 function seriesListPath(params?: CatalogListParams): string {
   const qs = new URLSearchParams();

@@ -12,7 +12,7 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 import { marketingImages } from "@/lib/marketing-images";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
-import { seriesToPoster } from "@/lib/api/to-poster";
+import { seriesToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import {
   CATALOG_GENRE_KEYS,

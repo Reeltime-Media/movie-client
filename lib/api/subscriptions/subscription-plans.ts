@@ -1,5 +1,5 @@
-import { apiFetch } from "./client";
-import type { SubscriptionPlanRead } from "./types";
+import { apiFetch } from "../core/client";
+import type { SubscriptionPlanRead } from "../types";
 
 export function listSubscriptionPlans(): Promise<SubscriptionPlanRead[]> {
   return apiFetch<SubscriptionPlanRead[]>("/subscriptions/plans");

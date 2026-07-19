@@ -13,14 +13,14 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { listPurchases } from "@/lib/api/purchases";
-import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/to-poster";
+import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
-import type { HeroFeaturedSlide } from "@/lib/api/hero-featured";
-import type { PromotionBannerRead } from "@/lib/api/promotion-banners";
+import type { HeroFeaturedSlide } from "@/lib/api/catalog";
+import type { PromotionBannerRead } from "@/lib/api/catalog";
 import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 
 type HomeViewProps = {
