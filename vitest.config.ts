@@ -9,7 +9,7 @@ export default defineConfig({
     alias: { "@": rootDir },
   },
   test: {
-    include: ["**/*.test.{ts,tsx}"],
+    include: ["tests/**/*.test.{ts,tsx}", "components/**/*.test.{ts,tsx}"],
     exclude: ["node_modules/**", ".next/**"],
   },
 });

@@ -11,7 +11,6 @@ import type { ContentRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/watch-progress";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
-import { moviePayHref, movieWatchHref } from "@/lib/movie-routes";
 import {
   getCachedPlaybackUrl,
   prefetchPlaybackUrl,
@@ -224,22 +223,9 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     };
   }, [slug, router, loggedIn, isAdmin, initialMovie]);
 
-  const derived = useMemo(() => {
-    if (!movie) {
-      return {
-        priceLabel: null as string | null,
-        loginNext: "",
-        payHref: "",
-      };
-    }
-    const priceLabel = movie.price_usd
-      ? `$${parseFloat(movie.price_usd).toFixed(2)}`
-      : null;
-    return {
-      priceLabel,
-      loginNext: movieWatchHref(movie.slug),
-      payHref: moviePayHref(movie.slug, movie.title),
-    };
+  const priceLabel = useMemo(() => {
+    if (!movie?.price_usd) return null;
+    return `$${parseFloat(movie.price_usd).toFixed(2)}`;
   }, [movie]);
 
   return {
@@ -252,6 +238,6 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     resumeTime,
     loggedIn,
     prefetchPlayback,
-    ...derived,
+    priceLabel,
   };
 }

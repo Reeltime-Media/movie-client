@@ -9,14 +9,15 @@ import { CinematicDecor } from "@/components/home/CinematicDecor";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { useAuth } from "@/hooks/auth/use-auth";
-import { createSeriesSubscriptionIntent } from "@/lib/api/payments";
+// BARAY DISABLED — subscription checkout via Baray is paused.
+// import { createSeriesSubscriptionIntent } from "@/lib/api/payments";
 import { listSeries } from "@/lib/api/series";
 import { listSubscriptionPlans } from "@/lib/api/subscription-plans";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import type { SeriesRead, SubscriptionPlanRead } from "@/lib/api/types";
 import { marketingImages } from "@/lib/marketing-images";
-import { PENDING_INTENT_KEY, seriesSubscriptionSuccessUrl } from "@/lib/payment-success-urls";
-import { safeCheckoutUrl } from "@/lib/safe-redirect";
+// import { PENDING_INTENT_KEY, seriesSubscriptionSuccessUrl } from "@/lib/payment-success-urls";
+// import { safeCheckoutUrl } from "@/lib/safe-redirect";
 import { swallow } from "@/lib/log";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
@@ -50,7 +51,8 @@ function PricingPageInner() {
   const [activePlanCode, setActivePlanCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
+  // BARAY DISABLED — was used while redirecting to Baray checkout.
+  // const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     const subsPromise = loggedIn
@@ -97,6 +99,13 @@ function PricingPageInner() {
       return;
     }
 
+    // BARAY DISABLED — subscription redirect checkout paused.
+    void planId;
+    void checkoutSeries;
+    setError(t("pricingBarayDisabled"));
+    return;
+
+    /* BARAY DISABLED — original checkout flow kept for later.
     setPayingPlanId(planId);
     setError("");
     try {
@@ -115,6 +124,7 @@ function PricingPageInner() {
       setError(msg);
       setPayingPlanId(null);
     }
+    */
   }
 
   return (
@@ -153,6 +163,9 @@ function PricingPageInner() {
             {error ? (
               <p className="mb-4 text-center text-[13px] text-danger">{error}</p>
             ) : null}
+            <p className="mb-4 text-center text-[12px] text-text-muted">
+              {t("pricingSecureNote")}
+            </p>
             <div
               className={[
                 "grid gap-4",
@@ -163,7 +176,6 @@ function PricingPageInner() {
                 const isRecommended = plan.code === recommendedCode;
                 const isCurrent = activePlanCode === plan.code;
                 const price = formatPrice(plan.price_usd);
-                const isPaying = payingPlanId === plan.id;
 
                 return (
                   <article
@@ -214,18 +226,22 @@ function PricingPageInner() {
                       >
                         {t("navProfile")}
                       </Link>
+                    ) : !loggedIn ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleSubscribe(plan.id)}
+                        className={[primaryButtonClassName, "mt-auto"].join(" ")}
+                      >
+                        {t("pricingSignIn")}
+                      </button>
                     ) : (
                       <button
                         type="button"
-                        disabled={Boolean(payingPlanId)}
-                        onClick={() => void handleSubscribe(plan.id)}
+                        disabled
                         className={[primaryButtonClassName, "mt-auto disabled:opacity-60"].join(" ")}
+                        title={t("pricingBarayDisabled")}
                       >
-                        {isPaying
-                          ? "…"
-                          : loggedIn
-                            ? t("pricingSubscribe")
-                            : t("pricingSignIn")}
+                        {t("pricingSubscribeUnavailable")}
                       </button>
                     )}
                   </article>

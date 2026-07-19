@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 import { PageShell } from "@/components/layout/PageShell";
-import { waitForPaymentSucceeded } from "@/lib/api/payments";
+// BARAY DISABLED — success polling was for Baray redirect checkout.
+// import { waitForPaymentSucceeded } from "@/lib/api/payments";
 import { PENDING_INTENT_KEY } from "@/lib/payment-success-urls";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { cardClassName, secondaryButtonClassName } from "@/lib/ui/surfaces";
@@ -21,6 +22,12 @@ function PaymentSuccessInner() {
     if (ran.current) return;
     ran.current = true;
 
+    // BARAY DISABLED — clear any leftover pending intent and send user onward.
+    sessionStorage.removeItem(PENDING_INTENT_KEY);
+    setError("Subscription checkout is temporarily unavailable.");
+    return;
+
+    /* BARAY DISABLED — original success confirmation kept for later.
     const intentId = sessionStorage.getItem(PENDING_INTENT_KEY);
     if (!intentId) {
       router.replace(next);
@@ -36,6 +43,7 @@ function PaymentSuccessInner() {
         const msg = err instanceof Error ? err.message : "Could not confirm payment.";
         setError(msg);
       });
+    */
   }, [next, router]);
 
   if (error) {

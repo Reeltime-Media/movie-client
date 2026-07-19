@@ -174,6 +174,8 @@ export const en = {
   pricingRecommended: "Recommended",
   pricingCurrentPlan: "Your plan",
   pricingSubscribe: "Subscribe",
+  pricingSubscribeUnavailable: "Coming soon",
+  pricingBarayDisabled: "Subscription checkout is temporarily unavailable.",
   pricingBrowseSeries: "Browse series",
   pricingSignIn: "Sign in to subscribe",
   pricingLoadError: "Could not load plans. Please try again later.",
@@ -181,7 +183,8 @@ export const en = {
   pricingBillingMonthly: "/mo",
   pricingBillingYearly: "/yr",
   pricingBillingDays: "/{days} days",
-  pricingSecureNote: "Secure checkout via Baray · Card · KHQR · ABA Pay",
+  // BARAY DISABLED — was: "Secure checkout via Baray · Card · KHQR · ABA Pay"
+  pricingSecureNote: "Movie purchases use Bakong KHQR. Series subscriptions coming soon.",
 
   commentsTitle: "Comments",
   commentsPlaceholder: "Share your thoughts about this movie…",

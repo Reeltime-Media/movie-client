@@ -178,7 +178,7 @@ export function Hero({
         <>
           {/* Bottom gradient for text readability */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[60%] bg-linear-to-t from-black/90 via-black/50 to-transparent sm:h-[50%] sm:from-black/85 sm:via-black/40" />
-          {/* Left gradient — ends at 65% so description text stays legible over busy posters */}
+          {/* Left gradient — ends at 65% so title text stays legible over busy posters */}
           <div className="pointer-events-none absolute inset-y-0 left-0 z-1 w-[65%] bg-linear-to-r from-black/85 via-black/40 to-transparent" />
         </>
       )}
@@ -229,13 +229,6 @@ export function Hero({
                         </>
                       )}
                     </div>
-
-                    {/* Custom video slides show the title only — no description, no buttons */}
-                    {!s.isCustom && s.description && (
-                      <p className="mt-2 hidden max-w-[420px] text-[13px] leading-relaxed text-white/70 line-clamp-2 sm:block">
-                        {s.description}
-                      </p>
-                    )}
 
                     {!s.isCustom && s.watchHref ? (
                       <div className="mt-4 flex items-center gap-2.5">

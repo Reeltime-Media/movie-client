@@ -170,6 +170,8 @@ export const km = {
   pricingRecommended: "ណែនាំ",
   pricingCurrentPlan: "គម្រោងរបស់អ្នក",
   pricingSubscribe: "ចូលជាសមាជិក",
+  pricingSubscribeUnavailable: "មកដល់ឆាប់ៗ",
+  pricingBarayDisabled: "ការទូទាត់សមាជិកភាពមិនអាចប្រើបានបណ្តោះអាសន្នទេ។",
   pricingBrowseSeries: "រកមើលរឿងភាគ",
   pricingSignIn: "ចូលជាសមាជិក",
   pricingLoadError: "មិនអាចផ្ទុកគម្រោងបានទេ។ សូមព្យាយាមម្តងទៀត។",
@@ -177,7 +179,8 @@ export const km = {
   pricingBillingMonthly: "/ខែ",
   pricingBillingYearly: "/ឆ្នាំ",
   pricingBillingDays: "/{days} ថ្ងៃ",
-  pricingSecureNote: "ទូទាត់សុវត្ថិភាពតាម Baray · Card · KHQR · ABA Pay",
+  // BARAY DISABLED — was Baray · Card · KHQR · ABA Pay
+  pricingSecureNote: "ទិញភាពយន្តតាម Bakong KHQR។ សមាជិកភាពរឿងភាគនឹងមកដល់ឆាប់ៗ។",
 
   commentsTitle: "មតិយោបល់",
   commentsPlaceholder: "ចែករំលែកអារម្មណ៍របស់អ្នកអំពីភាពយន្តនេះ…",

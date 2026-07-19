@@ -33,6 +33,11 @@ export function createMovieBakongIntent(contentId: string): Promise<BakongPaymen
   });
 }
 
+export function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
+  return apiFetch<PaymentIntentRead>(`/payments/intents/${intentId}`);
+}
+
+/* BARAY DISABLED — subscription redirect checkout + success polling. Keep for later.
 export function createSeriesSubscriptionIntent(
   seriesId: string,
   customSuccessUrl?: string,
@@ -41,10 +46,6 @@ export function createSeriesSubscriptionIntent(
     method: "POST",
     body: { custom_success_url: customSuccessUrl ?? null },
   });
-}
-
-export function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
-  return apiFetch<PaymentIntentRead>(`/payments/intents/${intentId}`);
 }
 
 const POLL_MS = 1500;
@@ -64,3 +65,4 @@ export async function waitForPaymentSucceeded(intentId: string): Promise<Payment
   }
   throw new Error("Payment confirmation timed out. If you were charged, contact support.");
 }
+*/

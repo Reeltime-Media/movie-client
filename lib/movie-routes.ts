@@ -2,6 +2,10 @@ export function movieWatchHref(slug: string): string {
   return `/watch?slug=${encodeURIComponent(slug)}`;
 }
 
+/**
+ * Marker href for unpaid movies. Flip cards detect this and open the Bakong
+ * modal instead of navigating. Visiting the URL redirects to `/watch`.
+ */
 export function moviePayHref(slug: string, title: string): string {
   return `/pay/movie?slug=${encodeURIComponent(slug)}&title=${encodeURIComponent(title)}`;
 }
@@ -19,7 +23,7 @@ export function movieSlugFromPayHref(href: string): string | null {
   }
 }
 
-/** Poster / rail CTA: watch when free, owned, or admin; checkout when paid and not entitled. */
+/** Poster / rail CTA: watch when free, owned, or admin; pay-marker when paid and not entitled. */
 export function movieCardHref(
   movie: { slug: string; title: string; price_usd?: string | null },
   owned: boolean,
