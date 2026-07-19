@@ -48,7 +48,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: THEME_LOCALE_BOOTSTRAP }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-24 xl:pb-0">
+      <body className="min-h-full flex flex-col bg-bg text-text font-sans">
         <DevToolsGuard />
         <GoogleAuthProvider>
           <LocaleProvider>

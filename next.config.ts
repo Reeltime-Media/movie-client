@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
     imgOptTimeoutInSeconds: 30,
   },
   async headers() {
+    // In dev, Turbopack can reuse chunk URLs while content changes — never
+    // mark those as immutable or the browser keeps serving broken modules.
+    if (process.env.NODE_ENV !== "production") {
+      return [
+        {
+          source: "/_next/static/:path*",
+          headers: [{ key: "Cache-Control", value: "no-store" }],
+        },
+      ];
+    }
     return [
       {
         // Build-hashed — safe to cache forever.

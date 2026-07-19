@@ -1,1 +1,1 @@
-export { MobileBottomNavHost } from "./MobileBottomNavHost";
+export { MobileBottomNavHost } from "./BottomNavHost";
