@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { MobileBottomNav } from "./MobileBottomNav";
 
-/** Mount after hydration so pathname/locale tab UI never mismatches SSR HTML. */
+function subscribe() {
+  return () => {};
+}
+
+/** true after hydration; false during SSR / first server snapshot. */
+function useIsClient() {
+  return useSyncExternalStore(subscribe, () => true, () => false);
+}
+
+/** Client-only mount so pathname/locale tab UI never mismatches SSR HTML. */
 export function MobileBottomNavHost() {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setReady(true);
-  }, []);
-
+  const ready = useIsClient();
   if (!ready) return null;
   return <MobileBottomNav />;
 }
