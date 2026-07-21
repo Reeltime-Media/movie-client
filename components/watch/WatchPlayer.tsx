@@ -13,11 +13,27 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useWatchProgressSync } from "@/hooks/watch/use-watch-progress-sync";
 import { safePlay } from "@/lib/video/safe-play";
 
 type QualityLevel = { height: number; bitrate: number; index: number };
+
+/** iOS/iPadOS — Fullscreen API on a div is a no-op; only <video>.webkitEnterFullscreen works. */
+type WebkitVideo = HTMLVideoElement & {
+  webkitSupportsFullscreen?: boolean;
+  webkitDisplayingFullscreen?: boolean;
+  webkitEnterFullscreen?: () => void;
+  webkitExitFullscreen?: () => void;
+};
+
+function isAppleTouchDevice() {
+  if (typeof navigator === "undefined") return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
 
 function formatTime(s: number) {
   if (!isFinite(s) || s < 0) return "0:00";
@@ -175,6 +191,20 @@ export function WatchPlayer({
     setPreloadMode("metadata");
     updateProgressUi();
 
+    // Prefer native HLS on Apple devices so webkitEnterFullscreen works.
+    // hls.js (MSE) can claim support on some iPads but breaks iOS fullscreen.
+    if (
+      isAppleTouchDevice() &&
+      video.canPlayType("application/vnd.apple.mpegurl")
+    ) {
+      video.src = hlsSrc;
+      return () => {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      };
+    }
+
     if (Hls.isSupported()) {
       const hls = new Hls({
         startLevel: -1,
@@ -313,12 +343,14 @@ export function WatchPlayer({
 
   useEffect(() => {
     const update = () => {
+      const video = videoRef.current as WebkitVideo | null;
       const nativeFs =
         typeof document !== "undefined" &&
         !!(
           document.fullscreenElement ||
           (document as Document & { webkitFullscreenElement?: Element | null })
-            .webkitFullscreenElement
+            .webkitFullscreenElement ||
+          video?.webkitDisplayingFullscreen
         );
       setIsFullscreen(nativeFs || cssFullscreen);
     };
@@ -327,6 +359,10 @@ export function WatchPlayer({
     document.addEventListener("fullscreenchange", onDocChange);
     document.addEventListener("webkitfullscreenchange", onDocChange as EventListener);
 
+    const video = videoRef.current;
+    video?.addEventListener("webkitbeginfullscreen", onDocChange);
+    video?.addEventListener("webkitendfullscreen", onDocChange);
+
     update();
     return () => {
       document.removeEventListener("fullscreenchange", onDocChange);
@@ -334,21 +370,38 @@ export function WatchPlayer({
         "webkitfullscreenchange",
         onDocChange as EventListener,
       );
+      video?.removeEventListener("webkitbeginfullscreen", onDocChange);
+      video?.removeEventListener("webkitendfullscreen", onDocChange);
     };
   }, [cssFullscreen]);
 
-  // Lock page scroll while using CSS immersive fullscreen (iOS / no FS API).
-  // Clears ancestor overflow-x:hidden (PageShell / html/body) which otherwise
-  // traps position:fixed so the player never covers the real viewport on phones.
-  useEffect(() => {
+  // Lock page scroll + reparent player shell to <body> for CSS immersive.
+  // iOS Safari traps position:fixed inside overflow-x:hidden ancestors
+  // (PageShell / WatchPlayerFrame), so fixed inset-0 looks like a no-op.
+  useLayoutEffect(() => {
     if (!cssFullscreen) return;
+    const el = containerRef.current;
     const html = document.documentElement;
     const prevBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     html.dataset.watchImmersive = "1";
+
+    let placeholder: HTMLDivElement | null = null;
+    if (el?.parentElement) {
+      placeholder = document.createElement("div");
+      placeholder.setAttribute("data-watch-fs-ph", "");
+      placeholder.style.cssText = "display:block;width:100%;height:100%;";
+      el.parentElement.insertBefore(placeholder, el);
+      document.body.appendChild(el);
+    }
+
     return () => {
       document.body.style.overflow = prevBodyOverflow;
       delete html.dataset.watchImmersive;
+      if (el && placeholder?.parentElement) {
+        placeholder.parentElement.insertBefore(el, placeholder);
+        placeholder.remove();
+      }
     };
   }, [cssFullscreen]);
 
@@ -410,6 +463,7 @@ export function WatchPlayer({
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
+    const video = videoRef.current as WebkitVideo | null;
     if (!el) return;
 
     const doc = document as Document & {
@@ -418,7 +472,11 @@ export function WatchPlayer({
     };
     const nativeFs = document.fullscreenElement || doc.webkitFullscreenElement;
 
-    // Exit either native or CSS immersive mode.
+    // Exit paths.
+    if (video?.webkitDisplayingFullscreen) {
+      video.webkitExitFullscreen?.();
+      return;
+    }
     if (nativeFs) {
       if (document.exitFullscreen) void document.exitFullscreen();
       else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
@@ -429,16 +487,40 @@ export function WatchPlayer({
       return;
     }
 
-    // Always fullscreen the player SHELL (not the <video>).
-    // Video-element fullscreen swaps to native OS controls and drops quality UI.
+    const enterCssImmersive = () => setCssFullscreen(true);
+
+    // iOS/iPadOS: shell requestFullscreen is a silent no-op. Use the video's
+    // webkitEnterFullscreen (native controls) or CSS immersive reparented to body.
+    if (isAppleTouchDevice()) {
+      if (
+        video &&
+        video.webkitSupportsFullscreen !== false &&
+        typeof video.webkitEnterFullscreen === "function"
+      ) {
+        const enterWebkit = () => {
+          try {
+            video.webkitEnterFullscreen?.();
+          } catch {
+            enterCssImmersive();
+          }
+        };
+        // iOS often ignores webkitEnterFullscreen while the video is paused.
+        if (video.paused) {
+          void safePlay(video).then(enterWebkit).catch(() => enterCssImmersive());
+          return;
+        }
+        enterWebkit();
+        return;
+      }
+      enterCssImmersive();
+      return;
+    }
+
+    // Android / desktop: fullscreen the player shell (keeps custom controls).
     const anyEl = el as HTMLElement & {
       webkitRequestFullscreen?: () => void;
     };
 
-    const enterCssImmersive = () => setCssFullscreen(true);
-
-    // Confirm native FS actually took — iOS often exposes webkitRequestFullscreen
-    // on divs but no-ops, which previously skipped the CSS fallback entirely.
     const confirmNativeOrFallback = () => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -500,20 +582,17 @@ export function WatchPlayer({
     <figure className={fill ? "absolute inset-0 m-0" : "relative m-0 w-full"}>
       <div
         ref={containerRef}
-        className={[
-          "relative w-full overflow-hidden bg-black",
-          // Native :fullscreen / CSS immersive: fill the viewport and keep custom controls.
-          fill
-            ? "h-full w-full aspect-auto"
-            : "aspect-video",
-          "[:fullscreen]:aspect-auto [:fullscreen]:h-full [:fullscreen]:w-full",
-          "[:-webkit-full-screen]:aspect-auto [:-webkit-full-screen]:h-full [:-webkit-full-screen]:w-full",
+        className={
           cssFullscreen
-            ? "fixed inset-0 z-200 h-dvh w-screen max-w-[100vw] aspect-auto rounded-none"
-            : bleed || fill
-              ? ""
-              : "rounded-md",
-        ].join(" ")}
+            ? "fixed inset-0 z-9999 h-dvh w-screen max-w-[100vw] overflow-hidden bg-black aspect-auto rounded-none"
+            : [
+                "relative w-full overflow-hidden bg-black",
+                fill ? "h-full w-full aspect-auto" : "aspect-video",
+                "[:fullscreen]:aspect-auto [:fullscreen]:h-full [:fullscreen]:w-full",
+                "[:-webkit-full-screen]:aspect-auto [:-webkit-full-screen]:h-full [:-webkit-full-screen]:w-full",
+                bleed || fill ? "" : "rounded-md",
+              ].join(" ")
+        }
         onMouseMove={resetHideTimer}
         onPointerDown={resetHideTimer}
         onMouseLeave={() => {
