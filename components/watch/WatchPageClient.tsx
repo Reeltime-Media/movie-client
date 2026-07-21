@@ -18,15 +18,27 @@ import type { ContentRead } from "@/lib/api/types";
 import { warmQrCodeModule } from "@/lib/pay/khqr-image";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 
+const importWatchPlayer = () => import("@/components/watch/WatchPlayer");
+
 const WatchPlayerSkeleton = dynamic(
-  () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayerSkeleton),
+  () => importWatchPlayer().then((m) => m.WatchPlayerSkeleton),
   { ssr: false },
 );
 
-const WatchPlayer = dynamic(
-  () => import("@/components/watch/WatchPlayer").then((m) => m.WatchPlayer),
-  { ssr: false, loading: () => <WatchPlayerSkeleton fill /> },
-);
+const WatchPlayer = dynamic(() => importWatchPlayer().then((m) => m.WatchPlayer), {
+  ssr: false,
+  loading: () => <WatchPlayerSkeleton fill />,
+});
+
+/**
+ * Warm the player chunk (which bundles hls.js, ~200KB) so it downloads in
+ * parallel with the playback-authorize round-trip instead of only after
+ * `playbackUrl` resolves and the component first renders. import() is cached,
+ * so the later dynamic() reuses this in-flight/resolved module.
+ */
+function prewarmWatchPlayer() {
+  void importWatchPlayer();
+}
 
 const MovieComments = dynamic(
   () => import("@/components/comments/MovieComments").then((m) => m.MovieComments),
@@ -71,6 +83,13 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   useEffect(() => {
     if (!canPlay && !loading) void warmQrCodeModule();
   }, [canPlay, loading]);
+
+  // Once we know the user can play, start downloading the player chunk right
+  // away so it lands before/while the tokenized playback URL resolves, rather
+  // than after. Skipped for paywalled viewers, who never mount the player.
+  useEffect(() => {
+    if (canPlay) prewarmWatchPlayer();
+  }, [canPlay]);
 
   // Keep all hooks above the early returns below so hook order stays stable
   // across the loading → loaded transition.

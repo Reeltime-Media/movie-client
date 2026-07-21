@@ -26,7 +26,10 @@ export function PageShell({
       {/* Keep TopNav outside overflow clipping — overflow-x-hidden forces
           overflow-y to auto and will crop the fixed header (esp. Khmer). */}
       <TopNav />
-      <div className="flex min-h-full flex-col overflow-x-hidden bg-bg text-text">
+      <div
+        data-page-shell=""
+        className="flex min-h-full flex-col overflow-x-hidden bg-bg text-text"
+      >
         <main className="min-w-0 flex-1 pt-18">
           <div className={innerClass}>{children}</div>
         </main>

@@ -176,7 +176,13 @@ export function WatchPlayer({
     updateProgressUi();
 
     if (Hls.isSupported()) {
-      const hls = new Hls({ startLevel: -1, capLevelToPlayerSize: true });
+      const hls = new Hls({
+        startLevel: -1,
+        capLevelToPlayerSize: true,
+        // Fetch the first fragment as soon as the manifest is known, in parallel
+        // with media attach, so the first frame paints sooner.
+        startFragPrefetch: true,
+      });
       hlsRef.current = hls;
       hls.loadSource(hlsSrc);
       hls.attachMedia(video);
@@ -332,12 +338,17 @@ export function WatchPlayer({
   }, [cssFullscreen]);
 
   // Lock page scroll while using CSS immersive fullscreen (iOS / no FS API).
+  // Clears ancestor overflow-x:hidden (PageShell / html/body) which otherwise
+  // traps position:fixed so the player never covers the real viewport on phones.
   useEffect(() => {
     if (!cssFullscreen) return;
-    const prev = document.body.style.overflow;
+    const html = document.documentElement;
+    const prevBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    html.dataset.watchImmersive = "1";
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevBodyOverflow;
+      delete html.dataset.watchImmersive;
     };
   }, [cssFullscreen]);
 
@@ -423,19 +434,37 @@ export function WatchPlayer({
     const anyEl = el as HTMLElement & {
       webkitRequestFullscreen?: () => void;
     };
+
+    const enterCssImmersive = () => setCssFullscreen(true);
+
+    // Confirm native FS actually took — iOS often exposes webkitRequestFullscreen
+    // on divs but no-ops, which previously skipped the CSS fallback entirely.
+    const confirmNativeOrFallback = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const inFs =
+            document.fullscreenElement ||
+            (document as Document & { webkitFullscreenElement?: Element | null })
+              .webkitFullscreenElement;
+          if (!inFs) enterCssImmersive();
+        });
+      });
+    };
+
     if (typeof el.requestFullscreen === "function") {
-      void el.requestFullscreen().catch(() => setCssFullscreen(true));
+      void el.requestFullscreen().then(confirmNativeOrFallback).catch(enterCssImmersive);
       return;
     }
     if (typeof anyEl.webkitRequestFullscreen === "function") {
       try {
         anyEl.webkitRequestFullscreen();
+        confirmNativeOrFallback();
         return;
       } catch {
         /* fall through to CSS immersive */
       }
     }
-    setCssFullscreen(true);
+    enterCssImmersive();
   }, [cssFullscreen]);
 
   useEffect(() => {
@@ -480,12 +509,13 @@ export function WatchPlayer({
           "[:fullscreen]:aspect-auto [:fullscreen]:h-full [:fullscreen]:w-full",
           "[:-webkit-full-screen]:aspect-auto [:-webkit-full-screen]:h-full [:-webkit-full-screen]:w-full",
           cssFullscreen
-            ? "fixed inset-0 z-[100] h-dvh w-screen max-w-[100vw] aspect-auto rounded-none"
+            ? "fixed inset-0 z-200 h-dvh w-screen max-w-[100vw] aspect-auto rounded-none"
             : bleed || fill
               ? ""
               : "rounded-md",
         ].join(" ")}
         onMouseMove={resetHideTimer}
+        onPointerDown={resetHideTimer}
         onMouseLeave={() => {
           if (playing) setShowControls(false);
         }}
@@ -527,7 +557,7 @@ export function WatchPlayer({
 
         <div
           className={[
-            "absolute inset-x-0 bottom-0 px-4 pb-3 transition-opacity duration-300",
+            "absolute inset-x-0 bottom-0 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity duration-300",
             showControls ? "pointer-events-auto" : "pointer-events-none",
           ].join(" ")}
           style={{ opacity: showControls ? 1 : 0 }}
