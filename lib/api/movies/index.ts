@@ -1,4 +1,4 @@
-import { fetchAllPages } from "../core/pagination";
+import { fetchAllPages, fetchPage } from "../core/pagination";
 import { apiFetch, catalogCache } from "../core/client";
 import { clientCached, CLIENT_CATALOG_TTL_MS } from "../core/client-cache";
 import type { ContentListItemRead, ContentRead } from "../types";
@@ -22,6 +22,17 @@ export async function listMovies(params?: CatalogListParams): Promise<ContentLis
   const path = moviesListPath(params);
   return clientCached(`movies:list:${path}`, CLIENT_CATALOG_TTL_MS, () =>
     fetchAllPages<ContentListItemRead>(path, 100, catalogCache),
+  );
+}
+
+/** Single-page movie list — prefer this for home rails instead of draining all pages. */
+export async function listMoviesPage(
+  params?: CatalogListParams,
+  limit = 12,
+): Promise<ContentListItemRead[]> {
+  const path = moviesListPath(params);
+  return clientCached(`movies:page:${path}:${limit}`, CLIENT_CATALOG_TTL_MS, () =>
+    fetchPage<ContentListItemRead>(path, 1, limit, catalogCache),
   );
 }
 

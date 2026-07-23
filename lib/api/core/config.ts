@@ -29,20 +29,24 @@ export function posterUrl(posterKey: string | null | undefined): string | undefi
 }
 
 /**
- * Smaller poster URL for thumbnails. When NEXT_PUBLIC_R2_IMAGE_WIDTH_PARAM is set
- * (e.g. "width"), appends `?width=220` for CDN/worker transforms.
+ * Smaller poster URL for rail thumbnails.
+ * Prefers generated `-w{width}.webp` sibling objects written on upload optimize.
+ * Falls back to the full poster (CdnImage can also fall back on load error).
  */
 export function posterThumbUrl(
   posterKey: string | null | undefined,
-  width = 220,
+  width = 400,
 ): string | undefined {
   const base = posterUrl(posterKey);
   if (!base) return undefined;
   if (!isR2ImageUrl(base)) return base;
 
+  // movies/x/poster.webp -> movies/x/poster-w400.webp
+  const thumb = base.replace(/(\.[^.?#]+)(\?[^#]*)?(#.*)?$/, `-w${width}$1$2$3`);
+  if (thumb !== base) return thumb;
+
   const param = process.env.NEXT_PUBLIC_R2_IMAGE_WIDTH_PARAM?.trim();
   if (!param) return base;
-
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}${param}=${width}`;
 }

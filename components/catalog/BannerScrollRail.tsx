@@ -35,15 +35,22 @@ export function BannerScrollRail({
       style={{ WebkitOverflowScrolling: "touch" }}
     >
       <ul className="m-0 flex w-max list-none flex-row gap-3 p-0 snap-x snap-mandatory">
-        {items.map((card, i) => (
+        {items.map((card, i) => {
+          const isClone = autoScroll && i >= cards.length;
+          return (
           <li
             key={`${card.watchHref ?? "no-href"}-${i}`}
             className="w-[min(320px,80vw)] shrink-0 snap-start sm:w-85 md:w-95"
-            aria-hidden={autoScroll && i >= cards.length ? true : undefined}
+            aria-hidden={isClone ? true : undefined}
           >
-            <BannerCard {...card} imagePriority={i < imagePriorityCount} />
+            <BannerCard
+              {...card}
+              imagePriority={!isClone && i < imagePriorityCount}
+              imageContain={card.imageContain}
+            />
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

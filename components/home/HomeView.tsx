@@ -13,6 +13,7 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { listPurchases } from "@/lib/api/purchases";
+import { listWatchProgress } from "@/lib/api/playback";
 import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
@@ -21,15 +22,13 @@ import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { HeroFeaturedSlide } from "@/lib/api/catalog";
 import type { PromotionBannerRead } from "@/lib/api/catalog";
-import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
+import type { ContentListItemRead, SeriesRead, WatchProgressRead } from "@/lib/api/types";
 
 type HomeViewProps = {
   movies: ContentListItemRead[];
   seriesList: SeriesRead[];
-  seasons: SeasonRead[][];
   initialTrending: PosterCardProps[];
   initialFreeToday: PosterCardProps[];
-  initialSubscribe: PosterCardProps[];
   promotionBanners: PromotionBannerRead[];
   heroFeatured: HeroFeaturedSlide[];
 };
@@ -50,6 +49,13 @@ export function HomeView({
   const isAdmin = isAdminUser(user);
 
   const [ownedIds, setOwnedIds] = useState<Set<string>>(() => new Set());
+  const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>([]);
+
+  const movieById = useMemo(() => {
+    const map = new Map<string, ContentListItemRead>();
+    for (const movie of movies) map.set(movie.id, movie);
+    return map;
+  }, [movies]);
 
   const moviePosters = useMemo(
     () => movies.slice(0, RAIL_LIMIT).map((m, i) => movieToPoster(m, i, ownedIds, isAdmin)),
@@ -63,6 +69,15 @@ export function HomeView({
 
   const topMovieBanners = useMemo<BannerCardProps[]>(
     () => movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds, isAdmin)),
+    [movies, ownedIds, isAdmin],
+  );
+
+  const libraryPosters = useMemo(
+    () =>
+      movies
+        .filter((m) => ownedIds.has(m.id))
+        .slice(0, RAIL_LIMIT)
+        .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin)),
     [movies, ownedIds, isAdmin],
   );
 
@@ -80,6 +95,30 @@ export function HomeView({
       cancelled = true;
     };
   }, [loggedIn]);
+
+  useEffect(() => {
+    if (!loggedIn) {
+      setContinuePosters([]);
+      return;
+    }
+    let cancelled = false;
+    listWatchProgress()
+      .catch(swallow("home: load watch progress", [] as WatchProgressRead[]))
+      .then((progress) => {
+        if (cancelled) return;
+        const posters: PosterCardProps[] = [];
+        for (const row of progress) {
+          if (posters.length >= RAIL_LIMIT) break;
+          const movie = movieById.get(row.content_id);
+          if (!movie) continue;
+          posters.push(movieToPoster(movie, posters.length, ownedIds, isAdmin));
+        }
+        setContinuePosters(posters);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loggedIn, movieById, ownedIds, isAdmin]);
 
   const displayBanners = useMemo((): PromotionBannerRead[] => {
     if (promotionBanners.length > 0) return promotionBanners;
@@ -133,9 +172,8 @@ export function HomeView({
           showSeeAll
           seeAllHref="/movies"
           seeAllLabel={t("sectionSeeAll")}
-
         />
-        <PosterScrollRail posters={moviePosters.length > 0 ? moviePosters : initialTrending.slice(0, RAIL_LIMIT)} gutter="sm" />
+        <PosterScrollRail posters={trendingPosters} gutter="sm" />
       </section>
 
       <section className="pt-8 pb-6">
@@ -144,7 +182,6 @@ export function HomeView({
           showSeeAll
           seeAllHref="/series"
           seeAllLabel={t("sectionSeeAll")}
-
         />
         <BannerScrollRail cards={seriesBanners} />
       </section>
@@ -153,39 +190,31 @@ export function HomeView({
         <PromotionBannerStrip banners={displayBanners} />
       </section>
 
-      <section className="pt-8 pb-6">
-        <SectionHeader
-          title={t("homeContinueWatching")}
-          showSeeAll
-          seeAllHref="/my-library"
-          seeAllLabel={t("sectionSeeAll")}
-
-        />
-        <PosterScrollRail posters={trendingPosters} gutter="sm" />
-      </section>
+      {continuePosters.length > 0 ? (
+        <section className="pt-8 pb-6">
+          <SectionHeader
+            title={t("homeContinueWatching")}
+            showSeeAll
+            seeAllHref="/my-library"
+            seeAllLabel={t("sectionSeeAll")}
+          />
+          <PosterScrollRail posters={continuePosters} gutter="sm" />
+        </section>
+      ) : null}
 
       <HomeGenreRails movies={movies} ownedIds={ownedIds} isAdmin={isAdmin} />
 
-      <section className="pt-8 pb-6">
-        <SectionHeader
-          title={t("seriesPopularTitle")}
-          showSeeAll
-          seeAllHref="/series"
-          seeAllLabel={t("sectionSeeAll")}
-        />
-        <BannerScrollRail cards={seriesBanners} />
-      </section>
-
-      <section className="pt-8 pb-12">
-        <SectionHeader
-          title={t("homeLibrarySpotlight")}
-          showSeeAll
-          seeAllHref="/my-library"
-          seeAllLabel={t("sectionSeeAll")}
-
-        />
-        <PosterScrollRail posters={trendingPosters} gutter="sm" />
-      </section>
+      {libraryPosters.length > 0 ? (
+        <section className="pt-8 pb-12">
+          <SectionHeader
+            title={t("homeLibrarySpotlight")}
+            showSeeAll
+            seeAllHref="/my-library"
+            seeAllLabel={t("sectionSeeAll")}
+          />
+          <PosterScrollRail posters={libraryPosters} gutter="sm" />
+        </section>
+      ) : null}
     </PageShell>
   );
 }
