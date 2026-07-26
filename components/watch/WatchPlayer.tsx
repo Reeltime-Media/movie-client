@@ -3,11 +3,14 @@
 import Hls from "hls.js";
 import {
   AlertCircle,
+  Gauge,
   Loader2,
   Maximize2,
   Minimize2,
   Pause,
+  PictureInPicture2,
   Play,
+  RotateCcw,
   Settings,
   Volume1,
   Volume2,
@@ -18,6 +21,16 @@ import { useWatchProgressSync } from "@/hooks/watch/use-watch-progress-sync";
 import { safePlay } from "@/lib/video/safe-play";
 
 type QualityLevel = { height: number; bitrate: number; index: number };
+
+const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const REWIND_SECONDS = 10;
+
+/** Safari (incl. iOS) gates PiP behind webkit-prefixed APIs on some versions. */
+type PipVideo = HTMLVideoElement & {
+  webkitSupportsPresentationMode?: (mode: string) => boolean;
+  webkitSetPresentationMode?: (mode: "picture-in-picture" | "inline") => void;
+  webkitPresentationMode?: string;
+};
 
 /** iOS/iPadOS — Fullscreen API on a div is a no-op; only <video>.webkitEnterFullscreen works. */
 type WebkitVideo = HTMLVideoElement & {
@@ -93,6 +106,9 @@ export function WatchPlayer({
   const [selectedLevel, setSelectedLevel] = useState(-1);
   const [autoLevel, setAutoLevel] = useState(-1);
   const [showQuality, setShowQuality] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSpeed, setShowSpeed] = useState(false);
+  const [pipActive, setPipActive] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   /** CSS immersive fallback when Fullscreen API isn't available (e.g. iOS Safari). */
   const [cssFullscreen, setCssFullscreen] = useState(false);
@@ -375,6 +391,29 @@ export function WatchPlayer({
     };
   }, [cssFullscreen]);
 
+  // Sync the PiP button when the user exits via the browser's own floating
+  // window (rather than our button), or via Safari's presentation-mode API.
+  useEffect(() => {
+    const video = videoRef.current as PipVideo | null;
+    if (!video) return;
+
+    const onEnter = () => setPipActive(true);
+    const onLeave = () => setPipActive(false);
+    const onPresentationModeChange = () => {
+      setPipActive(video.webkitPresentationMode === "picture-in-picture");
+    };
+
+    video.addEventListener("enterpictureinpicture", onEnter);
+    video.addEventListener("leavepictureinpicture", onLeave);
+    video.addEventListener("webkitpresentationmodechanged", onPresentationModeChange);
+
+    return () => {
+      video.removeEventListener("enterpictureinpicture", onEnter);
+      video.removeEventListener("leavepictureinpicture", onLeave);
+      video.removeEventListener("webkitpresentationmodechanged", onPresentationModeChange);
+    };
+  }, []);
+
   // Lock page scroll + reparent player shell to <body> for CSS immersive.
   // iOS Safari traps position:fixed inside overflow-x:hidden ancestors
   // (PageShell / WatchPlayerFrame), so fixed inset-0 looks like a no-op.
@@ -459,6 +498,42 @@ export function WatchPlayer({
     if (hlsRef.current) hlsRef.current.currentLevel = levelIndex;
     setSelectedLevel(levelIndex);
     setShowQuality(false);
+  }, []);
+
+  const skip = useCallback(
+    (deltaSeconds: number) => {
+      const v = videoRef.current;
+      if (!v || !Number.isFinite(v.duration)) return;
+      v.currentTime = Math.min(Math.max(0, v.currentTime + deltaSeconds), v.duration);
+      currentTimeRef.current = v.currentTime;
+      updateProgressUi();
+    },
+    [updateProgressUi],
+  );
+
+  const changeSpeed = useCallback((rate: number) => {
+    const v = videoRef.current;
+    if (v) v.playbackRate = rate;
+    setPlaybackRate(rate);
+    setShowSpeed(false);
+  }, []);
+
+  const togglePip = useCallback(async () => {
+    const video = videoRef.current as PipVideo | null;
+    if (!video) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (video.webkitPresentationMode === "picture-in-picture") {
+        video.webkitSetPresentationMode?.("inline");
+      } else if (typeof video.requestPictureInPicture === "function") {
+        await video.requestPictureInPicture();
+      } else if (video.webkitSetPresentationMode) {
+        video.webkitSetPresentationMode("picture-in-picture");
+      }
+    } catch {
+      /* PiP can reject (e.g. no user gesture, unsupported media) — no-op. */
+    }
   }, []);
 
   const toggleFullscreen = useCallback(() => {
@@ -559,15 +634,15 @@ export function WatchPlayer({
         e.preventDefault();
         togglePlay();
       }
-      if (e.code === "ArrowRight") v.currentTime = Math.min(v.duration, v.currentTime + 10);
-      if (e.code === "ArrowLeft") v.currentTime = Math.max(0, v.currentTime - 10);
+      if (e.code === "ArrowRight") skip(REWIND_SECONDS);
+      if (e.code === "ArrowLeft") skip(-REWIND_SECONDS);
       if (e.code === "KeyF") toggleFullscreen();
       if (e.code === "KeyM") toggleMute();
       if (e.code === "Escape" && cssFullscreen) setCssFullscreen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePlay, toggleFullscreen, toggleMute, cssFullscreen]);
+  }, [togglePlay, toggleFullscreen, toggleMute, cssFullscreen, skip]);
 
   const qualityLabel =
     selectedLevel === -1
@@ -608,7 +683,6 @@ export function WatchPlayer({
           preload={preloadMode}
           aria-label={`Video player: ${title}`}
           controlsList="nodownload noremoteplayback"
-          disablePictureInPicture
           disableRemotePlayback
           onContextMenu={(e) => e.preventDefault()}
         />
@@ -678,6 +752,15 @@ export function WatchPlayer({
               )}
             </button>
 
+            <button
+              type="button"
+              onClick={() => skip(-REWIND_SECONDS)}
+              aria-label="Rewind 10 seconds"
+              className="text-white transition-opacity hover:opacity-75"
+            >
+              <RotateCcw size={18} />
+            </button>
+
             <div className="group/vol flex items-center gap-1.5">
               <button
                 type="button"
@@ -716,6 +799,41 @@ export function WatchPlayer({
             </span>
 
             <div className="flex-1" />
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSpeed((v) => !v)}
+                className="flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px] font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Playback speed"
+              >
+                <Gauge size={14} />
+                <span>{playbackRate === 1 ? "1x" : `${playbackRate}x`}</span>
+              </button>
+
+              {showSpeed && (
+                <div className="absolute bottom-full right-0 mb-2 min-w-24 overflow-hidden rounded-md border border-white/10 bg-[#141414] py-1">
+                  <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-white/35">
+                    Speed
+                  </div>
+                  {PLAYBACK_RATES.map((rate) => (
+                    <button
+                      key={rate}
+                      type="button"
+                      onClick={() => changeSpeed(rate)}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-white/75 transition-colors hover:bg-white/8 hover:text-white"
+                    >
+                      {playbackRate === rate && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+                      )}
+                      <span className={playbackRate === rate ? "text-brand" : ""}>
+                        {rate === 1 ? "Normal" : `${rate}x`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {levels.length > 0 && (
               <div className="relative">
@@ -779,6 +897,18 @@ export function WatchPlayer({
                 )}
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => void togglePip()}
+              aria-label={pipActive ? "Exit picture-in-picture" : "Picture-in-picture"}
+              className={[
+                "transition-colors",
+                pipActive ? "text-brand" : "text-white/75 hover:text-white",
+              ].join(" ")}
+            >
+              <PictureInPicture2 size={16} />
+            </button>
 
             <button
               type="button"

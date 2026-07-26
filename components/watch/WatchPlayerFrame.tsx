@@ -10,8 +10,6 @@ import {
 
 type WatchPlayerFrameProps = {
   children: ReactNode;
-  /** Series desktop theater — fill the side pane instead of locking 16:9. */
-  theater?: boolean;
 };
 
 /**
@@ -22,9 +20,9 @@ type WatchPlayerFrameProps = {
  * height in sync — a fixed height was the bug that pillarboxed video after
  * rotating landscape → portrait.
  */
-export function WatchPlayerFrame({ children, theater = false }: WatchPlayerFrameProps) {
+export function WatchPlayerFrame({ children }: WatchPlayerFrameProps) {
   const ref = useRef<HTMLDivElement>(null);
-  /** Max width that still fits in the visible viewport as 16:9. null = fill parent. */
+  /** Max width that still fits in the visible viewport as 16:9. */
   const [maxW, setMaxW] = useState<number | null>(null);
 
   useEffect(() => {
@@ -32,13 +30,6 @@ export function WatchPlayerFrame({ children, theater = false }: WatchPlayerFrame
     if (!el) return;
 
     const measure = () => {
-      const desktopTheater =
-        theater && window.matchMedia("(min-width: 1024px)").matches;
-      if (desktopTheater) {
-        setMaxW(null);
-        return;
-      }
-
       const parent = el.parentElement;
       if (!parent) return;
 
@@ -77,37 +68,23 @@ export function WatchPlayerFrame({ children, theater = false }: WatchPlayerFrame
       window.visualViewport?.removeEventListener("resize", measure);
       window.visualViewport?.removeEventListener("scroll", measure);
     };
-  }, [theater]);
+  }, []);
 
-  const desktopFill = theater && maxW === null;
-
-  const style: CSSProperties = desktopFill
-    ? {
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        background: "#000",
-      }
-    : {
-        position: "relative",
-        width: "100%",
-        maxWidth: maxW ?? "100%",
-        aspectRatio: "16 / 9",
-        height: "auto",
-        marginInline: "auto",
-        overflow: "hidden",
-        background: "#000",
-      };
+  const style: CSSProperties = {
+    position: "relative",
+    width: "100%",
+    maxWidth: maxW ?? "100%",
+    aspectRatio: "16 / 9",
+    height: "auto",
+    marginInline: "auto",
+    overflow: "hidden",
+    background: "#000",
+  };
 
   return (
     <div
       ref={ref}
-      className={
-        theater
-          ? "watch-player-frame watch-player-frame--theater"
-          : "watch-player-frame"
-      }
+      className="watch-player-frame"
       style={style}
       data-watch-frame={maxW != null ? `v2-maxw-${maxW}` : "v2-fill"}
     >

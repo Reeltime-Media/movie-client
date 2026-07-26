@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, User } from "lucide-react";
+import { MessageSquare, ThumbsDown, ThumbsUp, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import {
   createComment,
   listComments,
   reportComment,
+  voteComment,
   type CommentRead,
   type CommentThreadRead,
 } from "@/lib/api/comments";
@@ -79,6 +80,20 @@ function markReportedInTree(
     }
     if (node.replies.length > 0) {
       return { ...node, replies: markReportedInTree(node.replies, commentId) };
+    }
+    return node;
+  });
+}
+
+function updateCommentInTree(
+  roots: CommentThreadRead[],
+  commentId: string,
+  updater: (c: CommentThreadRead) => CommentThreadRead,
+): CommentThreadRead[] {
+  return roots.map((node) => {
+    if (node.id === commentId) return updater(node);
+    if (node.replies.length > 0) {
+      return { ...node, replies: updateCommentInTree(node.replies, commentId, updater) };
     }
     return node;
   });
@@ -222,6 +237,34 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
       .catch(() => {});
   }
 
+  function handleVote(comment: CommentThreadRead, direction: 1 | -1) {
+    if (!loggedIn) {
+      window.location.href = loginHref;
+      return;
+    }
+    const prevValue = comment.user_vote ?? 0;
+    const nextValue: 1 | -1 | 0 = prevValue === direction ? 0 : direction;
+    const scoreDelta = nextValue - prevValue;
+
+    setComments((prev) =>
+      updateCommentInTree(prev, comment.id, (c) => ({
+        ...c,
+        score: c.score + scoreDelta,
+        user_vote: nextValue === 0 ? null : nextValue,
+      })),
+    );
+
+    voteComment(comment.id, nextValue).catch(() => {
+      setComments((prev) =>
+        updateCommentInTree(prev, comment.id, (c) => ({
+          ...c,
+          score: c.score - scoreDelta,
+          user_vote: prevValue === 0 ? null : (prevValue as 1 | -1),
+        })),
+      );
+    });
+  }
+
   return (
     <section
       className="mt-8"
@@ -326,6 +369,7 @@ export function MovieComments({ contentId, movieTitle }: MovieCommentsProps) {
                 onReplyBodyChange={setReplyBody}
                 onReplySubmit={handleReplySubmit}
                 onReport={handleReport}
+                onVote={handleVote}
               />
             ))}
           </ul>
@@ -359,6 +403,7 @@ type CommentThreadItemProps = {
   onReplyBodyChange: (value: string) => void;
   onReplySubmit: (parentId: string) => void;
   onReport: (commentId: string) => void;
+  onVote: (comment: CommentThreadRead, direction: 1 | -1) => void;
 };
 
 function CommentThreadItem({
@@ -374,6 +419,7 @@ function CommentThreadItem({
   onReplyBodyChange,
   onReplySubmit,
   onReport,
+  onVote,
 }: CommentThreadItemProps) {
   const isReplying = replyingTo === comment.id;
   const hue = avatarHue(comment.author.id);
@@ -409,6 +455,36 @@ function CommentThreadItem({
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-4 text-[12px] font-semibold">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => onVote(comment, 1)}
+                  aria-label={t("commentsVoteUp")}
+                  aria-pressed={comment.user_vote === 1}
+                  className={
+                    comment.user_vote === 1
+                      ? "text-brand"
+                      : "text-text-muted transition-colors hover:text-text"
+                  }
+                >
+                  <ThumbsUp size={14} className={comment.user_vote === 1 ? "fill-current" : ""} aria-hidden />
+                </button>
+                <span className="min-w-[1.5ch] text-center text-text-muted">{comment.score}</span>
+                <button
+                  type="button"
+                  onClick={() => onVote(comment, -1)}
+                  aria-label={t("commentsVoteDown")}
+                  aria-pressed={comment.user_vote === -1}
+                  className={
+                    comment.user_vote === -1
+                      ? "text-danger"
+                      : "text-text-muted transition-colors hover:text-text"
+                  }
+                >
+                  <ThumbsDown size={14} className={comment.user_vote === -1 ? "fill-current" : ""} aria-hidden />
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => (isReplying ? onReplyCancel() : onReplyOpen(comment.id))}
@@ -482,6 +558,7 @@ function CommentThreadItem({
                 onReplyBodyChange={onReplyBodyChange}
                 onReplySubmit={onReplySubmit}
                 onReport={onReport}
+                onVote={onVote}
               />
             ))}
           </ul>

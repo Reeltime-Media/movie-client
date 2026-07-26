@@ -1,7 +1,7 @@
 "use client";
 "use no memo";
 
-import { Play, X } from "lucide-react";
+import { Play, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -149,30 +149,38 @@ function PosterFace({
   );
 }
 
-function TitleBelow({ titleBelow, titleKm, year, entitlement }: PosterCardProps) {
+function TitleBelow({ titleBelow, titleKm, year, entitlement, rating }: PosterCardProps) {
   const km = kmTitle(titleKm);
   const titleClass =
     "truncate text-[15px] font-semibold leading-snug text-text group-hover:text-text/90";
   return (
-    <div className="mt-2 min-w-0">
-      {km ? (
-        <>
+    <div className="mt-2 flex min-w-0 items-start justify-between gap-2">
+      <div className="min-w-0 flex-1">
+        {km ? (
+          <>
+            <p className={titleClass} suppressHydrationWarning>
+              {km}
+            </p>
+            <p className={`mt-0.5 ${titleClass}`} suppressHydrationWarning>
+              {titleBelow}
+            </p>
+          </>
+        ) : (
           <p className={titleClass} suppressHydrationWarning>
-            {km}
-          </p>
-          <p className={`mt-0.5 ${titleClass}`} suppressHydrationWarning>
             {titleBelow}
           </p>
-        </>
-      ) : (
-        <p className={titleClass} suppressHydrationWarning>
-          {titleBelow}
+        )}
+        {year ? (
+          <p className="mt-0.5 text-[11px] font-medium text-text-muted">{year}</p>
+        ) : entitlement?.kind === "subscribed" ? (
+          <p className="mt-0.5 text-[11px] font-semibold text-success">{entitlement.value}</p>
+        ) : null}
+      </div>
+      {rating ? (
+        <p className="mt-0.5 inline-flex shrink-0 items-center gap-0.5 text-[13px] font-bold text-warning">
+          <Star size={13} className="fill-warning text-warning" aria-hidden />
+          {rating}
         </p>
-      )}
-      {year ? (
-        <p className="mt-0.5 text-[11px] font-medium text-text-muted">{year}</p>
-      ) : entitlement?.kind === "subscribed" ? (
-        <p className="mt-0.5 text-[11px] font-semibold text-success">{entitlement.value}</p>
       ) : null}
     </div>
   );

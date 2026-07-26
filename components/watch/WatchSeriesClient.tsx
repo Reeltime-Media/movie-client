@@ -1,15 +1,20 @@
 "use client";
 
-import { Loader2, PlayCircle, Star } from "lucide-react";
+import { Calendar, Check, Clock, Loader2, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
+import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
+import { useFavorites } from "@/components/providers/FavoritesProvider";
+import { useI18n } from "@/components/providers/LocaleProvider";
+import { CdnImage } from "@/components/ui/CdnImage";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
-import { WatchDetailBody, WatchSeriesTheater } from "@/components/watch/WatchPageSection";
-import { WatchSeriesEpisodeSidebar } from "@/components/watch/WatchSeriesEpisodeSidebar";
+import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
+import { WatchSeriesEpisodes } from "@/components/watch/WatchSeriesEpisodes";
 import { useSeriesWatch } from "@/hooks/watch/use-series-watch";
+import { posterThumbUrl } from "@/lib/api/core";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 
 // Lazy-loaded: pulls in hls.js, which we don't want in the initial bundle.
@@ -26,6 +31,37 @@ const WatchPlayer = dynamic(
   },
 );
 
+const MovieComments = dynamic(
+  () => import("@/components/comments/MovieComments").then((m) => m.MovieComments),
+  { ssr: false },
+);
+
+function FavouriteButton({ contentId }: { contentId: string }) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { t } = useI18n();
+  const active = isFavorite(contentId);
+
+  return (
+    <button
+      type="button"
+      onClick={() => void toggleFavorite(contentId)}
+      className={[
+        "inline-flex shrink-0 items-center gap-1.5 rounded-md px-4 py-2 text-[13px] font-bold transition-colors",
+        active
+          ? "border border-border bg-surface-elevated text-text hover:border-border-hover"
+          : "bg-brand text-white hover:bg-brand-hover",
+      ].join(" ")}
+    >
+      {active ? (
+        <Check size={15} aria-hidden />
+      ) : (
+        <Plus size={15} aria-hidden />
+      )}
+      {active ? t("favoriteRemove") : t("favoriteAdd")}
+    </button>
+  );
+}
+
 type WatchSeriesClientProps = {
   seriesSlug: string;
   playback: string[];
@@ -41,6 +77,7 @@ export function WatchSeriesClient({
   initialSeasons = [],
 }: WatchSeriesClientProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const {
     series,
     seasons,
@@ -122,8 +159,8 @@ export function WatchSeriesClient({
               </Link>
             </div>
             {seasons.length > 0 ? (
-              <div className="mt-6 max-w-md">
-                <WatchSeriesEpisodeSidebar
+              <div className="mt-6 max-w-2xl">
+                <WatchSeriesEpisodes
                   seriesSlug={series.slug}
                   seriesTitle={series.title}
                   seasons={seasons}
@@ -153,27 +190,126 @@ export function WatchSeriesClient({
 
   return (
     <PageShell fullWidth>
-      <section>
-        <WatchSeriesTheater
-          media={
-            playbackLoading || !playbackUrl ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black">
-                <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
-                <span className="sr-only">Loading stream</span>
+      {playbackLoading || !playbackUrl ? (
+        <WatchPlayerBand>
+          <div className="absolute inset-0 flex items-center justify-center bg-black">
+            <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
+            <span className="sr-only">Loading stream</span>
+          </div>
+        </WatchPlayerBand>
+      ) : (
+        <WatchPlayerBand>
+          <WatchPlayer
+            key={playbackUrl}
+            contentId={episode.id}
+            hlsSrc={playbackUrl}
+            title={playerTitle}
+            initialTime={resumeTime ?? 0}
+            fill
+          />
+        </WatchPlayerBand>
+      )}
+
+      <section className="border-b border-border py-6 md:py-8">
+        <WatchDetailBody>
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 sm:flex-row sm:gap-6">
+            {series.poster_key ? (
+              <div
+                className="relative aspect-2/3 w-[140px] shrink-0 overflow-hidden rounded-md border border-border sm:w-[160px]"
+                style={{ viewTransitionName: `poster-${series.id}` }}
+              >
+                <CdnImage
+                  src={posterThumbUrl(series.poster_key, 320) ?? ""}
+                  alt={series.title}
+                  fill
+                  sizes="160px"
+                  className="object-cover"
+                />
               </div>
-            ) : (
-              <WatchPlayer
-                key={playbackUrl}
-                contentId={episode.id}
-                hlsSrc={playbackUrl}
-                title={playerTitle}
-                initialTime={resumeTime ?? 0}
-                fill
-              />
-            )
-          }
-          sidebar={
-            <WatchSeriesEpisodeSidebar
+            ) : null}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h1 className="text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-text md:text-[26px]">
+                    {series.title}
+                  </h1>
+                  <p className="mt-1 text-[13px] font-semibold text-text-muted">
+                    S{seasonNum} E{episodeNum} · {episode.title}
+                  </p>
+                </div>
+                <FavouriteButton contentId={series.id} />
+              </div>
+
+              {series.genres.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {series.genres.map((g) => (
+                    <span
+                      key={g}
+                      className="rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-black"
+                    >
+                      {g}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] font-medium text-text-muted">
+                {series.release_year ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar size={13} className="text-text-disabled" aria-hidden />
+                    {series.release_year}
+                  </span>
+                ) : null}
+                {episode.runtime ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock size={13} className="text-text-disabled" aria-hidden />
+                    {episode.runtime}
+                  </span>
+                ) : null}
+                {series.rating ? (
+                  <span className="inline-flex items-center gap-1 text-warning">
+                    <Star size={13} className="fill-current" aria-hidden />
+                    {series.rating}
+                  </span>
+                ) : null}
+              </div>
+
+              {series.description ? (
+                <p className="mt-4 max-w-3xl text-[13px] leading-relaxed text-text-muted">
+                  {series.description}
+                </p>
+              ) : null}
+
+              {episode.description ? (
+                <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-text-muted">
+                  {episode.description}
+                </p>
+              ) : null}
+
+              <div className="mt-5 grid max-w-md grid-cols-[110px_1fr] gap-y-2 border-t border-border pt-4 text-[13px] sm:grid-cols-[130px_1fr]">
+                {series.genres.length > 0 ? (
+                  <>
+                    <span className="text-text-muted">{t("watchDetailsGenre")}</span>
+                    <span className="text-text">{series.genres.join(", ")}</span>
+                  </>
+                ) : null}
+                {series.release_year ? (
+                  <>
+                    <span className="text-text-muted">{t("watchDetailsReleaseDate")}</span>
+                    <span className="text-text">{series.release_year}</span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </WatchDetailBody>
+      </section>
+
+      <section className="border-b border-border py-6 md:py-8">
+        <WatchDetailBody>
+          <div className="mx-auto max-w-6xl">
+            <WatchSeriesEpisodes
               seriesSlug={series.slug}
               seriesTitle={series.title}
               seasons={seasons}
@@ -182,78 +318,25 @@ export function WatchSeriesClient({
               hasSubscription={hasSubscription}
               onEpisodeHover={prefetchEpisode}
             />
-          }
-        />
-
-        <WatchDetailBody>
-          <div className="mt-6 pb-8">
-            <h1 className="text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-text md:text-[26px]">
-              {series.title}
-            </h1>
-            {series.description ? (
-              <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-text-muted">
-                {series.description}
-              </p>
-            ) : null}
-
-            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] font-medium text-text-muted border-t border-border pt-4">
-              <span className="inline-flex items-center gap-1.5 text-text">
-                <PlayCircle size={14} className="text-text-muted" aria-hidden />
-                S{seasonNum} E{episodeNum}
-              </span>
-              <span className="font-semibold text-text">{episode.title}</span>
-              {episode.runtime && (
-                <>
-                  <span className="select-none text-border-hover" aria-hidden>
-                    ·
-                  </span>
-                  <span>{episode.runtime}</span>
-                </>
-              )}
-              {series.release_year && (
-                <>
-                  <span className="select-none text-border-hover" aria-hidden>
-                    ·
-                  </span>
-                  <span>{series.release_year}</span>
-                </>
-              )}
-              {series.rating && (
-                <>
-                  <span className="select-none text-border-hover" aria-hidden>
-                    ·
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-warning">
-                    <Star size={14} className="fill-current" aria-hidden />
-                    {series.rating}
-                  </span>
-                </>
-              )}
-            </div>
-
-            {series.genres.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {series.genres.map((g) => (
-                  <span
-                    key={g}
-                    className="rounded-md border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted"
-                  >
-                    {g}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {episode.description ? (
-              <p className="mt-4 text-[13px] leading-relaxed text-text-muted">
-                {episode.description}
-              </p>
-            ) : null}
           </div>
         </WatchDetailBody>
       </section>
 
-      <WatchDiscoveryRails seriesSlug={series.slug} genres={series.genres} />
+      <WatchDiscoveryRails
+        seriesSlug={series.slug}
+        genres={series.genres}
+        seriesPicksLayout="grid"
+      />
+
+      <section className="border-b border-border py-8 md:py-10">
+        <WatchDetailBody>
+          <div className="mx-auto max-w-6xl">
+            <LazyWhenVisible>
+              <MovieComments contentId={episode.id} movieTitle={series.title} />
+            </LazyWhenVisible>
+          </div>
+        </WatchDetailBody>
+      </section>
     </PageShell>
   );
 }

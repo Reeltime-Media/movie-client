@@ -3,6 +3,7 @@
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
 import { PosterCard } from "@/components/catalog/PosterCard";
 import type { PosterCardProps } from "@/types/poster-card";
+import type { RefObject } from "react";
 
 const GUTTER = {
   sm: "px-4 sm:px-6 md:px-8",
@@ -17,6 +18,7 @@ export function PosterScrollRail({
   autoScroll = false,
   speed = 0.6,
   direction = "left",
+  scrollRef: externalRef,
 }: {
   posters: readonly PosterCardProps[];
   imagePriorityCount?: number;
@@ -25,8 +27,14 @@ export function PosterScrollRail({
   autoScroll?: boolean;
   speed?: number;
   direction?: "left" | "right";
+  /** Exposes the scroll container so a SectionHeader can drive prev/next arrows. */
+  scrollRef?: RefObject<HTMLDivElement | null>;
 }) {
-  const scrollRef = useAutoScroll(autoScroll ? speed : 0, 2000, direction);
+  const autoScrollRef = useAutoScroll(autoScroll ? speed : 0, 2000, direction);
+  const scrollRef = (node: HTMLDivElement | null) => {
+    autoScrollRef.current = node;
+    if (externalRef) externalRef.current = node;
+  };
 
   if (!posters.length) return null;
 

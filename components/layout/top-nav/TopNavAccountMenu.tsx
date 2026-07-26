@@ -36,10 +36,10 @@ export function TopNavAccountMenu({
         type="button"
         onClick={onToggle}
         className={[
-          "inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-border/80 bg-surface/70 py-1.5 pl-1.5 pr-2.5 transition-colors",
-          "hover:border-border-hover hover:bg-surface",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35",
-          accountOpen ? "border-border-hover bg-surface" : "",
+          "inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-white/25 bg-white/10 py-1.5 pl-1.5 pr-2.5 transition-colors",
+          "hover:border-white/40 hover:bg-white/20",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+          accountOpen ? "border-white/40 bg-white/20" : "",
         ].join(" ")}
         aria-expanded={accountOpen}
         aria-haspopup="menu"
@@ -54,7 +54,7 @@ export function TopNavAccountMenu({
         <ChevronDown
           size={14}
           className={[
-            "text-text-muted transition-transform",
+            "text-white/80 transition-transform",
             accountOpen ? "rotate-180" : "",
           ].join(" ")}
           aria-hidden

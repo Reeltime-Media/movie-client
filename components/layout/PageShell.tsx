@@ -30,7 +30,7 @@ export function PageShell({
         data-page-shell=""
         className="flex min-h-full flex-col overflow-x-hidden bg-bg text-text"
       >
-        <main className="min-w-0 flex-1 pt-18">
+        <main className="min-w-0 flex-1 pt-20">
           <div className={innerClass}>{children}</div>
         </main>
         {footer ? <SiteFooter /> : null}

@@ -31,6 +31,10 @@ export function useAutoScroll(
   }, [resumeDelay]);
 
   useEffect(() => {
+    // Nothing to animate — skip the rAF loop entirely so it can't fight
+    // programmatic scrolling (e.g. SectionHeader's prev/next arrows).
+    if (speed <= 0) return;
+
     if (
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches

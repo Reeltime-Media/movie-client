@@ -18,18 +18,13 @@ export function TopNavSearchForm({
   if (variant === "desktop") {
     return (
       <form
-        className="relative hidden w-[min(100%,12rem)] shrink min-w-0 md:block lg:w-[min(100%,14rem)] xl:w-[min(100%,18rem)] 2xl:w-[min(100%,22rem)]"
+        className="relative hidden w-[min(100%,14rem)] shrink min-w-0 md:block lg:w-[min(100%,16rem)] xl:w-[min(100%,20rem)] 2xl:w-[min(100%,24rem)]"
         role="search"
         onSubmit={onSubmit}
       >
         <label htmlFor={inputId} className="sr-only">
           {searchLabel}
         </label>
-        <Search
-          size={15}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-          aria-hidden
-        />
         <input
           id={inputId}
           name="q"
@@ -37,8 +32,15 @@ export function TopNavSearchForm({
           inputMode="search"
           enterKeyHint="search"
           placeholder={placeholder}
-          className="rt-search-input h-10 w-full rounded-lg border border-border/80 bg-surface/70 py-2 pl-9 pr-3 text-[13px] text-text outline-none transition-colors placeholder:text-text-disabled focus:border-border-hover focus:bg-surface focus:shadow-[0_0_0_3px_rgba(229,9,20,0.08)]"
+          className="rt-search-input h-11 w-full rounded-full border-none bg-white py-2 pl-4 pr-11 text-[13px] text-black outline-none transition-shadow placeholder:text-neutral-500 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.35)]"
         />
+        <button
+          type="submit"
+          aria-label={searchLabel}
+          className="absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-neutral-800"
+        >
+          <Search size={15} aria-hidden />
+        </button>
       </form>
     );
   }

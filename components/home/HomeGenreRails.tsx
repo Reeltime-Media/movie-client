@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { useI18n } from "@/components/providers/LocaleProvider";
@@ -8,12 +8,40 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { genreKeyFromLabel } from "@/lib/catalog-filter";
 import { buildHomeGenreRails, moviesGenreHref } from "@/lib/home-genre-rails";
 import type { ContentListItemRead } from "@/lib/api/types";
+import type { PosterCardProps } from "@/types/poster-card";
 
 type HomeGenreRailsProps = {
   movies: ContentListItemRead[];
   ownedIds: Set<string>;
   isAdmin: boolean;
 };
+
+function GenreRail({
+  label,
+  title,
+  posters,
+  seeAllLabel,
+}: {
+  label: string;
+  title: string;
+  posters: PosterCardProps[];
+  seeAllLabel: string;
+}) {
+  const railRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <section className="pt-4 pb-6">
+      <SectionHeader
+        title={title}
+        showSeeAll
+        seeAllHref={moviesGenreHref(label)}
+        seeAllLabel={seeAllLabel}
+        scrollRef={railRef}
+      />
+      <PosterScrollRail posters={posters} gutter="sm" scrollRef={railRef} />
+    </section>
+  );
+}
 
 export function HomeGenreRails({ movies, ownedIds, isAdmin }: HomeGenreRailsProps) {
   const { t } = useI18n();
@@ -38,15 +66,13 @@ export function HomeGenreRails({ movies, ownedIds, isAdmin }: HomeGenreRailsProp
         const title = knownKey !== "genreAll" ? t(knownKey) : rail.label;
 
         return (
-          <section key={rail.label} className="pt-4 pb-6">
-            <SectionHeader
-              title={title}
-              showSeeAll
-              seeAllHref={moviesGenreHref(rail.label)}
-              seeAllLabel={t("sectionSeeAll")}
-            />
-            <PosterScrollRail posters={rail.posters} gutter="sm" />
-          </section>
+          <GenreRail
+            key={rail.label}
+            label={rail.label}
+            title={title}
+            posters={rail.posters}
+            seeAllLabel={t("sectionSeeAll")}
+          />
         );
       })}
     </>

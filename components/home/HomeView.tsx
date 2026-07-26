@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import { BannerScrollRail } from "@/components/catalog/BannerScrollRail";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
@@ -50,6 +50,11 @@ export function HomeView({
 
   const [ownedIds, setOwnedIds] = useState<Set<string>>(() => new Set());
   const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>([]);
+
+  const freeTodayRailRef = useRef<HTMLDivElement>(null);
+  const trendingRailRef = useRef<HTMLDivElement>(null);
+  const continueRailRef = useRef<HTMLDivElement>(null);
+  const libraryRailRef = useRef<HTMLDivElement>(null);
 
   const movieById = useMemo(() => {
     const map = new Map<string, ContentListItemRead>();
@@ -156,8 +161,8 @@ export function HomeView({
 
       {initialFreeToday.length > 0 && (
         <ScrollReveal as="section" className="pt-8 pb-6">
-          <SectionHeader title={t("homeFreeTodayTitle")} />
-          <PosterScrollRail posters={initialFreeToday} gutter="sm" />
+          <SectionHeader title={t("homeFreeTodayTitle")} scrollRef={freeTodayRailRef} />
+          <PosterScrollRail posters={initialFreeToday} gutter="sm" scrollRef={freeTodayRailRef} />
         </ScrollReveal>
       )}
 
@@ -172,8 +177,9 @@ export function HomeView({
           showSeeAll
           seeAllHref="/movies"
           seeAllLabel={t("sectionSeeAll")}
+          scrollRef={trendingRailRef}
         />
-        <PosterScrollRail posters={trendingPosters} gutter="sm" />
+        <PosterScrollRail posters={trendingPosters} gutter="sm" scrollRef={trendingRailRef} />
       </section>
 
       <section className="pt-8 pb-6">
@@ -197,8 +203,9 @@ export function HomeView({
             showSeeAll
             seeAllHref="/my-library"
             seeAllLabel={t("sectionSeeAll")}
+            scrollRef={continueRailRef}
           />
-          <PosterScrollRail posters={continuePosters} gutter="sm" />
+          <PosterScrollRail posters={continuePosters} gutter="sm" scrollRef={continueRailRef} />
         </section>
       ) : null}
 
@@ -211,8 +218,9 @@ export function HomeView({
             showSeeAll
             seeAllHref="/my-library"
             seeAllLabel={t("sectionSeeAll")}
+            scrollRef={libraryRailRef}
           />
-          <PosterScrollRail posters={libraryPosters} gutter="sm" />
+          <PosterScrollRail posters={libraryPosters} gutter="sm" scrollRef={libraryRailRef} />
         </section>
       ) : null}
     </PageShell>

@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 import type { NavLink } from "./constants";
@@ -40,7 +41,12 @@ export function TopNavNavLinks({
             className={className(active)}
             onClick={onNavigate}
           >
-            {label(link.labelKey)}
+            <span className="inline-flex items-center gap-1">
+              {label(link.labelKey)}
+              {variant === "desktop" && link.hasCaret ? (
+                <ChevronDown size={13} className="opacity-70" aria-hidden />
+              ) : null}
+            </span>
           </Link>
         );
       })}

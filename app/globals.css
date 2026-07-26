@@ -386,6 +386,11 @@ html[lang="km"] body {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
 
+/* Top nav — red gradient bar */
+.rt-nav-gradient {
+  background: linear-gradient(180deg, var(--rt-brand) 0%, var(--rt-brand-pressed) 50%, var(--rt-bg) 98%);
+}
+
 [data-theme="light"] .rt-glass {
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(14px);
@@ -472,24 +477,5 @@ html[lang="km"] body {
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #000;
-}
-
-/* Desktop series theater: fill the side-by-side pane instead of locking 16:9. */
-@media (min-width: 1024px) {
-  .watch-series-theater {
-    height: calc(100svh - 4.5rem - 2.5rem);
-    flex-direction: row;
-    align-items: stretch;
-  }
-
-  .watch-player-frame--theater {
-    position: absolute !important;
-    inset: 0;
-    margin: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: none !important;
-    aspect-ratio: auto !important;
-  }
 }
 

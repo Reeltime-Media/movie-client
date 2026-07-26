@@ -20,22 +20,14 @@ export function TopNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Only go transparent at the very top of the home page —
-  // other pages may start with light-coloured content behind the nav.
-  const transparent = !scrolled && nav.pathname === "/";
-
-  const headerClass = transparent
-    ? "border-transparent bg-transparent shadow-none"
-    : "rt-glass";
-
   return (
     <header
       className={[
-        "fixed top-0 z-50 w-full overflow-visible border-b transition-all duration-400 ease-out",
-        headerClass,
+        "rt-nav-gradient fixed top-0 z-50 w-full overflow-visible transition-shadow duration-400 ease-out",
+        scrolled ? "shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]" : "",
       ].join(" ")}
     >
-      <div className="mx-auto flex h-18 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 md:px-8 lg:gap-5 lg:px-10 xl:px-12">
+      <div className="mx-auto flex h-20 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 md:px-8 lg:gap-5 lg:px-10 xl:px-12">
         <div className="flex min-w-0 shrink-0 items-center gap-4 lg:gap-6 xl:gap-8">
           <TopNavLogo />
           <TopNavNavLinks
@@ -56,7 +48,7 @@ export function TopNav() {
             variant="desktop"
           />
 
-          <div className="hidden h-7 w-px shrink-0 bg-border/80 xl:block" aria-hidden />
+          <div className="hidden h-7 w-px shrink-0 bg-white/20 xl:block" aria-hidden />
 
           <TopNavActions {...nav} />
         </div>

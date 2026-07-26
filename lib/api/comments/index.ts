@@ -63,3 +63,11 @@ export async function createComment(
 export async function reportComment(commentId: string): Promise<void> {
   await apiFetch<void>(`/comments/${commentId}/report`, { method: "POST" });
 }
+
+/** value: 1 = upvote, -1 = downvote, 0 = clear the current vote. */
+export async function voteComment(commentId: string, value: 1 | -1 | 0): Promise<CommentRead> {
+  return apiFetch<CommentRead>(`/comments/${commentId}/vote`, {
+    method: "POST",
+    body: { value },
+  });
+}

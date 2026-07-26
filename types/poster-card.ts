@@ -31,6 +31,8 @@ export type PosterCardProps = {
   watchHref?: string;
   watchLabel?: string;
   year?: number | null;
+  /** e.g. "8.5" — shown with a star icon under the title. */
+  rating?: string | null;
   /** Click flips the card to a Buy / View-trailer back face (movie cards). */
   flipActions?: boolean;
   /** YouTube trailer for the back face's "View trailer" popup. */

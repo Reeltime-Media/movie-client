@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, PlayCircle, Star } from "lucide-react";
+import { Calendar, Clock, Info, PlayCircle, Star } from "lucide-react";
 import { CdnImage } from "@/components/ui/CdnImage";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
@@ -211,22 +211,37 @@ export function Hero({
                       </h1>
                     )}
 
-                    <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-medium text-white/70 sm:mt-1.5 sm:gap-x-2 sm:text-[13px]">
-                      {s.year && <span>{s.year}</span>}
-                      {s.rating && (
-                        <>
-                          <span className="text-white/30">·</span>
-                          <span className="inline-flex items-center gap-1">
-                            <Star size={11} className="fill-warning text-warning" />
-                            <span>{s.rating}</span>
+                    {s.genres && (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:mt-2.5">
+                        {s.genres.split(" · ").filter(Boolean).map((genre) => (
+                          <span
+                            key={genre}
+                            className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold text-black sm:text-[11px]"
+                          >
+                            {genre}
                           </span>
-                        </>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] font-medium text-white/70 sm:mt-2.5 sm:text-[13px]">
+                      {s.year && (
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar size={11} className="text-white/50" />
+                          {s.year}
+                        </span>
                       )}
                       {s.duration && (
-                        <>
-                          <span className="text-white/30">·</span>
-                          <span>{s.duration}</span>
-                        </>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock size={11} className="text-white/50" />
+                          {s.duration}
+                        </span>
+                      )}
+                      {s.rating && (
+                        <span className="inline-flex items-center gap-1">
+                          <Star size={11} className="fill-warning text-warning" />
+                          {s.rating}
+                        </span>
                       )}
                     </div>
 
@@ -266,6 +281,23 @@ export function Hero({
                   </div>
                 </div>
               ))
+            )}
+
+            {total > 1 && (
+              <div className="pointer-events-auto mt-4 flex items-center gap-1.5 sm:mt-5">
+                {slides.map((s, i) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setActive(i)}
+                    aria-label={`Go to slide ${i + 1}`}
+                    aria-current={i === active}
+                    className={`h-[3px] rounded-full transition-all duration-300 ${
+                      i === active ? "w-5.5 bg-brand" : "w-3.5 bg-white/25 hover:bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>

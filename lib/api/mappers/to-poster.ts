@@ -62,6 +62,7 @@ export function movieToPoster(
     entitlement: isOwned || !price ? { kind: "none" } : { kind: "price", value: price },
     watchHref: movieCardHref(movie, Boolean(isOwned), isAdmin),
     year: movie.release_year,
+    rating: movie.rating,
     flipActions: true,
     trailerUrl: movie.trailer_url ?? null,
   };
@@ -101,11 +102,13 @@ export function seriesToPoster(
       : null,
     posterGradient: gradient,
     accentColor: accent,
+    badge: { kind: "hd", label: "HD" },
     subtitle: { text: "A SERIES", color: accent },
     entitlement: hasSubscription ? { kind: "subscribed", value: "Subscribed" } : { kind: "none" },
     watchLabel,
     watchHref,
     year: series.release_year,
+    rating: series.rating,
   };
 }
 

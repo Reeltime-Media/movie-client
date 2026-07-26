@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PosterCard } from "@/components/catalog/PosterCard";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { SectionHeader } from "@/components/shared/SectionHeader";
@@ -23,9 +24,16 @@ type WatchDiscoveryRailsProps = {
   movieSlug?: string;
   seriesSlug?: string;
   genres?: string[];
+  /** "grid" renders the series-picks section as a static poster grid titled "You may also like" instead of a scroll rail. */
+  seriesPicksLayout?: "rail" | "grid";
 };
 
-export function WatchDiscoveryRails({ movieSlug, seriesSlug, genres = [] }: WatchDiscoveryRailsProps) {
+export function WatchDiscoveryRails({
+  movieSlug,
+  seriesSlug,
+  genres = [],
+  seriesPicksLayout = "rail",
+}: WatchDiscoveryRailsProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
   const { user } = useUser();
@@ -107,15 +115,28 @@ export function WatchDiscoveryRails({ movieSlug, seriesSlug, genres = [] }: Watc
 
       {seriesPicks.length > 0 ? (
         <section className="pb-12">
-          <WatchDetailBody>
-            <SectionHeader
-              title={t("watchSeriesPicks")}
-              showSeeAll
-              seeAllHref="/series"
-              seeAllLabel={t("sectionSeeAll")}
-            />
-            <PosterScrollRail posters={seriesPicks} />
-          </WatchDetailBody>
+          {seriesPicksLayout === "grid" ? (
+            <>
+              <SectionHeader title={t("watchYouMayAlsoLike")} />
+              <WatchDetailBody>
+                <div className="mx-auto mt-4 grid max-w-6xl grid-cols-2 gap-4 sm:grid-cols-4">
+                  {seriesPicks.map((poster) => (
+                    <PosterCard key={poster.watchHref ?? poster.titleBelow} {...poster} />
+                  ))}
+                </div>
+              </WatchDetailBody>
+            </>
+          ) : (
+            <WatchDetailBody>
+              <SectionHeader
+                title={t("watchSeriesPicks")}
+                showSeeAll
+                seeAllHref="/series"
+                seeAllLabel={t("sectionSeeAll")}
+              />
+              <PosterScrollRail posters={seriesPicks} />
+            </WatchDetailBody>
+          )}
         </section>
       ) : null}
     </>

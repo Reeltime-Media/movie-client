@@ -20,7 +20,7 @@ export function TopNavLocaleSwitcher({
   const buttonClass = (active: boolean) =>
     [
       "cursor-pointer rounded-md px-2.5 py-1.5 text-[11px] font-bold transition-colors",
-      active ? "bg-surface-elevated text-text" : "text-text-muted hover:text-text",
+      active ? "bg-white/25 text-white" : "text-white/65 hover:text-white",
     ].join(" ");
 
   const mobileButtonClass = (active: boolean) =>
@@ -32,7 +32,7 @@ export function TopNavLocaleSwitcher({
   if (variant === "desktop") {
     return (
       <div
-        className="hidden h-10 items-center rounded-lg border border-border/80 bg-surface/70 p-1 sm:flex"
+        className="hidden h-10 items-center rounded-lg border border-white/20 bg-white/10 p-1 sm:flex"
         role="group"
         aria-label={langSwitchLabel}
       >
