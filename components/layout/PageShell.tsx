@@ -30,7 +30,9 @@ export function PageShell({
         data-page-shell=""
         className="flex min-h-full flex-col overflow-x-hidden bg-bg text-text"
       >
-        <main className="min-w-0 flex-1 pt-20">
+        {/* rt-site caps the whole content column (incl. fullWidth pages) at the
+            per-breakpoint site width and keeps it centered on wide viewports. */}
+        <main className="rt-site min-w-0 flex-1 pt-20">
           <div className={innerClass}>{children}</div>
         </main>
         {footer ? <SiteFooter /> : null}

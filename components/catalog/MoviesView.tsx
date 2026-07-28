@@ -35,6 +35,8 @@ type MoviesViewProps = {
   movies: ContentListItemRead[];
   /** Raw genre label from ?genre= (e.g. "Action"), or empty for all. */
   initialGenreLabel?: string;
+  /** Show only free movies (?free=1, e.g. from the nav dropdown). */
+  initialFree?: boolean;
 };
 
 function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
@@ -93,22 +95,30 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
 export function MoviesView({
   movies,
   initialGenreLabel = ALL_GENRES,
+  initialFree = false,
 }: MoviesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
   const [activeGenre, setActiveGenre] = useState(initialGenreLabel);
+  const [freeOnly, setFreeOnly] = useState(initialFree);
   const [searchQuery, setSearchQuery] = useState("");
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
   const [page, setPage] = useState(0);
 
   // Sync when navigating from a home genre rail (e.g. /movies?genre=Thriller)
-  // using the adjust-state-during-render pattern.
+  // or the nav dropdown, using the adjust-state-during-render pattern.
   const [prevInitialGenre, setPrevInitialGenre] = useState(initialGenreLabel);
   if (prevInitialGenre !== initialGenreLabel) {
     setPrevInitialGenre(initialGenreLabel);
     setActiveGenre(initialGenreLabel);
+    setPage(0);
+  }
+  const [prevInitialFree, setPrevInitialFree] = useState(initialFree);
+  if (prevInitialFree !== initialFree) {
+    setPrevInitialFree(initialFree);
+    setFreeOnly(initialFree);
     setPage(0);
   }
 
@@ -129,9 +139,12 @@ export function MoviesView({
   const filteredMovies = useMemo(
     () =>
       movies.filter(
-        (m) => matchesSearch(m, searchQuery) && matchesGenreLabel(m, activeGenre || null),
+        (m) =>
+          matchesSearch(m, searchQuery) &&
+          matchesGenreLabel(m, activeGenre || null) &&
+          (!freeOnly || m.is_free),
       ),
-    [movies, searchQuery, activeGenre],
+    [movies, searchQuery, activeGenre, freeOnly],
   );
 
   const allPosters = useMemo(
@@ -149,7 +162,8 @@ export function MoviesView({
   const safePage = Math.min(page, totalPages - 1);
   const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
-  const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES;
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES || freeOnly;
 
   useEffect(() => {
     if (!movies.length) return;
@@ -166,7 +180,7 @@ export function MoviesView({
   return (
     <PageShell fullWidth>
       <div
-        className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 overflow-hidden border-b border-border min-h-36 sm:min-h-48 md:min-h-60"
+        className="relative rt-full-bleed shrink-0 overflow-hidden border-b border-border min-h-36 sm:min-h-48 md:min-h-60"
         style={{ backgroundImage: "url('/asset/moviebackground_header.png')", backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/55 to-transparent" />

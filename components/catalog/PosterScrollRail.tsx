@@ -1,6 +1,7 @@
 "use client";
 
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
+import { useDragScroll } from "@/hooks/use-drag-scroll";
 import { PosterCard } from "@/components/catalog/PosterCard";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { RefObject } from "react";
@@ -31,8 +32,10 @@ export function PosterScrollRail({
   scrollRef?: RefObject<HTMLDivElement | null>;
 }) {
   const autoScrollRef = useAutoScroll(autoScroll ? speed : 0, 2000, direction);
+  const dragScrollRef = useDragScroll();
   const scrollRef = (node: HTMLDivElement | null) => {
     autoScrollRef.current = node;
+    dragScrollRef.current = node;
     if (externalRef) externalRef.current = node;
   };
 
@@ -44,8 +47,7 @@ export function PosterScrollRail({
     <div
       ref={scrollRef}
       className={[
-        "mt-4 overflow-x-auto overflow-y-visible pb-2 pt-0.5",
-        autoScroll ? "rt-scroll-rail" : "",
+        "mt-4 overflow-x-auto overflow-y-visible pb-2 pt-0.5 rt-scroll-rail rt-drag-rail",
         GUTTER[gutter],
         className ?? "",
       ].join(" ")}

@@ -40,7 +40,7 @@ export function CatalogPageSkeleton() {
   return (
     <PageShell fullWidth>
       {/* Hero header band */}
-      <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 overflow-hidden border-b border-border min-h-36 bg-surface sm:min-h-48 md:min-h-60" />
+      <div className="relative rt-full-bleed shrink-0 overflow-hidden border-b border-border min-h-36 bg-surface sm:min-h-48 md:min-h-60" />
 
       {/* Filters row */}
       <div className="flex items-center gap-3 px-4 py-4 sm:px-6 md:px-8">
@@ -61,7 +61,7 @@ export function HomePageSkeleton() {
   return (
     <PageShell fullWidth footer>
       {/* Hero band */}
-      <div className="relative ml-[calc(50%-50vw)] w-screen max-w-none overflow-hidden border-b border-border bg-surface h-[420px] sm:h-[480px]" />
+      <div className="relative rt-full-bleed overflow-hidden border-b border-border bg-surface h-[420px] sm:h-[480px]" />
 
       {/* Rails */}
       <div className="mx-auto w-full max-w-6xl">

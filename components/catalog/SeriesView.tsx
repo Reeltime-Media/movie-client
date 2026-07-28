@@ -15,11 +15,12 @@ import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { seriesToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import {
-  CATALOG_GENRE_KEYS,
-  type CatalogGenreKey,
-  matchesGenre,
+  collectGenreLabels,
+  genreKeyFromLabel,
+  matchesGenreLabel,
   matchesSearch,
 } from "@/lib/catalog-filter";
+import { seasonsHaveFreeEpisodes } from "@/lib/api/series/series-free";
 import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
@@ -29,9 +30,15 @@ const ROWS = 4;
 const PAGE_SIZE = COLS * ROWS;
 const TOP_COUNT = 10;
 
+const ALL_GENRES = "";
+
 type SeriesViewProps = {
   seriesList: SeriesRead[];
   seasons: SeasonRead[][];
+  /** Raw genre label from ?genre= (e.g. "Khmer"), or empty for all. */
+  initialGenreLabel?: string;
+  /** Show only series with free episodes (?free=1, e.g. from the nav dropdown). */
+  initialFree?: boolean;
 };
 
 function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
@@ -79,17 +86,57 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
   );
 }
 
-export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
+export function SeriesView({
+  seriesList,
+  seasons,
+  initialGenreLabel = ALL_GENRES,
+  initialFree = false,
+}: SeriesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
-  const [activeGenre, setActiveGenre] = useState<CatalogGenreKey>("genreAll");
+  const [activeGenre, setActiveGenre] = useState(initialGenreLabel);
+  const [freeOnly, setFreeOnly] = useState(initialFree);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSubscription, setHasSubscription] = useState(false);
   const [page, setPage] = useState(0);
 
+  // Sync with URL-driven filters (nav dropdown) via adjust-state-during-render.
+  const [prevInitialGenre, setPrevInitialGenre] = useState(initialGenreLabel);
+  if (prevInitialGenre !== initialGenreLabel) {
+    setPrevInitialGenre(initialGenreLabel);
+    setActiveGenre(initialGenreLabel);
+    setPage(0);
+  }
+  const [prevInitialFree, setPrevInitialFree] = useState(initialFree);
+  if (prevInitialFree !== initialFree) {
+    setPrevInitialFree(initialFree);
+    setFreeOnly(initialFree);
+    setPage(0);
+  }
+
+  const genreOptions = useMemo(() => {
+    const labels = collectGenreLabels(seriesList);
+    return [
+      { value: ALL_GENRES, label: t("genreAll") },
+      ...labels.map((label) => {
+        const knownKey = genreKeyFromLabel(label);
+        return {
+          value: label,
+          label: knownKey !== "genreAll" ? t(knownKey) : label,
+        };
+      }),
+    ];
+  }, [seriesList, t]);
+
   const filteredSeries = useMemo(
-    () => seriesList.filter((s) => matchesSearch(s, searchQuery) && matchesGenre(s, activeGenre)),
-    [seriesList, searchQuery, activeGenre],
+    () =>
+      seriesList.filter(
+        (s, i) =>
+          matchesSearch(s, searchQuery) &&
+          matchesGenreLabel(s, activeGenre || null) &&
+          (!freeOnly || seasonsHaveFreeEpisodes(seasons[i] ?? [])),
+      ),
+    [seriesList, seasons, searchQuery, activeGenre, freeOnly],
   );
 
   const allPosters = useMemo(
@@ -110,7 +157,8 @@ export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
   const totalPages = Math.max(1, Math.ceil(allPosters.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages - 1);
   const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
-  const hasActiveFilters = searchQuery.trim().length > 0 || activeGenre !== "genreAll";
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES || freeOnly;
 
   useEffect(() => {
     if (!loggedIn || !seriesList.length) return;
@@ -127,7 +175,7 @@ export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
   return (
     <PageShell fullWidth>
       <div
-        className="relative ml-[calc(50%-50vw)] w-screen max-w-none shrink-0 overflow-hidden border-b border-border min-h-36 sm:min-h-48 md:min-h-60"
+        className="relative rt-full-bleed shrink-0 overflow-hidden border-b border-border min-h-36 sm:min-h-48 md:min-h-60"
         style={{ backgroundImage: `url('${marketingImages.cinemaCurtains}')`, backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/55 to-transparent" />
@@ -165,7 +213,7 @@ export function SeriesView({ seriesList, seasons }: SeriesViewProps) {
               setActiveGenre(genre);
               setPage(0);
             }}
-            options={CATALOG_GENRE_KEYS.map((key) => ({ value: key, label: t(key) }))}
+            options={genreOptions}
           />
         </div>
       </div>

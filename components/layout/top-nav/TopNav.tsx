@@ -27,7 +27,7 @@ export function TopNav() {
         scrolled ? "shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]" : "",
       ].join(" ")}
     >
-      <div className="mx-auto flex h-20 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 md:px-8 lg:gap-5 lg:px-10 xl:px-12">
+      <div className="rt-site flex h-20 items-center gap-3 px-4 sm:gap-4 sm:px-6 md:px-8 lg:gap-5 lg:px-8 xl:px-8">
         <div className="flex min-w-0 shrink-0 items-center gap-4 lg:gap-6 xl:gap-8">
           <TopNavLogo />
           <TopNavNavLinks

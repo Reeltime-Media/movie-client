@@ -109,7 +109,7 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-auto border-t border-border bg-surface/40">
-      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 md:px-8 md:py-12">
+      <div className="rt-site px-4 py-8 sm:px-6 sm:py-10 md:px-8 md:py-12">
 
         {/* Main grid: brand full-width on mobile, link columns in 3-col sub-grid, all 4 on lg */}
         <div className="grid gap-8 sm:gap-10 lg:grid-cols-[1.5fr_auto_auto_auto]">

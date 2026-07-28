@@ -30,7 +30,7 @@ export function CinematicDecor({
   children,
 }: CinematicDecorProps) {
   const bleed = viewportBleed
-    ? "relative left-auto ml-[calc(50%-50vw)] w-screen max-w-none shrink-0"
+    ? "relative left-auto rt-full-bleed shrink-0"
     : "relative";
 
   return (

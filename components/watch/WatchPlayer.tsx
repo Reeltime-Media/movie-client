@@ -109,6 +109,7 @@ export function WatchPlayer({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSpeed, setShowSpeed] = useState(false);
   const [pipActive, setPipActive] = useState(false);
+  const [pipSupported, setPipSupported] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   /** CSS immersive fallback when Fullscreen API isn't available (e.g. iOS Safari). */
   const [cssFullscreen, setCssFullscreen] = useState(false);
@@ -397,6 +398,12 @@ export function WatchPlayer({
     const video = videoRef.current as PipVideo | null;
     if (!video) return;
 
+    // Hide the button in browsers without any PiP API (e.g. Firefox).
+    setPipSupported(
+      (document.pictureInPictureEnabled ?? false) ||
+        video.webkitSupportsPresentationMode?.("picture-in-picture") === true,
+    );
+
     const onEnter = () => setPipActive(true);
     const onLeave = () => setPipActive(false);
     const onPresentationModeChange = () => {
@@ -638,11 +645,12 @@ export function WatchPlayer({
       if (e.code === "ArrowLeft") skip(-REWIND_SECONDS);
       if (e.code === "KeyF") toggleFullscreen();
       if (e.code === "KeyM") toggleMute();
+      if (e.code === "KeyP") void togglePip();
       if (e.code === "Escape" && cssFullscreen) setCssFullscreen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePlay, toggleFullscreen, toggleMute, cssFullscreen, skip]);
+  }, [togglePlay, toggleFullscreen, toggleMute, togglePip, cssFullscreen, skip]);
 
   const qualityLabel =
     selectedLevel === -1
@@ -898,17 +906,20 @@ export function WatchPlayer({
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => void togglePip()}
-              aria-label={pipActive ? "Exit picture-in-picture" : "Picture-in-picture"}
-              className={[
-                "transition-colors",
-                pipActive ? "text-brand" : "text-white/75 hover:text-white",
-              ].join(" ")}
-            >
-              <PictureInPicture2 size={16} />
-            </button>
+            {pipSupported && (
+              <button
+                type="button"
+                onClick={() => void togglePip()}
+                aria-label={pipActive ? "Exit picture-in-picture" : "Picture-in-picture"}
+                title={pipActive ? "Exit picture-in-picture (p)" : "Picture-in-picture (p)"}
+                className={[
+                  "transition-colors",
+                  pipActive ? "text-brand" : "text-white/75 hover:text-white",
+                ].join(" ")}
+              >
+                <PictureInPicture2 size={16} />
+              </button>
+            )}
 
             <button
               type="button"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
+import { useDragScroll } from "@/hooks/use-drag-scroll";
 import { BannerCard, type BannerCardProps } from "@/components/catalog/BannerCard";
 
 export function BannerScrollRail({
@@ -18,7 +19,12 @@ export function BannerScrollRail({
   speed?: number;
   direction?: "left" | "right";
 }) {
-  const scrollRef = useAutoScroll(autoScroll ? speed : 0, 2000, direction);
+  const autoScrollRef = useAutoScroll(autoScroll ? speed : 0, 2000, direction);
+  const dragScrollRef = useDragScroll();
+  const scrollRef = (node: HTMLDivElement | null) => {
+    autoScrollRef.current = node;
+    dragScrollRef.current = node;
+  };
 
   if (!cards.length) return null;
 
@@ -28,8 +34,7 @@ export function BannerScrollRail({
     <div
       ref={scrollRef}
       className={[
-        "mt-3 overflow-x-auto overflow-y-visible pb-2 pt-0.5 px-4 sm:px-6 md:px-8",
-        autoScroll ? "rt-scroll-rail" : "",
+        "mt-3 overflow-x-auto overflow-y-visible pb-2 pt-0.5 px-4 sm:px-6 md:px-8 rt-scroll-rail rt-drag-rail",
         className ?? "",
       ].join(" ")}
       style={{ WebkitOverflowScrolling: "touch" }}

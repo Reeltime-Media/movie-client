@@ -9,7 +9,12 @@ const SERIES_EPISODE_PREFETCH_LIMIT = 12;
 // Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
 export const revalidate = 300;
 
-export default async function SeriesPage() {
+type SeriesPageProps = {
+  searchParams: Promise<{ genre?: string; free?: string }>;
+};
+
+export default async function SeriesPage({ searchParams }: SeriesPageProps) {
+  const { genre, free } = await searchParams;
   const seriesList = await listSeries().catch(swallow("series: load series", []));
   const seasons = await Promise.all(
     seriesList.map((s, index) =>
@@ -19,5 +24,12 @@ export default async function SeriesPage() {
     ),
   );
 
-  return <SeriesView seriesList={seriesList} seasons={seasons} />;
+  return (
+    <SeriesView
+      seriesList={seriesList}
+      seasons={seasons}
+      initialGenreLabel={genre?.trim() ?? ""}
+      initialFree={free === "1"}
+    />
+  );
 }

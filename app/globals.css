@@ -268,13 +268,47 @@ html[lang="km"] body {
   }
 }
 
-/* Hide scrollbar on auto-scroll rails (still scrollable) */
+/* Site container: edge-to-edge on mobile, tablet and laptop (no side
+   gutters at 100% zoom). Once the viewport is wider than a laptop —
+   big monitors or zoomed-out pages — content caps and stays centered. */
+:root {
+  --site-width: 100%;
+}
+@media (min-width: 1600px) {
+  :root { --site-width: 1536px; }
+}
+
+.rt-site {
+  width: 100%;
+  max-width: var(--site-width);
+  margin-inline: auto;
+  min-width: 0;
+}
+
+/* Full-bleed band that stops at the site column instead of the viewport. */
+.rt-full-bleed {
+  width: min(100vw, var(--site-width));
+  max-width: none;
+  margin-left: calc(50% - min(100vw, var(--site-width)) / 2);
+}
+
+/* Hide scrollbar on scroll rails (still scrollable) */
 .rt-scroll-rail {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 .rt-scroll-rail::-webkit-scrollbar {
   display: none;
+}
+
+/* Click-hold-and-move panning on rails (see use-drag-scroll) */
+.rt-drag-rail {
+  cursor: grab;
+}
+.rt-drag-rail.rt-dragging {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Ken Burns slow zoom for Hero background slides */
