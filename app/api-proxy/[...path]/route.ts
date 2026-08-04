@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// This proxy forwards arbitrary, often per-user Authorization-bearing
+// requests (auth, favorites, etc.) — it must never be cached or served
+// stale, for any path or method.
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
   "keep-alive",
@@ -39,6 +46,7 @@ async function proxyToApi(request: NextRequest, pathSegments: string[]) {
     method: request.method,
     headers,
     redirect: "follow",
+    cache: "no-store",
   };
 
   if (request.method !== "GET" && request.method !== "HEAD") {
@@ -52,6 +60,9 @@ async function proxyToApi(request: NextRequest, pathSegments: string[]) {
       responseHeaders.set(key, value);
     }
   });
+  // Override whatever (or no) cache header the upstream sent — never let a
+  // browser or CDN cache a per-user, auth-sensitive proxy response.
+  responseHeaders.set("Cache-Control", "no-store, must-revalidate");
 
   return new NextResponse(upstream.body, {
     status: upstream.status,

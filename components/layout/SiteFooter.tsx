@@ -122,7 +122,7 @@ export function SiteFooter() {
             >
               <div className="h-7 w-7 overflow-hidden rounded-md bg-brand">
                 <Image
-                  src="/logo_r.jpeg"
+                  src="/logo.jpeg"
                   alt="Reeltime logo"
                   width={28}
                   height={28}
