@@ -56,6 +56,26 @@ export function CatalogPageSkeleton() {
   );
 }
 
+/** Loading skeleton for the live TV route (hero + a grid of 16:9 channel tiles). */
+export function TvPageSkeleton() {
+  return (
+    <PageShell fullWidth>
+      {/* Hero band */}
+      <div className="relative rt-full-bleed shrink-0 overflow-hidden border-b border-border min-h-[220px] bg-surface sm:min-h-[260px] md:min-h-[300px]" />
+
+      {/* Channel grid */}
+      <div className="px-4 py-6 sm:px-6 md:px-8">
+        <div className="mb-4 h-5 w-32 animate-pulse rounded bg-surface-elevated" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="aspect-video animate-pulse rounded-md bg-surface-elevated" />
+          ))}
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
 /** Loading skeleton for the home route (hero + a couple of rails). */
 export function HomePageSkeleton() {
   return (

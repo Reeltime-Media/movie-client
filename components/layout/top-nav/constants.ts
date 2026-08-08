@@ -43,6 +43,7 @@ export const navLinks: NavLink[] = [
   { labelKey: "navHome", href: "/" },
   { labelKey: "navMovies", href: "/movies", hasCaret: true, dropdown: categoryDropdown("/movies") },
   { labelKey: "navSeries", href: "/series", hasCaret: true, dropdown: categoryDropdown("/series") },
+  { labelKey: "navTv", href: "/tv" },
   { labelKey: "navShortMovies", href: "/short-movies", hasCaret: true },
   { labelKey: "navPricing", href: "/pricing" },
   { labelKey: "navMyLibrary", href: "/my-library", requiresAuth: true },

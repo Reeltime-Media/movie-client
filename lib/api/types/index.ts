@@ -115,3 +115,20 @@ export interface WatchProgressRead {
   completed: boolean;
   last_watched_at: string;
 }
+
+/** Public live-TV channel row from GET /tv/channels. */
+export interface TvChannelRead {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  logo_key: string | null;
+  /** "live" | "offline" — server never reports intermediate states publicly. */
+  status: string;
+  is_free: boolean;
+}
+
+export interface TvChannelAuthorizeRead {
+  master_url: string;
+  expires_in: number;
+}

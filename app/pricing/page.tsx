@@ -1,272 +1,170 @@
 "use client";
 
-import { BadgeCheck, Crown } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import type { CSSProperties } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { CinematicDecor } from "@/components/home/CinematicDecor";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { useAuth } from "@/hooks/auth/use-auth";
-// BARAY DISABLED — subscription checkout via Baray is paused.
-// import { createSeriesSubscriptionIntent } from "@/lib/api/payments";
-import { listSeries } from "@/lib/api/series";
-import { listSubscriptionPlans } from "@/lib/api/subscriptions";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
-import type { SeriesRead, SubscriptionPlanRead } from "@/lib/api/types";
-import { marketingImages } from "@/lib/marketing-images";
-// import { PENDING_INTENT_KEY, seriesSubscriptionSuccessUrl } from "@/lib/payment-success-urls";
-// import { safeCheckoutUrl } from "@/lib/safe-redirect";
-import { swallow } from "@/lib/log";
-import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
+import type { TranslationKey } from "@/lib/i18n";
+import { pageTitleClassName } from "@/lib/ui/page-title";
 import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
 
-function formatPrice(priceUsd: string): string {
-  const parsed = Number.parseFloat(priceUsd);
-  if (Number.isNaN(parsed)) return priceUsd;
-  return parsed.toFixed(2);
-}
+const secondaryPlanButtonClassName =
+  "inline-flex w-full cursor-pointer items-center justify-center rounded-lg bg-border-hover px-4 py-3.5 text-[14px] font-bold text-text transition-colors duration-200 hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
 
-function billingSuffix(
-  days: number,
-  t: (key: "pricingBillingMonthly" | "pricingBillingYearly" | "pricingBillingDays") => string,
-): string {
-  if (days === 30) return t("pricingBillingMonthly");
-  if (days === 365) return t("pricingBillingYearly");
-  return t("pricingBillingDays").replace("{days}", String(days));
-}
+type PlanTier = {
+  key: string;
+  nameKey: TranslationKey;
+  price: string;
+  bulletKeys: TranslationKey[];
+  ctaKey: TranslationKey;
+  recommended?: boolean;
+};
 
-function PricingPageInner() {
+const UNLOCK_TIERS: PlanTier[] = [
+  {
+    key: "mini",
+    nameKey: "pricingPlanMiniName",
+    price: "2.49",
+    bulletKeys: ["pricingBulletUnlockEachSeries"],
+    ctaKey: "pricingPlanMiniCta",
+  },
+  {
+    key: "basic",
+    nameKey: "pricingPlanBasicName",
+    price: "3.49",
+    bulletKeys: ["pricingPlanBasicDuration", "pricingBulletUnlockAllSeries"],
+    ctaKey: "pricingPlanBasicCta",
+  },
+];
+
+const SUBSCRIPTION_TIERS: PlanTier[] = [
+  {
+    key: "value",
+    nameKey: "pricingPlanValueName",
+    price: "4.99",
+    bulletKeys: ["pricingPlanValueDuration", "pricingBulletAllSeries", "pricingBulletAllMovies"],
+    ctaKey: "pricingPlanValueCta",
+    recommended: true,
+  },
+  {
+    key: "best-value",
+    nameKey: "pricingPlanBestValueName",
+    price: "6.99",
+    bulletKeys: ["pricingPlanBestValueDuration", "pricingBulletAllSeries", "pricingBulletAllMovies"],
+    ctaKey: "pricingPlanBestValueCta",
+  },
+  {
+    key: "premium",
+    nameKey: "pricingPlanPremiumName",
+    price: "10.99",
+    bulletKeys: ["pricingPlanPremiumDuration", "pricingBulletAllSeries", "pricingBulletAllMovies"],
+    ctaKey: "pricingPlanPremiumCta",
+  },
+];
+
+function PlanCard({
+  plan,
+  delayMs,
+  onChoose,
+}: {
+  plan: PlanTier;
+  delayMs: number;
+  onChoose: () => void;
+}) {
   const { t } = useI18n();
-  const router = useRouter();
-  const { loggedIn } = useAuth();
-  const params = useSearchParams();
-  const seriesSlug = params.get("slug");
-  const lockedSeason = params.get("season");
-  const lockedEpisode = params.get("episode");
-
-  const [plans, setPlans] = useState<SubscriptionPlanRead[]>([]);
-  const [seriesList, setSeriesList] = useState<SeriesRead[]>([]);
-  const [activePlanCode, setActivePlanCode] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  // BARAY DISABLED — was used while redirecting to Baray checkout.
-  // const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const subsPromise = loggedIn
-      ? listMySubscriptions().catch(swallow("pricing: load subscriptions", []))
-      : Promise.resolve([]);
-
-    Promise.all([listSubscriptionPlans(), listSeries(), subsPromise])
-      .then(([planItems, seriesItems, subs]) => {
-        setPlans(planItems);
-        setSeriesList(seriesItems);
-        const active = subs.find((s) => s.status === "active");
-        setActivePlanCode(active?.plan ?? null);
-      })
-      .catch(() => setError(t("pricingLoadError")))
-      .finally(() => setLoading(false));
-  }, [t, loggedIn]);
-
-  const checkoutSeries = useMemo(() => {
-    if (seriesSlug) {
-      const match = seriesList.find((s) => s.slug === seriesSlug);
-      if (match) return match;
-    }
-    return seriesList[0] ?? null;
-  }, [seriesList, seriesSlug]);
-
-  const recommendedCode = useMemo(
-    () => (plans.length ? plans[0].code : null),
-    [plans],
-  );
-
-  async function handleSubscribe(planId: string) {
-    const pricingReturn = seriesSlug
-      ? `/pricing?slug=${encodeURIComponent(seriesSlug)}${
-          lockedSeason ? `&season=${encodeURIComponent(lockedSeason)}` : ""
-        }${lockedEpisode ? `&episode=${encodeURIComponent(lockedEpisode)}` : ""}`
-      : "/pricing";
-
-    if (!loggedIn) {
-      router.push(`/login?next=${encodeURIComponent(pricingReturn)}`);
-      return;
-    }
-    if (!checkoutSeries) {
-      router.push("/series");
-      return;
-    }
-
-    // BARAY DISABLED — subscription redirect checkout paused.
-    void planId;
-    void checkoutSeries;
-    setError(t("pricingBarayDisabled"));
-    return;
-
-    /* BARAY DISABLED — original checkout flow kept for later.
-    setPayingPlanId(planId);
-    setError("");
-    try {
-      const intent = await createSeriesSubscriptionIntent(
-        checkoutSeries.id,
-        seriesSubscriptionSuccessUrl(checkoutSeries.slug, {
-          season: lockedSeason,
-          episode: lockedEpisode,
-        }),
-      );
-      if (!intent.checkout_url) throw new Error("Payment provider did not return a checkout URL.");
-      sessionStorage.setItem(PENDING_INTENT_KEY, intent.intent_id);
-      window.location.assign(safeCheckoutUrl(intent.checkout_url));
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t("pricingLoadError");
-      setError(msg);
-      setPayingPlanId(null);
-    }
-    */
-  }
 
   return (
-    <PageShell wide>
-      <CinematicDecor
-        imageSrc={marketingImages.cinemaCurtains}
-        imageDescription="Classic red cinema curtains and velvet seats"
-        showBrandGlow
-        minHeightClass="min-h-[200px] sm:min-h-[240px]"
-        viewportBleed
+    <article
+      className={[
+        "rt-page-fade-up relative flex flex-col p-5 transition-colors duration-200 md:p-6",
+        plan.recommended ? cardHighlightClassName : cardClassName,
+      ].join(" ")}
+      style={{ "--rt-enter-delay": `${delayMs}ms` } as CSSProperties}
+    >
+      {plan.recommended ? (
+        <span className="absolute -top-3 right-4 inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-[10px] font-bold text-white">
+          <Star size={11} className="fill-current" aria-hidden />
+          {t("pricingRecommended")}
+        </span>
+      ) : null}
+
+      <div className="mb-3 text-[15px] font-semibold text-text-muted">{t(plan.nameKey)}</div>
+
+      <div className="mb-4 text-[28px] font-extrabold tracking-[-0.02em] text-brand md:text-[32px]">
+        ${plan.price}
+      </div>
+
+      <ul className="mb-6 flex-1 space-y-2">
+        {plan.bulletKeys.map((bulletKey) => (
+          <li key={bulletKey} className="flex items-start gap-2 text-[12px] text-text-muted">
+            <Check size={13} className="mt-0.5 shrink-0" aria-hidden />
+            {t(bulletKey)}
+          </li>
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={onChoose}
+        className={plan.recommended ? primaryButtonClassName : secondaryPlanButtonClassName}
       >
-        <div className="max-w-2xl">
-          <h1
-            className={["rt-page-fade-up", pageTitleOnHeroClassName].join(" ")}
-            style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
-          >
-            {t("pricingTitle")}
-          </h1>
-        </div>
-      </CinematicDecor>
-
-      <section
-        className="rt-page-fade-up px-6 pb-4 pt-8 md:px-8"
-        style={{ "--rt-enter-delay": "180ms" } as CSSProperties}
-      >
-        {loading ? (
-          <div className="flex h-48 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-          </div>
-        ) : error && plans.length === 0 ? (
-          <p className="text-center text-[13px] text-danger">{error}</p>
-        ) : plans.length === 0 ? (
-          <p className="text-center text-[13px] text-text-muted">{t("pricingEmpty")}</p>
-        ) : (
-          <>
-            {error ? (
-              <p className="mb-4 text-center text-[13px] text-danger">{error}</p>
-            ) : null}
-            <p className="mb-4 text-center text-[12px] text-text-muted">
-              {t("pricingSecureNote")}
-            </p>
-            <div
-              className={[
-                "grid gap-4",
-                plans.length === 1 ? "mx-auto max-w-md" : "md:grid-cols-2 lg:grid-cols-3",
-              ].join(" ")}
-            >
-              {plans.map((plan, index) => {
-                const isRecommended = plan.code === recommendedCode;
-                const isCurrent = activePlanCode === plan.code;
-                const price = formatPrice(plan.price_usd);
-
-                return (
-                  <article
-                    key={plan.id}
-                    className={[
-                      "relative flex flex-col p-5 transition-colors duration-200",
-                      isRecommended ? cardHighlightClassName : cardClassName,
-                    ].join(" ")}
-                    style={{ "--rt-enter-delay": `${220 + index * 60}ms` } as CSSProperties}
-                  >
-                    {isRecommended && !isCurrent ? (
-                      <span className="absolute -top-2.5 left-4 inline-flex items-center gap-1 rounded-sm bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                        <Crown size={11} aria-hidden />
-                        {t("pricingRecommended")}
-                      </span>
-                    ) : null}
-                    {isCurrent ? (
-                      <span className="absolute -top-2.5 left-4 inline-flex items-center gap-1 rounded-sm bg-success/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
-                        <BadgeCheck size={11} aria-hidden />
-                        {t("pricingCurrentPlan")}
-                      </span>
-                    ) : null}
-
-                    <div className="mb-1 text-[12px] font-semibold uppercase tracking-widest text-text-muted">
-                      {plan.name}
-                    </div>
-                    {plan.description ? (
-                      <p className="mb-4 text-[12px] leading-relaxed text-text-muted">
-                        {plan.description}
-                      </p>
-                    ) : (
-                      <div className="mb-4" />
-                    )}
-
-                    <div className="mb-5 flex items-end gap-1">
-                      <span className="text-[32px] font-extrabold tracking-[-0.02em] text-text">
-                        ${price}
-                      </span>
-                      <span className="pb-1 text-[12px] text-text-muted">
-                        {billingSuffix(plan.billing_interval_days, t)}
-                      </span>
-                    </div>
-
-                    {isCurrent ? (
-                      <Link
-                        href="/profile"
-                        className="mt-auto inline-flex w-full items-center justify-center rounded-md border border-border py-3 text-[13px] font-semibold text-text-muted transition-colors hover:border-border-hover hover:text-text"
-                      >
-                        {t("navProfile")}
-                      </Link>
-                    ) : !loggedIn ? (
-                      <button
-                        type="button"
-                        onClick={() => void handleSubscribe(plan.id)}
-                        className={[primaryButtonClassName, "mt-auto"].join(" ")}
-                      >
-                        {t("pricingSignIn")}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled
-                        className={[primaryButtonClassName, "mt-auto disabled:opacity-60"].join(" ")}
-                        title={t("pricingBarayDisabled")}
-                      >
-                        {t("pricingSubscribeUnavailable")}
-                      </button>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </section>
-    </PageShell>
+        {t(plan.ctaKey)}
+      </button>
+    </article>
   );
 }
 
 export default function PricingPage() {
+  const { t } = useI18n();
+  const router = useRouter();
+  const { loggedIn } = useAuth();
+  const [notice, setNotice] = useState("");
+
+  function handleChoosePlan() {
+    if (!loggedIn) {
+      router.push(`/login?next=${encodeURIComponent("/pricing")}`);
+      return;
+    }
+    setNotice(t("pricingBarayDisabled"));
+  }
+
   return (
-    <Suspense
-      fallback={
-        <PageShell wide>
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-          </div>
-        </PageShell>
-      }
-    >
-      <PricingPageInner />
-    </Suspense>
+    <PageShell wide>
+      <section className="px-6 pb-16 pt-14 md:px-8 md:pt-16">
+        <div
+          className="rt-page-fade-up mx-auto max-w-lg text-center"
+          style={{ "--rt-enter-delay": "20ms" } as CSSProperties}
+        >
+          <h1 className={[pageTitleClassName, "text-center"].join(" ")}>{t("pricingTitle")}</h1>
+          <p className="mt-3 text-[13px] leading-relaxed text-text-muted">{t("pricingDesc")}</p>
+        </div>
+
+        {notice ? (
+          <p className="mx-auto mt-4 max-w-lg text-center text-[13px] text-danger">{notice}</p>
+        ) : null}
+
+        <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+          {UNLOCK_TIERS.map((plan, index) => (
+            <PlanCard key={plan.key} plan={plan} delayMs={80 + index * 60} onChoose={handleChoosePlan} />
+          ))}
+        </div>
+
+        <div className="mx-auto mt-4 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {SUBSCRIPTION_TIERS.map((plan, index) => (
+            <PlanCard
+              key={plan.key}
+              plan={plan}
+              delayMs={200 + index * 60}
+              onChoose={handleChoosePlan}
+            />
+          ))}
+        </div>
+
+        <p className="mt-8 text-center text-[12px] text-text-muted">{t("pricingSecureNote")}</p>
+      </section>
+    </PageShell>
   );
 }
