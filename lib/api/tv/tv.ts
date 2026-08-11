@@ -20,5 +20,10 @@ export async function authorizeTvChannel(channelId: string): Promise<string> {
   const auth = await apiFetch<TvChannelAuthorizeRead>(
     `/tv/channels/${channelId}/authorize`,
   );
-  return `${getApiUrl()}${auth.master_url}`;
+  const master = auth.master_url?.trim() ?? "";
+  if (master.startsWith("http://") || master.startsWith("https://")) {
+    return master;
+  }
+  const path = master.startsWith("/") ? master : `/${master}`;
+  return `${getApiUrl()}${path}`;
 }
