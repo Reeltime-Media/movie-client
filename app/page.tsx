@@ -1,5 +1,5 @@
 import { HomeView } from "@/components/home/HomeView";
-import { listFreeToday } from "@/lib/api/catalog";
+import { listComingSoon, listFreeToday } from "@/lib/api/catalog";
 import { listHeroFeatured } from "@/lib/api/catalog";
 import { listMoviesPage } from "@/lib/api/movies";
 import { listPromotionBanners } from "@/lib/api/catalog";
@@ -16,13 +16,15 @@ const HOME_SERIES_LIMIT = 12;
 export const revalidate = 300;
 
 export default async function Home() {
-  const [movies, seriesList, promotionBanners, heroFeatured, freeToday] = await Promise.all([
-    listMoviesPage(undefined, HOME_MOVIE_LIMIT).catch(swallow("home: load movies", [])),
-    listSeriesPage(undefined, HOME_SERIES_LIMIT).catch(swallow("home: load series", [])),
-    listPromotionBanners("home").catch(swallow("home: load promotion banners", [])),
-    listHeroFeatured("home").catch(swallow("home: load hero featured", [])),
-    listFreeToday().catch(swallow("home: load free today", [])),
-  ]);
+  const [movies, seriesList, promotionBanners, heroFeatured, freeToday, comingSoon] =
+    await Promise.all([
+      listMoviesPage(undefined, HOME_MOVIE_LIMIT).catch(swallow("home: load movies", [])),
+      listSeriesPage(undefined, HOME_SERIES_LIMIT).catch(swallow("home: load series", [])),
+      listPromotionBanners("home").catch(swallow("home: load promotion banners", [])),
+      listHeroFeatured("home").catch(swallow("home: load hero featured", [])),
+      listFreeToday().catch(swallow("home: load free today", [])),
+      listComingSoon().catch(swallow("home: load coming soon", [])),
+    ]);
 
   // Public (signed-out) posters, rendered into the initial HTML for a fast LCP.
   // HomeView re-derives entitlement badges client-side once the user is known.
@@ -34,6 +36,13 @@ export default async function Home() {
     entitlement: { kind: "none" } as const,
     watchHref: `/watch?slug=${m.slug}`,
   }));
+  // Coming Soon: poster + trailer only — never a watch / buy CTA.
+  const initialComingSoon = comingSoon.map((m, i) => ({
+    ...movieToPoster(m, i, new Set<string>()),
+    badge: { kind: "soon", label: "SOON" } as const,
+    entitlement: { kind: "none" } as const,
+    watchHref: "#",
+  }));
 
   return (
     <HomeView
@@ -41,6 +50,7 @@ export default async function Home() {
       seriesList={seriesList}
       initialTrending={initialTrending}
       initialFreeToday={initialFreeToday}
+      initialComingSoon={initialComingSoon}
       promotionBanners={promotionBanners}
       heroFeatured={heroFeatured}
     />

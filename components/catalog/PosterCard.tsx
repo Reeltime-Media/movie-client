@@ -87,18 +87,21 @@ function PosterFace({
         />
       ) : null}
 
-      {/* Play overlay — scrim */}
-      <div
-        className="absolute inset-0 z-[5] bg-black/50 opacity-0 transition-opacity duration-[180ms] group-hover:opacity-100"
-        aria-hidden="true"
-      />
-      {/* Play overlay — icon */}
-      <div
-        className="absolute inset-0 z-[6] flex items-center justify-center scale-[0.85] opacity-0 transition-[opacity,transform] duration-[180ms] ease-out group-hover:scale-100 group-hover:opacity-100"
-        aria-hidden="true"
-      >
-        <Play size={40} className="fill-white text-white ml-2" />
-      </div>
+      {/* Play overlay — skip for Coming Soon (no watch CTA). */}
+      {badge.kind !== "soon" ? (
+        <>
+          <div
+            className="absolute inset-0 z-[5] bg-black/50 opacity-0 transition-opacity duration-[180ms] group-hover:opacity-100"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute inset-0 z-[6] flex items-center justify-center scale-[0.85] opacity-0 transition-[opacity,transform] duration-[180ms] ease-out group-hover:scale-100 group-hover:opacity-100"
+            aria-hidden="true"
+          >
+            <Play size={40} className="fill-white text-white ml-2" />
+          </div>
+        </>
+      ) : null}
 
       {/* Badges — top row */}
       <div className="absolute left-2 top-2 z-[10] flex flex-col gap-1">
@@ -109,6 +112,11 @@ function PosterFace({
         ) : null}
         {badge.kind === "free" ? (
           <span className="rounded-sm bg-success px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
+            {badge.label}
+          </span>
+        ) : null}
+        {badge.kind === "soon" ? (
+          <span className="rounded-sm bg-black/70 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
             {badge.label}
           </span>
         ) : null}
@@ -266,6 +274,7 @@ function FlipPosterCard(props: PosterCardProps) {
     year,
     entitlement,
     trailerUrl,
+    badge = { kind: "none" },
   } = props;
   const { t } = useI18n();
   const flipId = contentId ?? watchHref ?? titleBelow;
@@ -277,6 +286,7 @@ function FlipPosterCard(props: PosterCardProps) {
   const flipped = activeId === flipId;
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const isComingSoon = badge.kind === "soon";
 
   const km = kmTitle(titleKm);
   const cardLabel = cardAriaLabel(titleKm, titleBelow, year);
@@ -359,7 +369,24 @@ function FlipPosterCard(props: PosterCardProps) {
             </div>
 
             <div className="flex shrink-0 flex-col gap-1.5 sm:gap-2">
-              {needsCheckout && contentId && paySlug ? (
+              {isComingSoon ? (
+                embedUrl ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTrailerOpen(true);
+                    }}
+                    className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-hover sm:px-3 sm:py-2 sm:text-[12px]"
+                  >
+                    {t("cardViewTrailer")}
+                  </button>
+                ) : (
+                  <span className="inline-flex min-h-9 items-center justify-center rounded-md border border-border bg-surface-elevated px-2.5 py-1.5 text-[11px] font-bold text-text-muted sm:px-3 sm:py-2 sm:text-[12px]">
+                    {t("cardComingSoon")}
+                  </span>
+                )
+              ) : needsCheckout && contentId && paySlug ? (
                 <button
                   type="button"
                   onClick={(e) => {
@@ -382,7 +409,7 @@ function FlipPosterCard(props: PosterCardProps) {
                   {buyLabel}
                 </Link>
               )}
-              {embedUrl ? (
+              {!isComingSoon && embedUrl ? (
                 <button
                   type="button"
                   onClick={(e) => {

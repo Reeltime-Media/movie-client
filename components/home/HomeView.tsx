@@ -29,6 +29,7 @@ type HomeViewProps = {
   seriesList: SeriesRead[];
   initialTrending: PosterCardProps[];
   initialFreeToday: PosterCardProps[];
+  initialComingSoon: PosterCardProps[];
   promotionBanners: PromotionBannerRead[];
   heroFeatured: HeroFeaturedSlide[];
 };
@@ -40,6 +41,7 @@ export function HomeView({
   seriesList,
   initialTrending,
   initialFreeToday,
+  initialComingSoon,
   promotionBanners,
   heroFeatured,
 }: HomeViewProps) {
@@ -52,6 +54,7 @@ export function HomeView({
   const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>([]);
 
   const freeTodayRailRef = useRef<HTMLDivElement>(null);
+  const comingSoonRailRef = useRef<HTMLDivElement>(null);
   const trendingRailRef = useRef<HTMLDivElement>(null);
   const continueRailRef = useRef<HTMLDivElement>(null);
   const libraryRailRef = useRef<HTMLDivElement>(null);
@@ -163,6 +166,13 @@ export function HomeView({
         <ScrollReveal as="section" className="pt-8 pb-6">
           <SectionHeader title={t("homeFreeTodayTitle")} scrollRef={freeTodayRailRef} />
           <PosterScrollRail posters={initialFreeToday} gutter="sm" scrollRef={freeTodayRailRef} />
+        </ScrollReveal>
+      )}
+
+      {initialComingSoon.length > 0 && (
+        <ScrollReveal as="section" className="pt-8 pb-6">
+          <SectionHeader title={t("homeComingSoonTitle")} scrollRef={comingSoonRailRef} />
+          <PosterScrollRail posters={initialComingSoon} gutter="sm" scrollRef={comingSoonRailRef} />
         </ScrollReveal>
       )}
 
