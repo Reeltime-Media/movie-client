@@ -282,6 +282,13 @@ export const en = {
   commentsReplyPlaceholder: "Write a reply…",
   commentsSignInToPost: "Sign in to post a comment.",
   commentsSessionExpired: "Your session expired. Please sign in again to comment.",
+
+  ratingLabel: "Your rating",
+  ratingStarLabel: "Rate {n} out of 5 stars",
+  ratingYourScore: "You rated this {n}/5",
+  ratingSubmitError: "Could not save your rating. Please try again.",
+  ratingSignInLink: "Sign in",
+  ratingSignInSuffix: "to rate this movie.",
 } as const;
 
 export type TranslationKey = keyof typeof en;

@@ -279,6 +279,13 @@ export const km = {
   commentsSignInToPost: "សូមចូលគណនីដើម្បីបង្ហោះមតិ។",
   commentsSessionExpired: "សម័យរបស់អ្នកផុតកំណត់ហើយ។ សូមចូលគណនីម្តងទៀតដើម្បីបង្ហោះមតិ។",
 
+  ratingLabel: "ការវាយតម្លៃរបស់អ្នក",
+  ratingStarLabel: "ផ្តល់ចំណាត់ថ្នាក់ {n} លើ 5 ផ្កាយ",
+  ratingYourScore: "អ្នកបានវាយតម្លៃ {n}/5",
+  ratingSubmitError: "មិនអាចរក្សាទុកការវាយតម្លៃរបស់អ្នកបានទេ។ សូមព្យាយាមម្តងទៀត។",
+  ratingSignInLink: "ចូលគណនី",
+  ratingSignInSuffix: "ដើម្បីវាយតម្លៃភាពយន្តនេះ។",
+
   // Missing Footer Keys
   footerContact: "ទាក់ទងមកយើង",
   footerBrowse: "រកមើល",

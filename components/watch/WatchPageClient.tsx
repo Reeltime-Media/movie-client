@@ -11,6 +11,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
+import { RatingInput } from "@/components/watch/RatingInput";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
 import { useMovieWatch } from "@/hooks/watch/use-movie-watch";
@@ -80,6 +81,15 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
+  // Live aggregate shown once the viewer (or anyone) rates this movie, overriding
+  // the value baked into `movie` until the next full fetch. Reset on movie change.
+  const [ratingOverride, setRatingOverride] = useState<string | null>(null);
+  const [prevMovieId, setPrevMovieId] = useState(movie?.id ?? null);
+  if (prevMovieId !== (movie?.id ?? null)) {
+    setPrevMovieId(movie?.id ?? null);
+    setRatingOverride(null);
+  }
+
   useEffect(() => {
     if (!canPlay && !loading) void warmQrCodeModule();
   }, [canPlay, loading]);
@@ -129,6 +139,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
 
   const title = movie.title;
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
+  const displayRating = ratingOverride ?? movie.rating;
 
   return (
     <PageShell fullWidth>
@@ -171,10 +182,10 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                     <h1 className="text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-text md:text-[26px]">
                       {title}
                     </h1>
-                    {movie.rating ? (
+                    {displayRating ? (
                       <div className="mt-1.5 flex items-center gap-1.5 text-[13px] text-text-muted">
                         <Star size={13} className="fill-warning text-warning shrink-0" aria-hidden />
-                        <span className="font-medium">{movie.rating}</span>
+                        <span className="font-medium">{displayRating}</span>
                         {movie.release_year ? (
                           <>
                             <span className="text-border-hover">·</span>
@@ -192,6 +203,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                         ) : null}
                       </div>
                     ) : null}
+                    <RatingInput contentId={movie.id} onAggregateChange={setRatingOverride} />
                   </div>
 
                   {!canPlay ? (
