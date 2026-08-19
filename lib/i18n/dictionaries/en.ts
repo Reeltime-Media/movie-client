@@ -6,6 +6,7 @@ export const en = {
   navTv: "Live TV",
   navMyLibrary: "My library",
   navPricing: "Pricing",
+  navComingSoon: "Coming soon",
   navProfile: "Profile",
   navSignIn: "Sign in",
   navSignOut: "Sign out",
@@ -217,6 +218,10 @@ export const en = {
   shortMoviesDesc:
     "Bite-sized Khmer stories are on the way — quick watches for your commute, your break, or a late-night scroll.",
   shortMoviesBrowseMovies: "Browse movies",
+
+  comingSoonPageTitle: "The movie is coming",
+  comingSoonCardLabel: "Coming soon",
+  comingSoonEmpty: "No titles announced yet — check back soon.",
 
   pricingBadge: "Series subscription",
   pricingTitle: "Choose Your Monthly Plan",

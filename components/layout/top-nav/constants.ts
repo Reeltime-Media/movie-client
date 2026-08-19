@@ -47,4 +47,5 @@ export const navLinks: NavLink[] = [
   { labelKey: "navShortMovies", href: "/short-movies", hasCaret: true },
   { labelKey: "navPricing", href: "/pricing" },
   { labelKey: "navMyLibrary", href: "/my-library", requiresAuth: true },
+  { labelKey: "navComingSoon", href: "/coming-soon" },
 ];

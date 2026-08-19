@@ -168,6 +168,17 @@ html[lang="km"] body {
   }
 }
 
+/* Slow neon pulse — coming-soon card glow + title light streak. */
+@keyframes rt-neon-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
+}
+
 .rt-page-fade-up {
   animation: rt-page-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--rt-enter-delay, 0s);
@@ -182,10 +193,15 @@ html[lang="km"] body {
   animation: rt-page-hero-breathe 14s ease-in-out infinite;
 }
 
+.rt-neon-pulse {
+  animation: rt-neon-pulse 4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rt-page-fade-up,
   .rt-page-fade-in,
-  .rt-page-hero-breathe {
+  .rt-page-hero-breathe,
+  .rt-neon-pulse {
     animation: none !important;
   }
 

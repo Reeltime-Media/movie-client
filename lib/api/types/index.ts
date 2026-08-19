@@ -35,6 +35,18 @@ export interface ContentListItemRead {
   trailer_url?: string | null;
 }
 
+/** Public teaser row from GET /movies/coming-soon */
+export interface ComingSoonItemRead {
+  id: string;
+  slug: string;
+  title: string;
+  title_km?: string | null;
+  poster_key: string | null;
+  banner_key: string | null;
+  /** ISO datetime. Announced release date/time; null = not yet announced (TBA). */
+  release_at: string | null;
+}
+
 export interface ContentRead extends ContentListItemRead {
   series_id: string | null;
   season_number: number | null;
