@@ -8,7 +8,6 @@ export const km = {
   navTv: "ទូរទស្សន៍ផ្សាយផ្ទាល់",
   navMyLibrary: "បណ្ណាល័យរបស់ខ្ញុំ",
   navPricing: "តម្លៃ",
-  navComingSoon: "មកដល់ឆាប់ៗ",
   navProfile: "ប្រវត្តិរូប",
   navSignIn: "ចូលគណនី",
   navSignOut: "ចេញពីគណនី",
@@ -214,10 +213,6 @@ export const km = {
   shortMoviesDesc:
     "រឿងខ្មែរខ្លីៗកំពុងមកដល់ — មើលបានរហ័ស ទាំងពេលធ្វើដំណើរ សម្រាក ឬមុនគេង។",
   shortMoviesBrowseMovies: "រកមើលភាពយន្ត",
-
-  comingSoonPageTitle: "ភាពយន្តជិតមកដល់ហើយ",
-  comingSoonCardLabel: "មកដល់ឆាប់ៗ",
-  comingSoonEmpty: "មិនទាន់មានចំណងជើងប្រកាសនៅឡើយទេ — សូមមកមើលម្តងទៀតឆាប់ៗនេះ។",
 
   pricingBadge: "ការចូលជាសមាជិករឿងភាគ",
   pricingTitle: "ជ្រើសរើសគម្រោងប្រចាំខែ",

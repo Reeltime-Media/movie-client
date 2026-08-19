@@ -1,18 +1,7 @@
 import { fetchAllPages, fetchPage } from "../core/pagination";
 import { apiFetch, catalogCache } from "../core/client";
 import { clientCached, CLIENT_CATALOG_TTL_MS } from "../core/client-cache";
-import type { ComingSoonItemRead, ContentListItemRead, ContentRead } from "../types";
-
-/** Admin-curated, changes should show up quickly. */
-const comingSoonCache: RequestInit = {
-  next: { revalidate: 30 },
-} as RequestInit;
-
-export async function listComingSoon(
-  init: RequestInit = comingSoonCache,
-): Promise<ComingSoonItemRead[]> {
-  return apiFetch<ComingSoonItemRead[]>("/movies/coming-soon", init);
-}
+import type { ContentListItemRead, ContentRead } from "../types";
 
 export type CatalogListParams = {
   search?: string;
