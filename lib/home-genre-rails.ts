@@ -11,13 +11,17 @@ export type HomeGenreRail = {
 
 const RAIL_LIMIT = 12;
 
-/** Build home poster rails from genres that actually appear on movies. */
+/** Cap the home page to the most popular genres instead of one rail per genre in the catalog. */
+const GENRE_RAIL_LIMIT = 6;
+
+/** Build home poster rails for the most popular genres (by movie count) that actually appear on movies. */
 export function buildHomeGenreRails(
   movies: ContentListItemRead[],
   ownedIds: Set<string>,
   isAdmin: boolean,
 ): HomeGenreRail[] {
   return collectGenreLabels(movies)
+    .slice(0, GENRE_RAIL_LIMIT)
     .map((label) => {
       const posters = filterByGenreLabel(movies, label)
         .slice(0, RAIL_LIMIT)

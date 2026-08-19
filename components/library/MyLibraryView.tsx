@@ -3,18 +3,22 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CSSProperties, ElementType } from "react";
-import { CheckCircle2, Clock, Heart, ShoppingBag } from "lucide-react";
+import { Camera, Clock, Crown, CreditCard, Heart, Lock, ShoppingBag } from "lucide-react";
+import { UserAvatar } from "@/components/auth/UserAvatar";
 import { PosterCard } from "@/components/catalog/PosterCard";
 import { PageShell } from "@/components/layout/PageShell";
 import { useFavorites } from "@/components/providers/FavoritesProvider";
 import { useI18n } from "@/components/providers/LocaleProvider";
+import { getMe } from "@/lib/api/auth";
 import { listFavorites } from "@/lib/api/favorites";
 import { listOwnedMovies } from "@/lib/api/purchases";
+import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { movieToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { swallow } from "@/lib/log";
+import { getUserSnapshot, saveUserSnapshot } from "@/lib/user-session";
 import type { TranslationKey } from "@/lib/i18n";
-import type { ContentListItemRead } from "@/lib/api/types";
+import type { ContentListItemRead, SubscriptionRead, UserRead } from "@/lib/api/types";
 import type { PosterCardProps } from "@/types/poster-card";
 
 type LibraryTab = "owned" | "favourites" | "watchlist";
@@ -25,24 +29,93 @@ const tabs: { id: LibraryTab; labelKey: TranslationKey; icon: ElementType }[] = 
   { id: "watchlist", labelKey: "libraryWatchlist", icon: Clock },
 ];
 
-function StatCard({
-  icon: Icon,
-  count,
-  label,
-  accentClass,
-}: {
-  icon: ElementType;
-  count: number;
-  label: string;
-  accentClass: string;
-}) {
+/** Known plan codes get a curated crown color; anything else falls back to a deterministic hash. */
+const KNOWN_PLAN_ACCENTS: Record<string, string> = {
+  premium_annual: "text-warning",
+  standard_monthly: "text-orange-500",
+  basic_monthly: "text-pink-500",
+};
+const PLAN_ACCENTS = ["text-warning", "text-brand", "text-pink-500", "text-orange-500", "text-slate-300"];
+function planAccentClass(planCode: string): string {
+  if (KNOWN_PLAN_ACCENTS[planCode]) return KNOWN_PLAN_ACCENTS[planCode];
+  let hash = 0;
+  for (let i = 0; i < planCode.length; i += 1) hash = (hash + planCode.charCodeAt(i) * 17) % PLAN_ACCENTS.length;
+  return PLAN_ACCENTS[hash];
+}
+function planDisplayName(planCode: string): string {
+  return planCode
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ");
+}
+function formatExpiry(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US");
+}
+
+function StatusBadge({ active }: { active: boolean }) {
+  const { t } = useI18n();
+  return active ? (
+    <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success">
+      <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden />
+      {t("libraryStatusActive")}
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-text-muted">
+      {t("libraryStatusLocked")}
+      <Lock size={11} aria-hidden />
+    </span>
+  );
+}
+
+function SubscriptionCard({ subscription }: { subscription: SubscriptionRead }) {
+  const { t } = useI18n();
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-xl border border-border bg-surface px-3 py-3 sm:px-4 sm:py-4">
-      <div className={["flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest", accentClass].join(" ")}>
-        <Icon size={11} strokeWidth={2.5} aria-hidden />
-        <span className="truncate">{label}</span>
+    <div className="flex min-w-[180px] flex-col gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+        {t("librarySubscriptionLabel")}
+      </span>
+      <div className="flex items-center gap-2">
+        <Crown size={16} className={planAccentClass(subscription.plan)} aria-hidden />
+        <span className="text-[13px] font-bold text-text">{planDisplayName(subscription.plan)}</span>
       </div>
-      <p className="text-[22px] sm:text-[28px] font-black tabular-nums leading-none text-text">{count}</p>
+      <span className="text-[11px] text-text-muted">
+        {t("libraryExpirePrefix")} {formatExpiry(subscription.current_period_end)}
+      </span>
+    </div>
+  );
+}
+
+function UnlockCard() {
+  const { t } = useI18n();
+  return (
+    <div className="flex min-w-[220px] flex-col gap-2 rounded-xl border border-border bg-surface px-4 py-3.5">
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
+          <Crown size={15} aria-hidden />
+        </span>
+        <span className="text-[13px] font-bold text-text">{t("libraryUnlockTitle")}</span>
+      </div>
+      <p className="text-[11px] leading-relaxed text-text-muted">{t("libraryUnlockDesc")}</p>
+      <a
+        href="/pricing"
+        className="mt-1 inline-flex items-center justify-center rounded-md bg-brand px-3 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-brand-hover"
+      >
+        {t("libraryViewPlans")}
+      </a>
+    </div>
+  );
+}
+
+function PaymentMethodCard() {
+  const { t } = useI18n();
+  return (
+    <div className="flex min-w-[200px] flex-col gap-2 rounded-xl border border-border bg-surface px-4 py-3.5">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-elevated text-text-muted">
+        <CreditCard size={15} aria-hidden />
+      </span>
+      <span className="text-[13px] font-bold text-text">{t("libraryNoPaymentMethod")}</span>
+      <p className="text-[11px] leading-relaxed text-text-muted">{t("libraryAddPaymentHint")}</p>
     </div>
   );
 }
@@ -112,6 +185,8 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
   const [favoritePosters, setFavoritePosters] = useState<PosterCardProps[]>([]);
   const [ownedCount, setOwnedCount] = useState(0);
   const [favoriteCount, setFavoriteCount] = useState(0);
+  const [user, setUser] = useState<UserRead | null>(() => getUserSnapshot());
+  const [subscriptions, setSubscriptions] = useState<SubscriptionRead[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -134,9 +209,11 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
     // Only the small, user-specific data is fetched client-side; the public
     // catalog comes from the server (cached) via the `catalogMovies` prop.
     (async () => {
-      const [ownedMovies, favorites] = await Promise.all([
+      const [ownedMovies, favorites, me, subs] = await Promise.all([
         listOwnedMovies().catch(swallow("my-library: load owned movies", [])),
         listFavorites().catch(swallow("my-library: load favorites", [])),
+        getMe().catch(swallow("my-library: load user", null)),
+        listMySubscriptions().catch(swallow("my-library: load subscriptions", [])),
       ]);
 
       if (cancelled) return;
@@ -149,6 +226,12 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
       setFavoriteCount(favIds.size);
       const favMovies = catalogMovies.filter((m) => favIds.has(m.id));
       setFavoritePosters(favMovies.map((m, i) => movieToPoster(m, i, purchasedIds)));
+
+      if (me) {
+        setUser(me);
+        saveUserSnapshot(me);
+      }
+      setSubscriptions(subs);
 
       setLoadError(null);
       setDataLoading(false);
@@ -168,6 +251,8 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
     activeTab === "owned" ? ownedPosters : activeTab === "favourites" ? favoritePosters : [];
   const activeCount =
     activeTab === "owned" ? ownedCount : activeTab === "favourites" ? favoriteCount : 0;
+  const activeSubscriptions = subscriptions.filter((s) => s.status === "active");
+  const shortId = user ? user.id.replace(/-/g, "").slice(-8).toUpperCase() : "";
 
   return (
     <PageShell wide>
@@ -178,16 +263,44 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
         </div>
       ) : null}
 
-      {/* Stats + tabs */}
-      <div className="border-b border-border px-4 py-4 sm:px-6 sm:py-5 md:px-8">
-        {/* Stat cards */}
+      {/* Identity + tabs */}
+      <div className="border-b border-border px-4 py-5 sm:px-6 sm:py-6 md:px-8">
+        {/* Identity + subscription/payment */}
         <div
-          className="rt-page-fade-up flex gap-3"
+          className="rt-page-fade-up flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"
           style={{ "--rt-enter-delay": "0ms" } as CSSProperties}
         >
-          <StatCard icon={ShoppingBag} count={ownedCount} label="Owned" accentClass="text-warning" />
-          <StatCard icon={CheckCircle2} count={0} label="Subscribed" accentClass="text-success" />
-          <StatCard icon={Heart} count={favoriteCount} label="Favourites" accentClass="text-brand" />
+          <div className="flex items-center gap-4">
+            <div className="relative shrink-0">
+              <UserAvatar name={user?.full_name} email={user?.email} avatarUrl={user?.avatar_url} size="lg" />
+              <span
+                className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-bg bg-surface-elevated text-text-muted"
+                aria-hidden
+              >
+                <Camera size={11} />
+              </span>
+            </div>
+            <div>
+              <h1 className="text-[17px] font-extrabold tracking-tight text-text sm:text-[19px]">
+                {user?.full_name ?? user?.email ?? " "}
+              </h1>
+              <p className="mt-0.5 text-[12px] text-text-muted">{t("libraryWelcome")}</p>
+              {user ? <p className="text-[12px] text-text-muted">ID:{shortId}</p> : null}
+              <div className="mt-1.5">
+                <StatusBadge active={activeSubscriptions.length > 0} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-stretch gap-3">
+            {activeSubscriptions.length > 0 ? (
+              activeSubscriptions.map((sub) => <SubscriptionCard key={sub.id} subscription={sub} />)
+            ) : (
+              <UnlockCard />
+            )}
+            <div className="hidden w-px bg-border sm:block" aria-hidden />
+            <PaymentMethodCard />
+          </div>
         </div>
 
         {/* Tab bar */}
