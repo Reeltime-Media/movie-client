@@ -262,6 +262,8 @@ export const en = {
   pricingPlanPremiumDuration: "5month",
   pricingBulletAllSeries: "Access to all series",
   pricingBulletAllMovies: "Access to all Movies",
+  pricingBulletAllPodcast: "Access to all podcasts",
+  pricingBulletAllNews: "Access to all news",
   pricingPlanMiniCta: "Choose Mini Plan",
   pricingPlanBasicCta: "Choose Basic Plan",
   pricingPlanValueCta: "Choose Value Plan",
