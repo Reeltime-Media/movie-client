@@ -22,6 +22,12 @@ import { safePlay } from "@/lib/video/safe-play";
 
 type QualityLevel = { height: number; bitrate: number; index: number };
 
+function qualityHeightLabel(height: number): string {
+  if (height >= 2160) return "4K";
+  if (height > 0) return `${height}p`;
+  return "";
+}
+
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
 const REWIND_SECONDS = 10;
 
@@ -655,10 +661,10 @@ export function WatchPlayer({
   const qualityLabel =
     selectedLevel === -1
       ? autoLevel >= 0 && levels[autoLevel]
-        ? `Auto · ${levels[autoLevel].height}p`
+        ? `Auto · ${qualityHeightLabel(levels[autoLevel].height)}`
         : "Auto"
       : levels.find((l) => l.index === selectedLevel)?.height
-        ? `${levels.find((l) => l.index === selectedLevel)!.height}p`
+        ? qualityHeightLabel(levels.find((l) => l.index === selectedLevel)!.height)
         : "Auto";
 
   return (
@@ -872,7 +878,7 @@ export function WatchPlayer({
                       <span className={selectedLevel === -1 ? "text-brand" : ""}>Auto</span>
                       {selectedLevel === -1 && autoLevel >= 0 && levels[autoLevel] && (
                         <span className="ml-auto text-[10px] text-white/35">
-                          {levels[autoLevel].height}p
+                          {qualityHeightLabel(levels[autoLevel].height)}
                         </span>
                       )}
                     </button>
@@ -891,7 +897,7 @@ export function WatchPlayer({
                           )}
                           <span className={selectedLevel === l.index ? "text-brand" : ""}>
                             {l.height > 0
-                              ? `${l.height}p`
+                              ? qualityHeightLabel(l.height)
                               : `${Math.round(l.bitrate / 1000)}k`}
                           </span>
                           {selectedLevel !== l.index && (

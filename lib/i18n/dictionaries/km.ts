@@ -258,6 +258,8 @@ export const km = {
   pricingPlanPremiumDuration: "5ខែ",
   pricingBulletAllSeries: "មើលរឿងភាគទាំងអស់បាន",
   pricingBulletAllMovies: "មើលភាពយន្តទាំងអស់បាន",
+  pricingBulletAllPodcast: "មើលផតខាស់ទាំងអស់បាន",
+  pricingBulletAllNews: "មើលព័ត៌មានទាំងអស់បាន",
   pricingPlanMiniCta: "ជ្រើសរើសគម្រោង Mini",
   pricingPlanBasicCta: "ជ្រើសរើសគម្រោង Basic",
   pricingPlanValueCta: "ជ្រើសរើសគម្រោង Value",

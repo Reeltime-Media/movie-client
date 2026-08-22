@@ -1,16 +1,15 @@
 "use client";
 
 import {
+  Check,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   Crown,
   Eye,
   EyeOff,
   Globe,
   LogOut,
   Pencil,
-  ShoppingBag,
   Shield,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,12 +23,12 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { pageTitleClassName } from "@/lib/ui/page-title";
 import { getMe, updateMe } from "@/lib/api/auth";
 import { saveUserSnapshot } from "@/lib/user-session";
-import { listPurchases } from "@/lib/api/purchases";
+import { findPlanTier } from "@/lib/pricing-tiers";
 import { listMySubscriptions } from "@/lib/api/subscriptions";
 import { listWatchProgress } from "@/lib/api/playback";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { clearToken } from "@/lib/auth/token";
-import type { UserRead, SubscriptionRead, PurchaseRead, WatchProgressRead } from "@/lib/api/types";
+import type { UserRead, SubscriptionRead, WatchProgressRead } from "@/lib/api/types";
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -87,7 +86,6 @@ export default function ProfilePage() {
 
   const [user, setUser] = useState<UserRead | null>(null);
   const [subscriptions, setSubscriptions] = useState<SubscriptionRead[]>([]);
-  const [purchases, setPurchases] = useState<PurchaseRead[]>([]);
   const [watchProgress, setWatchProgress] = useState<WatchProgressRead[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -114,13 +112,11 @@ export default function ProfilePage() {
     Promise.all([
       getMe(),
       listMySubscriptions().catch(() => [] as SubscriptionRead[]),
-      listPurchases().catch(() => [] as PurchaseRead[]),
       listWatchProgress().catch(() => [] as WatchProgressRead[]),
-    ]).then(([me, subs, purch, progress]) => {
+    ]).then(([me, subs, progress]) => {
       setUser(me);
       saveUserSnapshot(me);
       setSubscriptions(subs);
-      setPurchases(purch);
       setWatchProgress(progress);
       setLoading(false);
     }).catch(() => {
@@ -134,9 +130,8 @@ export default function ProfilePage() {
   }, [editingName]);
 
   const activeSub = subscriptions.find((s) => s.status === "active");
-  const hoursWatched = Math.round(
-    watchProgress.reduce((sum, p) => sum + p.position_seconds, 0) / 3600
-  );
+  const planTier = activeSub ? findPlanTier(activeSub.plan) : undefined;
+
   async function handleSaveName() {
     if (!nameInput.trim() || !user) return;
     setNameSaving(true);
@@ -187,44 +182,24 @@ export default function ProfilePage() {
 
   return (
     <PageShell wide>
-      {/* ── Profile hero ── */}
-      <div className="relative">
-        <div
-          className="cinematic-banner h-32 w-full sm:h-40"
-          style={{
-            background:
-              "linear-gradient(120deg, #1a0508 0%, #3d0c12 40%, #0d1a2e 80%, #0a0a0a 100%)",
-          }}
-        />
-        <div className="absolute bottom-0 left-6 translate-y-1/2 md:left-8">
+      {/* ── Profile header ── */}
+      <div className="flex flex-wrap items-start justify-between gap-4 px-6 pb-8 pt-10 md:px-8">
+        <div className="flex flex-col items-start gap-3">
           <UserAvatar
             name={user.full_name}
             email={user.email}
             avatarUrl={user.avatar_url}
             size="lg"
-            className="border-4 border-bg ring-0"
           />
-        </div>
-      </div>
-
-      {/* Name + meta row */}
-      <div className="flex flex-wrap items-end justify-between gap-4 px-6 pb-5 pt-12 md:px-8 sm:pt-14">
-        <div>
-          <h1 className={pageTitleClassName}>
-            {user.full_name ?? user.email}
-          </h1>
-          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-text-muted">
-            <span>{user.email}</span>
-            <span className="text-border-hover">·</span>
-            <span>Member since {formatMemberSince(user.created_at)}</span>
-            <span className="text-border-hover">·</span>
-            {activeSub ? (
-              <span className="inline-flex items-center gap-1 font-semibold text-success">
-                <CheckCircle2 size={12} /> Subscribed
-              </span>
-            ) : (
-              <span className="font-semibold text-text-muted">Free plan</span>
-            )}
+          <div>
+            <h1 className={`${pageTitleClassName} uppercase`}>
+              {user.full_name ?? user.email}
+            </h1>
+            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-text-muted">
+              <span>{user.email}</span>
+              <span className="text-border-hover">·</span>
+              <span>Member since {formatMemberSince(user.created_at)}</span>
+            </div>
           </div>
         </div>
         <button
@@ -233,27 +208,6 @@ export default function ProfilePage() {
         >
           <LogOut size={13} /> Sign out
         </button>
-      </div>
-
-      {/* ── Stats row ── */}
-      <div className="mx-6 mb-6 grid grid-cols-3 divide-x divide-border rounded-md border border-border bg-surface md:mx-8">
-        <div className="flex flex-col items-center gap-1 px-4 py-4">
-          <ShoppingBag size={16} className="text-warning" />
-          <div className="text-[20px] font-extrabold tracking-[-0.02em]">{purchases.length}</div>
-          <div className="text-[11px] font-medium text-text-muted">Owned</div>
-        </div>
-        <div className="flex flex-col items-center gap-1 px-4 py-4">
-          <CheckCircle2 size={16} className="text-success" />
-          <div className="text-[20px] font-extrabold tracking-[-0.02em]">
-            {activeSub ? 1 : 0}
-          </div>
-          <div className="text-[11px] font-medium text-text-muted">Subscribed</div>
-        </div>
-        <div className="flex flex-col items-center gap-1 px-4 py-4">
-          <Clock3 size={16} className="text-text-muted" />
-          <div className="text-[20px] font-extrabold tracking-[-0.02em]">{hoursWatched}h</div>
-          <div className="text-[11px] font-medium text-text-muted">Watched</div>
-        </div>
       </div>
 
       {/* ── Main grid ── */}
@@ -305,30 +259,55 @@ export default function ProfilePage() {
               />
             )}
             <FieldRow label="Email" value={user.email} />
+            <FieldRow label="Bank account name" value={user.full_name ?? "—"} />
+            <FieldRow label="Bank account number" value="—" />
             <FieldRow label="Member since" value={formatMemberSince(user.created_at)} />
           </div>
         </SectionCard>
 
-        {/* Subscription */}
-        <SectionCard title="Subscription">
+        {/* Current plan */}
+        <SectionCard title="Current Plan">
           {activeSub ? (
-            <div className="space-y-3">
+            <div
+              className="cinematic-banner -mx-5 -my-4 space-y-3 rounded-b-md p-5"
+              style={{
+                background:
+                  "repeating-linear-gradient(180deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 22px, rgba(0,0,0,0.35) 22px, rgba(0,0,0,0.35) 26px), linear-gradient(120deg, #1a0508 0%, #3d0c12 40%, #0d1a2e 80%, #0a0a0a 100%)",
+              }}
+            >
               <div className="flex items-center gap-2">
                 <Crown size={15} className="text-warning" />
-                <span className="text-[13px] font-bold text-text">Reeltime Premium</span>
+                <span className="text-[13px] font-bold text-text">
+                  {planTier ? `${t(planTier.nameKey)} Plan` : "Member Plan"}
+                </span>
                 <span className="ml-auto rounded-sm bg-success/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
                   Active
                 </span>
               </div>
+              {planTier ? (
+                <div className="text-[24px] font-extrabold tracking-[-0.02em] text-text">
+                  ${planTier.price}
+                  <span className="text-[13px] font-semibold text-text-muted">
+                    /{t(planTier.bulletKeys[0])}
+                  </span>
+                </div>
+              ) : null}
               <p className="text-[12px] text-text-muted">
-                Renews on {formatRenewalDate(activeSub.current_period_end)}
+                Expire : {formatRenewalDate(activeSub.current_period_end)}
               </p>
-              <Link
-                href="/pricing"
-                className="mt-1 flex w-full items-center justify-center rounded-md border border-border py-2 text-[12px] font-semibold text-text-muted transition-colors hover:border-border-hover hover:text-text"
-              >
-                Manage subscription
-              </Link>
+              {planTier ? (
+                <ul className="space-y-1.5 border-t border-border pt-3">
+                  {planTier.bulletKeys.map((bulletKey) => (
+                    <li
+                      key={bulletKey}
+                      className="flex items-center gap-2 text-[12px] text-text-muted"
+                    >
+                      <Check size={13} className="shrink-0 text-success" />
+                      {t(bulletKey)}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           ) : (
             <div className="space-y-3">
@@ -418,7 +397,7 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Preferences ── */}
-      <div className="mt-4 px-6 md:px-8">
+      {/* <div className="mt-4 px-6 md:px-8">
         <SectionCard title="Preferences">
           <div className="divide-y divide-border">
             <div className="flex items-center justify-between gap-4 py-3 first:pt-0">
@@ -447,7 +426,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </SectionCard>
-      </div>
+      </div> */}
 
       {/* ── Continue watching ── */}
       {watchProgress.length > 0 && (

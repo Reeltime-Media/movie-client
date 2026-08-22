@@ -7,63 +7,12 @@ import { useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { useAuth } from "@/hooks/auth/use-auth";
-import type { TranslationKey } from "@/lib/i18n";
+import { UNLOCK_TIERS, SUBSCRIPTION_TIERS, type PlanTier } from "@/lib/pricing-tiers";
 import { pageTitleClassName } from "@/lib/ui/page-title";
 import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
 
 const secondaryPlanButtonClassName =
   "inline-flex w-full cursor-pointer items-center justify-center rounded-lg bg-border-hover px-4 py-3.5 text-[14px] font-bold text-text transition-colors duration-200 hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
-
-type PlanTier = {
-  key: string;
-  nameKey: TranslationKey;
-  price: string;
-  bulletKeys: TranslationKey[];
-  ctaKey: TranslationKey;
-  recommended?: boolean;
-};
-
-const UNLOCK_TIERS: PlanTier[] = [
-  {
-    key: "mini",
-    nameKey: "pricingPlanMiniName",
-    price: "2.49",
-    bulletKeys: ["pricingBulletUnlockEachSeries"],
-    ctaKey: "pricingPlanMiniCta",
-  },
-  {
-    key: "basic",
-    nameKey: "pricingPlanBasicName",
-    price: "3.49",
-    bulletKeys: ["pricingPlanBasicDuration", "pricingBulletUnlockAllSeries"],
-    ctaKey: "pricingPlanBasicCta",
-  },
-];
-
-const SUBSCRIPTION_TIERS: PlanTier[] = [
-  {
-    key: "value",
-    nameKey: "pricingPlanValueName",
-    price: "4.99",
-    bulletKeys: ["pricingPlanValueDuration", "pricingBulletAllSeries", "pricingBulletAllMovies"],
-    ctaKey: "pricingPlanValueCta",
-    recommended: true,
-  },
-  {
-    key: "best-value",
-    nameKey: "pricingPlanBestValueName",
-    price: "6.99",
-    bulletKeys: ["pricingPlanBestValueDuration", "pricingBulletAllSeries", "pricingBulletAllMovies"],
-    ctaKey: "pricingPlanBestValueCta",
-  },
-  {
-    key: "premium",
-    nameKey: "pricingPlanPremiumName",
-    price: "10.99",
-    bulletKeys: ["pricingPlanPremiumDuration", "pricingBulletAllSeries", "pricingBulletAllMovies"],
-    ctaKey: "pricingPlanPremiumCta",
-  },
-];
 
 function PlanCard({
   plan,
