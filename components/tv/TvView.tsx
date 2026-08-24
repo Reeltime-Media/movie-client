@@ -13,7 +13,7 @@ import { TvChannelCard } from "@/components/tv/TvChannelCard";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { authorizeTvChannel } from "@/lib/api/tv";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
+import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import type { TvChannelRead } from "@/lib/api/types";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { loginPathWithNext } from "@/lib/auth-redirect";
@@ -173,7 +173,7 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
     listMySubscriptions()
       .catch(swallow("tv: load subscriptions", []))
       .then((subs) => {
-        if (!cancelled) setHasSubscription(subs.some((s) => s.status === "active"));
+        if (!cancelled) setHasSubscription(hasActiveSubscription(subs));
       });
     return () => {
       cancelled = true;

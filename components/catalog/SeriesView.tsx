@@ -11,7 +11,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { marketingImages } from "@/lib/marketing-images";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
+import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import { seriesToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import {
@@ -167,7 +167,7 @@ export function SeriesView({
       .catch(swallow("series: load subscriptions", []))
       .then((subs) => {
         if (cancelled) return;
-        setHasSubscription(subs.some((s) => s.status === "active"));
+        setHasSubscription(hasActiveSubscription(subs));
       });
     return () => { cancelled = true; };
   }, [seriesList, loggedIn]);

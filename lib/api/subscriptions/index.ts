@@ -1,2 +1,2 @@
-export { listMySubscriptions } from "./subscriptions";
+export { listMySubscriptions, isSubscriptionActive, hasActiveSubscription } from "./subscriptions";
 export { listSubscriptionPlans } from "./subscription-plans";

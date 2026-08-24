@@ -9,7 +9,7 @@ import { WatchDetailBody } from "@/components/watch/WatchPageSection";
 import { getRelatedMovies } from "@/lib/api/movies";
 import { getRelatedSeries, listSeriesPage } from "@/lib/api/series";
 import { listPurchases } from "@/lib/api/purchases";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
+import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import { movieToPoster, seriesToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
@@ -75,7 +75,7 @@ export function WatchDiscoveryRails({
 
     Promise.all([seriesPromise, subsPromise])
       .then(([series, subs]) => {
-        const hasSub = subs.some((s) => s.status === "active");
+        const hasSub = hasActiveSubscription(subs);
         setSeriesPicks(series.map((s, i) => seriesToPoster(s, i, { hasSubscription: hasSub, isAdmin })));
       })
       .catch(() => {});

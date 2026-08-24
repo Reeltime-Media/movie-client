@@ -12,7 +12,7 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 import { getMe } from "@/lib/api/auth";
 import { listFavorites } from "@/lib/api/favorites";
 import { listOwnedMovies } from "@/lib/api/purchases";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
+import { listMySubscriptions, isSubscriptionActive } from "@/lib/api/subscriptions";
 import { movieToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { swallow } from "@/lib/log";
@@ -251,7 +251,7 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
     activeTab === "owned" ? ownedPosters : activeTab === "favourites" ? favoritePosters : [];
   const activeCount =
     activeTab === "owned" ? ownedCount : activeTab === "favourites" ? favoriteCount : 0;
-  const activeSubscriptions = subscriptions.filter((s) => s.status === "active");
+  const activeSubscriptions = subscriptions.filter(isSubscriptionActive);
   const shortId = user ? user.id.replace(/-/g, "").slice(-8).toUpperCase() : "";
 
   return (

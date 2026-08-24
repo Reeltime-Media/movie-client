@@ -24,7 +24,7 @@ import { pageTitleClassName } from "@/lib/ui/page-title";
 import { getMe, updateMe } from "@/lib/api/auth";
 import { saveUserSnapshot } from "@/lib/user-session";
 import { findPlanTier } from "@/lib/pricing-tiers";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
+import { listMySubscriptions, isSubscriptionActive } from "@/lib/api/subscriptions";
 import { listWatchProgress } from "@/lib/api/playback";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { clearToken } from "@/lib/auth/token";
@@ -129,7 +129,7 @@ export default function ProfilePage() {
     if (editingName && nameRef.current) nameRef.current.focus();
   }, [editingName]);
 
-  const activeSub = subscriptions.find((s) => s.status === "active");
+  const activeSub = subscriptions.find(isSubscriptionActive);
   const planTier = activeSub ? findPlanTier(activeSub.plan) : undefined;
 
   async function handleSaveName() {

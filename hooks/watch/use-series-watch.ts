@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { getSeries, listEpisodes } from "@/lib/api/series";
-import { listMySubscriptions } from "@/lib/api/subscriptions";
+import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import type { ContentRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/playback";
 import { isAdminUser } from "@/lib/auth/is-admin";
@@ -74,7 +74,7 @@ export function useSeriesWatch({
     if (initialSeries && initialSeries.slug === seriesSlug) {
       subsPromise.then((subs) => {
         if (cancelled) return;
-        setHasSubscription(subs.some((sub) => sub.status === "active"));
+        setHasSubscription(hasActiveSubscription(subs));
       });
       return () => {
         cancelled = true;
@@ -87,7 +87,7 @@ export function useSeriesWatch({
         setSeries(s);
         setSeasons(seasonList);
         setNotFound(false);
-        setHasSubscription(subs.some((sub) => sub.status === "active"));
+        setHasSubscription(hasActiveSubscription(subs));
       })
       .catch(() => !cancelled && setNotFound(true))
       .finally(() => !cancelled && setLoading(false));
@@ -163,7 +163,7 @@ export function useSeriesWatch({
       const subsPromise = hasSubscription
         ? Promise.resolve(true)
         : listMySubscriptions()
-            .then((subs) => subs.some((s) => s.status === "active"))
+            .then(hasActiveSubscription)
             .catch(() => false);
 
       const [hasSub, url] = await Promise.all([
