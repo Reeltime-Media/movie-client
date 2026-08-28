@@ -60,3 +60,10 @@ export async function updateMe(data: {
   saveUserSnapshot(user);
   return user;
 }
+
+export async function confirmDevicePairing(code: string): Promise<void> {
+  await apiFetch<void>("/auth/device/confirm", {
+    method: "POST",
+    body: { code },
+  });
+}

@@ -8,6 +8,7 @@ const ALLOWED_PATH_PREFIXES = [
   "/pay",
   "/profile",
   "/payment/success",
+  "/link-device",
 ] as const;
 
 /** Only allow same-site relative redirects after payment or login. */
