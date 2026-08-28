@@ -1,10 +1,9 @@
 "use client";
 
-import { Calendar, Check, Clock, Loader2, Plus, Star } from "lucide-react";
+import { Calendar, Check, Clock, Loader2, PlayCircle, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { useFavorites } from "@/components/providers/FavoritesProvider";
@@ -99,28 +98,6 @@ export function WatchSeriesClient({
     prefetchEpisode,
   } = useSeriesWatch({ seriesSlug, playback, initialSeries, initialSeasons });
 
-  useEffect(() => {
-    if (loading || notFound || !series || !activeSeason || !episode) return;
-    if (canPlay) return;
-    // Guests must sign in first; subscribed unlock goes through pricing.
-    if (!loggedIn) {
-      router.replace(`/login?next=${encodeURIComponent(loginNext)}`);
-      return;
-    }
-    router.replace(payHref);
-  }, [
-    loading,
-    notFound,
-    series,
-    activeSeason,
-    episode,
-    canPlay,
-    loggedIn,
-    loginNext,
-    payHref,
-    router,
-  ]);
-
   if (loading) {
     return (
       <PageShell fullWidth>
@@ -177,38 +154,29 @@ export function WatchSeriesClient({
     );
   }
 
-  if (!canPlay) {
-    return (
-      <PageShell fullWidth>
-        <div className="flex h-64 items-center justify-center text-[13px] text-text-muted">
-          <Loader2 size={28} className="animate-spin text-text-muted" aria-hidden />
-          <span className="sr-only">Redirecting to pricing</span>
-        </div>
-      </PageShell>
-    );
-  }
-
   return (
     <PageShell fullWidth>
-      {playbackLoading || !playbackUrl ? (
-        <WatchPlayerBand>
-          <div className="absolute inset-0 flex items-center justify-center bg-black">
-            <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
-            <span className="sr-only">Loading stream</span>
-          </div>
-        </WatchPlayerBand>
-      ) : (
-        <WatchPlayerBand>
-          <WatchPlayer
-            key={playbackUrl}
-            contentId={episode.id}
-            hlsSrc={playbackUrl}
-            title={playerTitle}
-            initialTime={resumeTime ?? 0}
-            fill
-          />
-        </WatchPlayerBand>
-      )}
+      {canPlay ? (
+        playbackLoading || !playbackUrl ? (
+          <WatchPlayerBand>
+            <div className="absolute inset-0 flex items-center justify-center bg-black">
+              <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
+              <span className="sr-only">Loading stream</span>
+            </div>
+          </WatchPlayerBand>
+        ) : (
+          <WatchPlayerBand>
+            <WatchPlayer
+              key={playbackUrl}
+              contentId={episode.id}
+              hlsSrc={playbackUrl}
+              title={playerTitle}
+              initialTime={resumeTime ?? 0}
+              fill
+            />
+          </WatchPlayerBand>
+        )
+      ) : null}
 
       <section className="border-b border-border py-6 md:py-8">
         <WatchDetailBody>
@@ -238,7 +206,25 @@ export function WatchSeriesClient({
                     S{seasonNum} E{episodeNum} · {episode.title}
                   </p>
                 </div>
-                <FavouriteButton contentId={series.id} />
+                <div className="flex flex-wrap items-center gap-2">
+                  {!canPlay ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          loggedIn
+                            ? payHref
+                            : `/login?next=${encodeURIComponent(loginNext)}`,
+                        )
+                      }
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+                    >
+                      <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
+                      {loggedIn ? "Subscribe to watch" : "Sign in to watch"}
+                    </button>
+                  ) : null}
+                  <FavouriteButton contentId={series.id} />
+                </div>
               </div>
 
               {series.genres.length > 0 ? (
