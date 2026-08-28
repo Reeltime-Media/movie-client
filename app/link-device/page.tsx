@@ -1,10 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { confirmDevicePairing } from "@/lib/api/auth";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { pageTitleClassName } from "@/lib/ui/page-title";
+import { clearToken } from "@/lib/auth/token";
+import { loginPathWithNext } from "@/lib/auth-redirect";
+import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 
 type Status = "idle" | "confirming" | "done" | "error";
 
@@ -15,6 +18,7 @@ function LinkDeviceContent() {
   const code = searchParams.get("code");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const ran = useRef(false);
 
   useEffect(() => {
     if (!code) return;
@@ -22,15 +26,24 @@ function LinkDeviceContent() {
       router.replace(`/login?next=${encodeURIComponent(`/link-device?code=${code}`)}`);
       return;
     }
-    if (status !== "idle") return;
+    if (ran.current) return;
+    ran.current = true;
     setStatus("confirming");
     confirmDevicePairing(code)
       .then(() => setStatus("done"))
       .catch((err) => {
+        const status = err && typeof err === "object" && "status" in err
+          ? (err as { status?: number }).status
+          : undefined;
+        if (status === 401) {
+          clearToken();
+          router.replace(loginPathWithNext(`/link-device?code=${code}`));
+          return;
+        }
         setError(err instanceof Error ? err.message : "Couldn't sign in the TV.");
         setStatus("error");
       });
-  }, [code, loggedIn, router, status]);
+  }, [code, loggedIn, router]);
 
   if (!code) {
     return (
@@ -68,7 +81,7 @@ function LinkDeviceContent() {
 
 export default function LinkDevicePage() {
   return (
-    <Suspense>
+    <Suspense fallback={<CheckoutSpinner />}>
       <LinkDeviceContent />
     </Suspense>
   );
