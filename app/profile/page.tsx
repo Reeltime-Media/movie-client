@@ -3,14 +3,11 @@
 import {
   Check,
   CheckCircle2,
-  ChevronRight,
   Crown,
   Eye,
   EyeOff,
-  Globe,
   LogOut,
   Pencil,
-  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

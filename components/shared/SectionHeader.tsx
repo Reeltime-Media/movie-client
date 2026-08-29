@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import Link from "next/link";
 import type { RefObject } from "react";
 

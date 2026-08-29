@@ -90,6 +90,7 @@ export function HomeView({
   );
 
   const trendingPosters = moviePosters.length > 0 ? moviePosters : initialTrending.slice(0, RAIL_LIMIT);
+  const visibleContinuePosters = loggedIn ? continuePosters : [];
 
   useEffect(() => {
     let cancelled = false;
@@ -105,10 +106,7 @@ export function HomeView({
   }, [loggedIn]);
 
   useEffect(() => {
-    if (!loggedIn) {
-      setContinuePosters([]);
-      return;
-    }
+    if (!loggedIn) return;
     let cancelled = false;
     listWatchProgress()
       .catch(swallow("home: load watch progress", [] as WatchProgressRead[]))
@@ -206,7 +204,7 @@ export function HomeView({
         <PromotionBannerStrip banners={displayBanners} />
       </section>
 
-      {continuePosters.length > 0 ? (
+      {visibleContinuePosters.length > 0 ? (
         <section className="pt-8 pb-6">
           <SectionHeader
             title={t("homeContinueWatching")}
@@ -215,7 +213,7 @@ export function HomeView({
             seeAllLabel={t("sectionSeeAll")}
             scrollRef={continueRailRef}
           />
-          <PosterScrollRail posters={continuePosters} gutter="sm" scrollRef={continueRailRef} />
+          <PosterScrollRail posters={visibleContinuePosters} gutter="sm" scrollRef={continueRailRef} />
         </section>
       ) : null}
 
