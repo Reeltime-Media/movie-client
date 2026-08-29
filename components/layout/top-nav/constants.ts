@@ -1,6 +1,6 @@
 import type { TranslationKey } from "@/lib/i18n";
 
-export type NavDropdownItem = {
+type NavDropdownItem = {
   labelKey: TranslationKey;
   href: string;
 };

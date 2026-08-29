@@ -1,7 +1,7 @@
 import type { TranslationKey } from "@/lib/i18n";
 
 /** Shared genre filter options for movies and series catalog pages. */
-export const CATALOG_GENRE_KEYS = [
+const CATALOG_GENRE_KEYS = [
   "genreAll",
   "genreAction",
   "genreThriller",

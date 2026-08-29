@@ -95,19 +95,6 @@ export interface SubscriptionRead {
   updated_at: string;
 }
 
-export interface SubscriptionPlanRead {
-  id: string;
-  code: string;
-  name: string;
-  description: string | null;
-  price_usd: string;
-  billing_interval_days: number;
-  is_active: boolean;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface WatchProgressRead {
   user_id: string;
   content_id: string;
