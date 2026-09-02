@@ -250,6 +250,10 @@ export function WatchPlayer({
         );
         setBuffering(false);
         applyPendingSeek();
+        // Browsers block unmuted autoplay; start muted (existing mute button
+        // lets the viewer unmute) so playback actually starts on navigation.
+        video.muted = true;
+        void safePlay(video);
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
@@ -278,6 +282,8 @@ export function WatchPlayer({
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = hlsSrc;
+      video.muted = true;
+      void safePlay(video);
       return () => {
         video.pause();
         video.removeAttribute("src");
