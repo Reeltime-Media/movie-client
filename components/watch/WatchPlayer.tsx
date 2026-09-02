@@ -214,6 +214,20 @@ export function WatchPlayer({
     setPreloadMode("metadata");
     updateProgressUi();
 
+    // Navigating here was itself a user click, so the browser may allow
+    // unmuted autoplay outright (sticky activation carries across a
+    // client-side route change, since it's the same document). Try with
+    // sound first; only fall back to muted if the browser actually blocks
+    // it (e.g. a direct/refreshed page load with no prior interaction).
+    const attemptAutoplay = async () => {
+      video.muted = false;
+      await safePlay(video);
+      if (video.paused) {
+        video.muted = true;
+        void safePlay(video);
+      }
+    };
+
     // Prefer native HLS on Apple devices so webkitEnterFullscreen works.
     // hls.js (MSE) can claim support on some iPads but breaks iOS fullscreen.
     if (
@@ -221,6 +235,7 @@ export function WatchPlayer({
       video.canPlayType("application/vnd.apple.mpegurl")
     ) {
       video.src = hlsSrc;
+      void attemptAutoplay();
       return () => {
         video.pause();
         video.removeAttribute("src");
@@ -250,10 +265,7 @@ export function WatchPlayer({
         );
         setBuffering(false);
         applyPendingSeek();
-        // Browsers block unmuted autoplay; start muted (existing mute button
-        // lets the viewer unmute) so playback actually starts on navigation.
-        video.muted = true;
-        void safePlay(video);
+        void attemptAutoplay();
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
@@ -282,8 +294,7 @@ export function WatchPlayer({
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = hlsSrc;
-      video.muted = true;
-      void safePlay(video);
+      void attemptAutoplay();
       return () => {
         video.pause();
         video.removeAttribute("src");
