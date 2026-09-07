@@ -18,6 +18,12 @@ const HOP_BY_HOP_HEADERS = new Set([
   "upgrade",
   "host",
   "content-length",
+  // fetch() transparently decompresses the upstream body, so by the time we
+  // read it (arrayBuffer) it's no longer gzip/br/deflate — forwarding the
+  // upstream's original Content-Encoding here mislabels the plain bytes we
+  // actually send, and Vercel's edge silently empties the body on that
+  // mismatch.
+  "content-encoding",
 ]);
 
 function apiProxyTarget(): string | null {
@@ -64,7 +70,12 @@ async function proxyToApi(request: NextRequest, pathSegments: string[]) {
   // browser or CDN cache a per-user, auth-sensitive proxy response.
   responseHeaders.set("Cache-Control", "no-store, must-revalidate");
 
-  return new NextResponse(upstream.body, {
+  // Buffer rather than pass `upstream.body` through directly — Vercel's
+  // Node.js serverless runtime has silently dropped streamed fetch() bodies
+  // on relayed Response objects (status/headers arrive, body doesn't).
+  const bodyBuffer = await upstream.arrayBuffer();
+
+  return new NextResponse(bodyBuffer, {
     status: upstream.status,
     headers: responseHeaders,
   });
