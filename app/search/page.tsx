@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
+import { primaryGenre } from "@/lib/catalog-filter";
 import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 
 
@@ -47,7 +48,7 @@ function ResultRow({ result, query }: { result: SearchResult; query: string }) {
 
   const title = result.data.title;
   const description = result.data.description;
-  const genres = result.data.genres ?? [];
+  const genre = primaryGenre(result.data.genres);
 
   const subtitle =
     result.kind === "series"
@@ -89,18 +90,13 @@ function ResultRow({ result, query }: { result: SearchResult; query: string }) {
             {description}
           </p>
         )}
-        {genres.length > 0 && (
+        {genre ? (
           <div className="mt-3 flex flex-wrap gap-2">
-            {genres.map((g) => (
-              <span
-                key={g}
-                className="rounded-sm border border-border px-2.5 py-0.5 text-[11px] font-medium text-text-muted"
-              >
-                {g}
-              </span>
-            ))}
+            <span className="rounded-sm border border-border px-2.5 py-0.5 text-[11px] font-medium text-text-muted">
+              {genre}
+            </span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Play button */}

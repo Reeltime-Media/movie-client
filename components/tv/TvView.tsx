@@ -110,7 +110,7 @@ function StatusBand({
             <p className="text-[13px] font-medium">{t("tvConnecting")}</p>
           </div>
         ) : selection.status === "playing" ? (
-          <WatchPlayer key={selection.url} hlsSrc={selection.url} title={channel.name} fill />
+          <WatchPlayer key={selection.url} hlsSrc={selection.url} title={channel.name} fill live />
         ) : selection.status === "locked" ? (
           <StatusPanel
             icon={

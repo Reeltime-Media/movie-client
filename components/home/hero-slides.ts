@@ -2,6 +2,7 @@ import { posterUrl } from "@/lib/api/core";
 import type { HeroFeaturedSlide } from "@/lib/api/catalog";
 import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
 import { youtubeHeroEmbedUrl } from "@/lib/youtube";
+import { primaryGenre } from "@/lib/catalog-filter";
 
 export type HeroSlide = {
   id: string;
@@ -29,7 +30,7 @@ export function slideFromFeatured(slide: HeroFeaturedSlide): HeroSlide {
     year: slide.release_year?.toString() ?? "",
     duration: slide.runtime ?? (slide.content_type === "series" ? "Series" : ""),
     rating: slide.rating != null ? String(slide.rating) : "",
-    genres: (slide.genres ?? []).join(" · "),
+    genres: primaryGenre(slide.genres) ?? "",
     description: slide.description ?? "",
     bannerSrc: bannerImageSrc(slide.banner_key),
     watchHref: slide.watch_href,
@@ -54,7 +55,7 @@ export function buildFallbackSlides(
     year: m.release_year?.toString() ?? "",
     duration: m.runtime ?? "",
     rating: m.rating != null ? String(m.rating) : "",
-    genres: (m.genres ?? []).join(" · "),
+    genres: primaryGenre(m.genres) ?? "",
     description: m.description ?? "",
     bannerSrc: "",
     watchHref: `/watch?slug=${m.slug}`,
@@ -68,7 +69,7 @@ export function buildFallbackSlides(
     year: s.release_year?.toString() ?? "",
     duration: "Series",
     rating: s.rating != null ? String(s.rating) : "",
-    genres: (s.genres ?? []).join(" · "),
+    genres: primaryGenre(s.genres) ?? "",
     description: s.description ?? "",
     bannerSrc: bannerImageSrc(s.banner_key),
     watchHref: `/watch/series/${s.slug}/1/1`,

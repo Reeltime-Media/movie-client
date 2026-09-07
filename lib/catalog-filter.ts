@@ -47,6 +47,17 @@ function normalizeGenreLabel(label: string): string {
   return label.trim().toLowerCase().replace(/[-\s]/g, "");
 }
 
+/** First non-empty genre — the only one shown on customer UIs. */
+export function primaryGenre(
+  genres: readonly string[] | null | undefined,
+): string | undefined {
+  for (const raw of genres ?? []) {
+    const label = raw.trim();
+    if (label) return label;
+  }
+  return undefined;
+}
+
 /** Map an API/catalog genre label (e.g. "Thriller") to a filter key. */
 export function genreKeyFromLabel(label: string | null | undefined): CatalogGenreKey {
   if (!label?.trim()) return "genreAll";
@@ -73,7 +84,8 @@ export function matchesGenreLabel(
 ): boolean {
   if (!label?.trim()) return true;
   const needle = normalizeGenreLabel(label);
-  return item.genres.some((g) => normalizeGenreLabel(g) === needle);
+  const primary = primaryGenre(item.genres);
+  return primary != null && normalizeGenreLabel(primary) === needle;
 }
 
 export function filterByGenreLabel<T extends CatalogSearchable>(
@@ -94,19 +106,14 @@ export function collectGenreLabels(
   const counts = new Map<string, { label: string; count: number }>();
 
   for (const item of items) {
-    const seen = new Set<string>();
-    for (const raw of item.genres ?? []) {
-      const label = raw.trim();
-      if (!label) continue;
-      const key = normalizeGenreLabel(label);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const existing = counts.get(key);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        counts.set(key, { label, count: 1 });
-      }
+    const label = primaryGenre(item.genres);
+    if (!label) continue;
+    const key = normalizeGenreLabel(label);
+    const existing = counts.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      counts.set(key, { label, count: 1 });
     }
   }
 

@@ -72,6 +72,7 @@ export function WatchPlayer({
   attribution,
   bleed = false,
   fill = false,
+  live = false,
   initialTime = 0,
 }: {
   contentId?: string;
@@ -82,6 +83,8 @@ export function WatchPlayer({
   bleed?: boolean;
   /** Stretch to parent height instead of locking to 16:9 (series theater). */
   fill?: boolean;
+  /** Live HLS: join near the edge, keep a short buffer. */
+  live?: boolean;
   /** Resume position in seconds (skipped when 0). */
   initialTime?: number;
 }) {
@@ -250,6 +253,15 @@ export function WatchPlayer({
         // Fetch the first fragment as soon as the manifest is known, in parallel
         // with media attach, so the first frame paints sooner.
         startFragPrefetch: true,
+        ...(live
+          ? {
+              liveSyncDurationCount: 2,
+              liveMaxLatencyDurationCount: 5,
+              maxBufferLength: 8,
+              maxMaxBufferLength: 12,
+              backBufferLength: 0,
+            }
+          : {}),
       });
       hlsRef.current = hls;
       hls.loadSource(hlsSrc);
@@ -310,7 +322,7 @@ export function WatchPlayer({
         video.load();
       };
     }
-  }, [hlsSrc, fallbackSrc, initialTime, applyPendingSeek, updateProgressUi]);
+  }, [hlsSrc, fallbackSrc, live, initialTime, applyPendingSeek, updateProgressUi]);
 
   useEffect(() => {
     const video = videoRef.current;

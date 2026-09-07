@@ -16,6 +16,7 @@ import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
 import { useMovieWatch } from "@/hooks/watch/use-movie-watch";
 import type { ContentRead } from "@/lib/api/types";
+import { primaryGenre } from "@/lib/catalog-filter";
 import { warmQrCodeModule } from "@/lib/pay/khqr-image";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 
@@ -140,6 +141,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
   const title = movie.title;
   const trailerEmbed = youtubeEmbedUrl(movie.trailer_url);
   const displayRating = ratingOverride ?? movie.rating;
+  const genre = primaryGenre(movie.genres);
 
   return (
     <PageShell fullWidth>
@@ -227,21 +229,16 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                   </p>
                 ) : null}
 
-                {/* Genres */}
-                {movie.genres.length > 0 ? (
+                {/* Genre — show only the primary category */}
+                {genre ? (
                   <div className="mt-5">
                     <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-text-disabled">
                       Genre
                     </span>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      {movie.genres.map((g) => (
-                        <span
-                          key={g}
-                          className="cursor-default rounded-sm border border-border bg-surface px-2.5 py-0.5 text-[11px] font-medium text-text-muted transition-colors hover:border-border-hover hover:text-text"
-                        >
-                          {g}
-                        </span>
-                      ))}
+                      <span className="cursor-default rounded-sm border border-border bg-surface px-2.5 py-0.5 text-[11px] font-medium text-text-muted transition-colors hover:border-border-hover hover:text-text">
+                        {genre}
+                      </span>
                     </div>
                   </div>
                 ) : null}
@@ -309,7 +306,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
         </WatchDetailBody>
       </section>
 
-      <WatchDiscoveryRails movieSlug={movie.slug} genres={movie.genres} />
+      <WatchDiscoveryRails movieSlug={movie.slug} genres={genre ? [genre] : []} />
 
       {checkoutOpen ? (
         <BakongCheckoutModal

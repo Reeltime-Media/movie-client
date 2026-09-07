@@ -14,6 +14,7 @@ import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSe
 import { WatchSeriesEpisodes } from "@/components/watch/WatchSeriesEpisodes";
 import { useSeriesWatch } from "@/hooks/watch/use-series-watch";
 import { posterThumbUrl } from "@/lib/api/core";
+import { primaryGenre } from "@/lib/catalog-filter";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 
 // Lazy-loaded: pulls in hls.js, which we don't want in the initial bundle.
@@ -121,6 +122,8 @@ export function WatchSeriesClient({
     );
   }
 
+  const genre = primaryGenre(series.genres);
+
   if (!activeSeason || !episode) {
     return (
       <PageShell fullWidth>
@@ -227,16 +230,11 @@ export function WatchSeriesClient({
                 </div>
               </div>
 
-              {series.genres.length > 0 ? (
+              {genre ? (
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {series.genres.map((g) => (
-                    <span
-                      key={g}
-                      className="rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-black"
-                    >
-                      {g}
-                    </span>
-                  ))}
+                  <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-black">
+                    {genre}
+                  </span>
                 </div>
               ) : null}
 
@@ -274,10 +272,10 @@ export function WatchSeriesClient({
               ) : null}
 
               <div className="mt-5 grid max-w-md grid-cols-[110px_1fr] gap-y-2 border-t border-border pt-4 text-[13px] sm:grid-cols-[130px_1fr]">
-                {series.genres.length > 0 ? (
+                {genre ? (
                   <>
                     <span className="text-text-muted">{t("watchDetailsGenre")}</span>
-                    <span className="text-text">{series.genres.join(", ")}</span>
+                    <span className="text-text">{genre}</span>
                   </>
                 ) : null}
                 {series.release_year ? (
@@ -310,7 +308,7 @@ export function WatchSeriesClient({
 
       <WatchDiscoveryRails
         seriesSlug={series.slug}
-        genres={series.genres}
+        genres={genre ? [genre] : []}
         seriesPicksLayout="grid"
       />
 

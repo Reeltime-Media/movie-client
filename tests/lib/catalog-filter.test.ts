@@ -6,6 +6,7 @@ import {
   matchesGenre,
   matchesGenreLabel,
   matchesSearch,
+  primaryGenre,
   type CatalogSearchable,
 } from "@/lib/catalog-filter";
 
@@ -14,6 +15,14 @@ const item = (over: Partial<CatalogSearchable> = {}): CatalogSearchable => ({
   description: "A rideshare driver picks up the wrong passenger.",
   genres: ["Action", "Thriller"],
   ...over,
+});
+
+describe("primaryGenre", () => {
+  it("returns the first non-empty genre", () => {
+    expect(primaryGenre(["Action", "Thriller"])).toBe("Action");
+    expect(primaryGenre(["", " Drama "])).toBe("Drama");
+    expect(primaryGenre([])).toBeUndefined();
+  });
 });
 
 describe("matchesSearch", () => {
@@ -55,8 +64,9 @@ describe("matchesGenre / matchesGenreLabel", () => {
     expect(matchesGenre(item(), "genreAll")).toBe(true);
   });
 
-  it("matches by mapped genre key", () => {
+  it("matches by mapped genre key using only the primary genre", () => {
     expect(matchesGenre(item(), "genreAction")).toBe(true);
+    expect(matchesGenre(item(), "genreThriller")).toBe(false);
     expect(matchesGenre(item(), "genreHorror")).toBe(false);
   });
 
@@ -67,21 +77,22 @@ describe("matchesGenre / matchesGenreLabel", () => {
 });
 
 describe("filterByGenreLabel", () => {
-  it("returns a copy for empty labels and filters otherwise", () => {
+  it("returns a copy for empty labels and filters by primary genre otherwise", () => {
     const items = [item(), item({ genres: ["Drama"] })];
     expect(filterByGenreLabel(items, null)).toHaveLength(2);
     expect(filterByGenreLabel(items, "Drama")).toHaveLength(1);
+    expect(filterByGenreLabel(items, "Thriller")).toHaveLength(0);
   });
 });
 
 describe("collectGenreLabels", () => {
-  it("orders by frequency then name, keeping first-seen casing", () => {
+  it("orders by primary-genre frequency then name, keeping first-seen casing", () => {
     const items = [
       item({ genres: ["Drama"] }),
       item({ genres: ["drama", "Action"] }),
       item({ genres: ["Action"] }),
     ];
-    expect(collectGenreLabels(items)).toEqual(["Action", "Drama"]);
+    expect(collectGenreLabels(items)).toEqual(["Drama", "Action"]);
   });
 
   it("ignores blank genre entries and duplicate genres within one item", () => {
