@@ -49,7 +49,9 @@ export function movieToPoster(
 
   return {
     contentId: movie.id,
-    imageSrc: posterThumbUrl(movie.poster_key, 400) ?? posterUrl(movie.poster_key),
+    imageSrc:
+      posterThumbUrl(movie.poster_key, 400, movie.updated_at) ??
+      posterUrl(movie.poster_key, movie.updated_at),
     posterTitle: movie.title.toUpperCase(),
     titleBelow: movie.title,
     // Always pass a string or null (never undefined) so SSR/client props match.
@@ -94,7 +96,9 @@ export function seriesToPoster(
   }
 
   return {
-    imageSrc: posterThumbUrl(series.poster_key, 400) ?? posterUrl(series.poster_key),
+    imageSrc:
+      posterThumbUrl(series.poster_key, 400, series.updated_at) ??
+      posterUrl(series.poster_key, series.updated_at),
     posterTitle: series.title.toUpperCase(),
     titleBelow: series.title,
     titleKm: typeof series.title_km === "string" && series.title_km.trim()
@@ -122,7 +126,9 @@ export function movieToBanner(
   const price =
     !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
   return {
-    imageSrc: posterUrl(movie.banner_key) ?? posterUrl(movie.poster_key),
+    imageSrc:
+      posterUrl(movie.banner_key, movie.updated_at) ??
+      posterUrl(movie.poster_key, movie.updated_at),
     imageAlt: movie.title_km ? `${movie.title_km} · ${movie.title}` : movie.title,
     title: movie.title,
     titleKm: typeof movie.title_km === "string" && movie.title_km.trim()
@@ -136,7 +142,9 @@ export function movieToBanner(
 
 export function seriesToBanner(series: SeriesRead, badgeLabel = "រឿងភាគ"): BannerCardProps {
   return {
-    imageSrc: posterUrl(series.banner_key) ?? posterUrl(series.poster_key),
+    imageSrc:
+      posterUrl(series.banner_key, series.updated_at) ??
+      posterUrl(series.poster_key, series.updated_at),
     imageAlt: series.title_km ? `${series.title_km} · ${series.title}` : series.title,
     title: series.title,
     titleKm: typeof series.title_km === "string" && series.title_km.trim()

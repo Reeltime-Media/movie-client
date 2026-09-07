@@ -43,10 +43,7 @@ type SearchResult =
   | { kind: "series"; data: SeriesRead; episodeCount: number };
 
 function ResultRow({ result, query }: { result: SearchResult; query: string }) {
-  const imgSrc =
-    result.kind === "movie"
-      ? posterUrl(result.data.poster_key)
-      : posterUrl(result.data.poster_key);
+  const imgSrc = posterUrl(result.data.poster_key, result.data.updated_at);
 
   const title = result.data.title;
   const description = result.data.description;

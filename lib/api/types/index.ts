@@ -33,6 +33,7 @@ export interface ContentListItemRead {
   is_free: boolean;
   /** Lets catalog cards offer a trailer preview without a detail fetch. */
   trailer_url?: string | null;
+  updated_at: string;
 }
 
 export interface ContentRead extends ContentListItemRead {
