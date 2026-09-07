@@ -1,4 +1,26 @@
 import type { NextConfig } from "next";
+import { cspConnectSrc } from "./lib/csp-connect-src";
+
+function securityHeaders(): { key: string; value: string }[] {
+  return [
+    { key: "X-Frame-Options", value: "DENY" },
+    { key: "X-Content-Type-Options", value: "nosniff" },
+    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+    {
+      key: "Content-Security-Policy",
+      value: [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: https:",
+        "font-src 'self' data:",
+        `connect-src ${cspConnectSrc()}`,
+        "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
+        "media-src 'self' https: blob:",
+      ].join("; "),
+    },
+  ];
+}
 
 const nextConfig: NextConfig = {
   // Auto-memoize components/hooks; the codebase passes the compiler's lint rules.
@@ -19,6 +41,10 @@ const nextConfig: NextConfig = {
       ];
     }
     return [
+      {
+        source: "/:path*",
+        headers: securityHeaders(),
+      },
       {
         // Build-hashed — safe to cache forever.
         source: "/_next/static/:path*",
