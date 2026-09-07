@@ -187,7 +187,7 @@ export function WatchSeriesClient({
                 style={{ viewTransitionName: `poster-${series.id}` }}
               >
                 <CdnImage
-                  src={posterThumbUrl(series.poster_key, 320) ?? ""}
+                  src={posterThumbUrl(series.poster_key, 320, series.updated_at) ?? ""}
                   alt={series.title}
                   fill
                   sizes="160px"

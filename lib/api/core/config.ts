@@ -20,12 +20,22 @@ export const catalogCache: RequestInit = {
   next: { revalidate: CATALOG_REVALIDATE_SECONDS },
 } as RequestInit;
 
-export function posterUrl(posterKey: string | null | undefined): string | undefined {
+/**
+ * `version`, when given, is appended as a `?v=` query param so a re-uploaded
+ * asset (same key, new bytes) busts the browser cache and Cloudflare's edge
+ * cache for r2.dev hosts — mirrors movie-admin's `mediaUrl` helper, which
+ * already does this using the record's `updated_at`.
+ */
+export function posterUrl(
+  posterKey: string | null | undefined,
+  version?: string | null,
+): string | undefined {
   if (!posterKey) return undefined;
   if (/^https?:\/\//i.test(posterKey)) return posterKey;
   if (posterKey.startsWith("/")) return posterKey;
   if (!R2_PUBLIC_URL) return undefined;
-  return `${R2_PUBLIC_URL}/${posterKey.replace(/^\//, "")}`;
+  const url = `${R2_PUBLIC_URL}/${posterKey.replace(/^\//, "")}`;
+  return version ? `${url}?v=${encodeURIComponent(version)}` : url;
 }
 
 /**
@@ -36,8 +46,9 @@ export function posterUrl(posterKey: string | null | undefined): string | undefi
 export function posterThumbUrl(
   posterKey: string | null | undefined,
   width = 400,
+  version?: string | null,
 ): string | undefined {
-  const base = posterUrl(posterKey);
+  const base = posterUrl(posterKey, version);
   if (!base) return undefined;
   if (!isR2ImageUrl(base)) return base;
 
