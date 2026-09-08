@@ -14,6 +14,7 @@ import { listFavorites } from "@/lib/api/favorites";
 import { listOwnedMovies } from "@/lib/api/purchases";
 import { listMySubscriptions, isSubscriptionActive } from "@/lib/api/subscriptions";
 import { movieToPoster } from "@/lib/api/mappers";
+import { isAdminUser } from "@/lib/auth/is-admin";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { swallow } from "@/lib/log";
 import { getUserSnapshot, saveUserSnapshot } from "@/lib/user-session";
@@ -53,12 +54,17 @@ function formatExpiry(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US");
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active, isAdmin }: { active: boolean; isAdmin: boolean }) {
   const { t } = useI18n();
   return active ? (
     <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success">
       <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden />
       {t("libraryStatusActive")}
+    </span>
+  ) : isAdmin ? (
+    <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-text-muted">
+      {t("libraryStatusAdmin")}
+      <Crown size={11} aria-hidden />
     </span>
   ) : (
     <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-text-muted">
@@ -218,14 +224,15 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
 
       if (cancelled) return;
 
+      const isAdmin = isAdminUser(me);
       const purchasedIds = new Set(ownedMovies.map((m) => m.id));
       setOwnedCount(ownedMovies.length);
-      setOwnedPosters(ownedMovies.map((m, i) => movieToPoster(m, i, purchasedIds)));
+      setOwnedPosters(ownedMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin)));
 
       const favIds = new Set(favorites.map((f) => f.content_id));
       setFavoriteCount(favIds.size);
       const favMovies = catalogMovies.filter((m) => favIds.has(m.id));
-      setFavoritePosters(favMovies.map((m, i) => movieToPoster(m, i, purchasedIds)));
+      setFavoritePosters(favMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin)));
 
       if (me) {
         setUser(me);
@@ -252,6 +259,7 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
   const activeCount =
     activeTab === "owned" ? ownedCount : activeTab === "favourites" ? favoriteCount : 0;
   const activeSubscriptions = subscriptions.filter(isSubscriptionActive);
+  const isAdmin = isAdminUser(user);
   const shortId = user ? user.id.replace(/-/g, "").slice(-8).toUpperCase() : "";
 
   return (
@@ -287,7 +295,7 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
               <p className="mt-0.5 text-[12px] text-text-muted">{t("libraryWelcome")}</p>
               {user ? <p className="text-[12px] text-text-muted">ID:{shortId}</p> : null}
               <div className="mt-1.5">
-                <StatusBadge active={activeSubscriptions.length > 0} />
+                <StatusBadge active={activeSubscriptions.length > 0} isAdmin={isAdmin} />
               </div>
             </div>
           </div>

@@ -96,6 +96,7 @@ export function WatchSeriesClient({
     canPlay,
     playerTitle,
     hasSubscription,
+    isAdmin,
     prefetchEpisode,
   } = useSeriesWatch({ seriesSlug, playback, initialSeries, initialSeasons });
 
@@ -147,6 +148,7 @@ export function WatchSeriesClient({
                   activeSeason={1}
                   activeEpisode={1}
                   hasSubscription={hasSubscription}
+                  isAdmin={isAdmin}
                   onEpisodeHover={prefetchEpisode}
                 />
               </div>
@@ -300,6 +302,7 @@ export function WatchSeriesClient({
               activeSeason={seasonNum}
               activeEpisode={episodeNum}
               hasSubscription={hasSubscription}
+              isAdmin={isAdmin}
               onEpisodeHover={prefetchEpisode}
             />
           </div>

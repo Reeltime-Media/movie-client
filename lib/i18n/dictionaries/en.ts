@@ -208,6 +208,7 @@ export const en = {
   libraryWelcome: "Welcome to Reeltime",
   libraryStatusActive: "Status : Active",
   libraryStatusLocked: "Status",
+  libraryStatusAdmin: "Status : Admin access",
   libraryUnlockTitle: "Unlock More Entertainment",
   libraryUnlockDesc: "Enjoy movies, series, and exclusive content.",
   libraryViewPlans: "View Plans",

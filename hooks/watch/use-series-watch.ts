@@ -255,6 +255,7 @@ export function useSeriesWatch({
     loading,
     notFound,
     hasSubscription,
+    isAdmin,
     playbackUrl,
     playbackLoading,
     resumeTime,

@@ -204,6 +204,7 @@ export const km = {
   libraryWelcome: "សូមស្វាគមន៍មកកាន់ Reeltime",
   libraryStatusActive: "ស្ថានភាព៖ សកម្ម",
   libraryStatusLocked: "ស្ថានភាព",
+  libraryStatusAdmin: "ស្ថានភាព៖ សិទ្ធិអ្នកគ្រប់គ្រង",
   libraryUnlockTitle: "ដោះសោការកម្សាន្តបន្ថែម",
   libraryUnlockDesc: "រីករាយជាមួយភាពយន្ត រឿងភាគ និងខ្លឹមសារពិសេស។",
   libraryViewPlans: "មើលគម្រោង",

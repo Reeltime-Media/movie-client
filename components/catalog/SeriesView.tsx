@@ -14,6 +14,8 @@ import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import { seriesToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
+import { useUser } from "@/hooks/auth/use-user";
+import { isAdminUser } from "@/lib/auth/is-admin";
 import {
   collectGenreLabels,
   genreKeyFromLabel,
@@ -94,6 +96,8 @@ export function SeriesView({
 }: SeriesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const [activeGenre, setActiveGenre] = useState(initialGenreLabel);
   const [freeOnly, setFreeOnly] = useState(initialFree);
   const [searchQuery, setSearchQuery] = useState("");
@@ -142,16 +146,16 @@ export function SeriesView({
   const allPosters = useMemo(
     () => filteredSeries.map((s) => {
       const index = seriesList.findIndex((row) => row.id === s.id);
-      return seriesToPoster(s, index, { hasSubscription, seasons: seasons[index] ?? [] });
+      return seriesToPoster(s, index, { hasSubscription, isAdmin, seasons: seasons[index] ?? [] });
     }),
-    [filteredSeries, seriesList, seasons, hasSubscription],
+    [filteredSeries, seriesList, seasons, hasSubscription, isAdmin],
   );
 
   const top10Posters = useMemo(
     () => seriesList.slice(0, TOP_COUNT).map((s, i) =>
-      seriesToPoster(s, i, { hasSubscription, seasons: seasons[i] ?? [] }),
+      seriesToPoster(s, i, { hasSubscription, isAdmin, seasons: seasons[i] ?? [] }),
     ),
-    [seriesList, seasons, hasSubscription],
+    [seriesList, seasons, hasSubscription, isAdmin],
   );
 
   const totalPages = Math.max(1, Math.ceil(allPosters.length / PAGE_SIZE));
