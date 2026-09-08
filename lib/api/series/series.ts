@@ -15,7 +15,8 @@ function seriesListPath(params?: SeriesListParams): string {
   const genre = params?.genre?.trim();
   if (search) qs.set("search", search);
   if (genre) qs.set("genre", genre);
-  if (params?.short) qs.set("short", "1");
+  if (params?.short === true) qs.set("short", "1");
+  else if (params?.short === false) qs.set("short", "0");
   const query = qs.toString();
   return query ? `/series/?${query}` : "/series/";
 }

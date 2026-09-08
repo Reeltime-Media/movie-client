@@ -15,7 +15,9 @@ type SeriesPageProps = {
 
 export default async function SeriesPage({ searchParams }: SeriesPageProps) {
   const { genre, free } = await searchParams;
-  const seriesList = await listSeries().catch(swallow("series: load series", []));
+  // Short movies get their own page (/short-movies) — exclude them here so
+  // the same series doesn't show up twice across the two catalogs.
+  const seriesList = await listSeries({ short: false }).catch(swallow("series: load series", []));
   const seasons = await Promise.all(
     seriesList.map((s, index) =>
       index < SERIES_EPISODE_PREFETCH_LIMIT
