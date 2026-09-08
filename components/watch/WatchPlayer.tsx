@@ -255,11 +255,43 @@ export function WatchPlayer({
         startFragPrefetch: true,
         ...(live
           ? {
-              liveSyncDurationCount: 2,
-              liveMaxLatencyDurationCount: 5,
-              maxBufferLength: 8,
-              maxMaxBufferLength: 12,
+              liveSyncDurationCount: 4,
+              liveMaxLatencyDurationCount: 8,
+              maxBufferLength: 16,
+              maxMaxBufferLength: 24,
               backBufferLength: 0,
+              manifestLoadPolicy: {
+                default: {
+                  maxTimeToFirstByteMs: 10000,
+                  maxLoadTimeMs: 20000,
+                  timeoutRetry: {
+                    maxNumRetry: 3,
+                    retryDelayMs: 500,
+                    maxRetryDelayMs: 2000,
+                  },
+                  errorRetry: {
+                    maxNumRetry: 4,
+                    retryDelayMs: 500,
+                    maxRetryDelayMs: 4000,
+                  },
+                },
+              },
+              fragLoadPolicy: {
+                default: {
+                  maxTimeToFirstByteMs: 10000,
+                  maxLoadTimeMs: 20000,
+                  timeoutRetry: {
+                    maxNumRetry: 4,
+                    retryDelayMs: 500,
+                    maxRetryDelayMs: 2000,
+                  },
+                  errorRetry: {
+                    maxNumRetry: 6,
+                    retryDelayMs: 500,
+                    maxRetryDelayMs: 4000,
+                  },
+                },
+              },
             }
           : {}),
       });
