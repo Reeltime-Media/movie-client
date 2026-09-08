@@ -85,6 +85,17 @@ export interface PurchaseRead {
   created_at: string;
 }
 
+export interface SeriesPurchaseRead {
+  id: string;
+  user_id: string | null;
+  series_id: string;
+  intent_id: string;
+  order_id: string;
+  bank: string | null;
+  amount_usd: string;
+  purchased_at: string;
+}
+
 export interface SubscriptionRead {
   id: string;
   user_id: string;
@@ -92,6 +103,19 @@ export interface SubscriptionRead {
   status: string;
   current_period_start: string;
   current_period_end: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionPlanRead {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  price_usd: string;
+  billing_interval_days: number;
+  is_active: boolean;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }

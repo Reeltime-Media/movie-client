@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { getSeries, listEpisodes } from "@/lib/api/series";
+import { hasPurchasedSeries, listPurchasedSeries } from "@/lib/api/purchases";
 import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import type { ContentRead, SeasonRead, SeriesRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/playback";
@@ -45,6 +46,8 @@ export function useSeriesWatch({
   const [seasons, setSeasons] = useState<SeasonRead[]>(isSeeded ? initialSeasons : []);
   const [loading, setLoading] = useState(!isSeeded);
   const [notFound, setNotFound] = useState(false);
+  // Despite the name, this means "entitled to this series" — either a full
+  // subscription or a one-time per-series unlock purchase grants the same access.
   const [hasSubscription, setHasSubscription] = useState(false);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const [playbackLoading, setPlaybackLoading] = useState(false);
@@ -70,24 +73,31 @@ export function useSeriesWatch({
     const subsPromise = loggedIn
       ? listMySubscriptions().catch(swallow("watch: load subscriptions", []))
       : Promise.resolve([]);
+    const seriesPurchasesPromise = loggedIn
+      ? listPurchasedSeries().catch(swallow("watch: load series purchases", []))
+      : Promise.resolve([]);
 
     if (initialSeries && initialSeries.slug === seriesSlug) {
-      subsPromise.then((subs) => {
+      Promise.all([subsPromise, seriesPurchasesPromise]).then(([subs, seriesPurchases]) => {
         if (cancelled) return;
-        setHasSubscription(hasActiveSubscription(subs));
+        setHasSubscription(
+          hasActiveSubscription(subs) || hasPurchasedSeries(seriesPurchases, initialSeries.id),
+        );
       });
       return () => {
         cancelled = true;
       };
     }
 
-    Promise.all([getSeries(seriesSlug), listEpisodes(seriesSlug), subsPromise])
-      .then(([s, seasonList, subs]) => {
+    Promise.all([getSeries(seriesSlug), listEpisodes(seriesSlug), subsPromise, seriesPurchasesPromise])
+      .then(([s, seasonList, subs, seriesPurchases]) => {
         if (cancelled) return;
         setSeries(s);
         setSeasons(seasonList);
         setNotFound(false);
-        setHasSubscription(hasActiveSubscription(subs));
+        setHasSubscription(
+          hasActiveSubscription(subs) || hasPurchasedSeries(seriesPurchases, s.id),
+        );
       })
       .catch(() => !cancelled && setNotFound(true))
       .finally(() => !cancelled && setLoading(false));

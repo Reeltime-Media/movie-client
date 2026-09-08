@@ -1,0 +1,200 @@
+"use client";
+
+import { CheckCircle2, Loader2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { KhqrCard } from "@/components/pay/KhqrCard";
+import { createSubscriptionBakongIntent, getPaymentIntent } from "@/lib/api/payments";
+import { invalidateSubscriptionsCache } from "@/lib/api/subscriptions";
+import { qrStringToDataUrl, warmQrCodeModule } from "@/lib/pay/khqr-image";
+
+const BAKONG_TIMEOUT_MS = 10 * 60 * 1000;
+
+/** Bakong settle latency is mostly poll wait — start fast, then back off. */
+function nextPollDelayMs(elapsedMs: number): number {
+  if (elapsedMs < 60_000) return 1500;
+  if (elapsedMs < 180_000) return 2500;
+  return 4000;
+}
+
+type BakongStatus = "loading" | "waiting" | "succeeded" | "expired" | "error";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export type SubscriptionBakongCheckoutModalProps = {
+  planCode: string;
+  onClose: () => void;
+};
+
+export function SubscriptionBakongCheckoutModal({
+  planCode,
+  onClose,
+}: SubscriptionBakongCheckoutModalProps) {
+  const router = useRouter();
+  const genRef = useRef(0);
+  const closedRef = useRef(false);
+  const [status, setStatus] = useState<BakongStatus>("loading");
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [amountUsd, setAmountUsd] = useState<string>("");
+  const [merchantName, setMerchantName] = useState("Reeltime Media");
+  const [error, setError] = useState("");
+
+  const pollIntent = useCallback(async (intentId: string, gen: number) => {
+    const startedAt = Date.now();
+    const deadline = startedAt + BAKONG_TIMEOUT_MS;
+    // First check almost immediately — don't burn 4s before looking for payment.
+    let delayMs = 400;
+    while (Date.now() < deadline) {
+      if (closedRef.current || gen !== genRef.current) return;
+      await sleep(delayMs);
+      if (closedRef.current || gen !== genRef.current) return;
+
+      let intent;
+      try {
+        intent = await getPaymentIntent(intentId);
+      } catch {
+        delayMs = nextPollDelayMs(Date.now() - startedAt);
+        continue;
+      }
+      if (closedRef.current || gen !== genRef.current) return;
+
+      if (intent.status === "succeeded") {
+        invalidateSubscriptionsCache();
+        setStatus("succeeded");
+        return;
+      }
+      if (intent.status === "failed" || intent.status === "cancelled") {
+        setError("Payment was not completed.");
+        setStatus("error");
+        return;
+      }
+      delayMs = nextPollDelayMs(Date.now() - startedAt);
+    }
+    if (!closedRef.current && gen === genRef.current) setStatus("expired");
+  }, []);
+
+  useEffect(() => {
+    closedRef.current = false;
+    const gen = ++genRef.current;
+    void warmQrCodeModule();
+
+    (async () => {
+      try {
+        const intent = await createSubscriptionBakongIntent(planCode);
+        if (closedRef.current || gen !== genRef.current) return;
+        const dataUrl = await qrStringToDataUrl(intent.qr_string);
+        if (closedRef.current || gen !== genRef.current) return;
+        setQrDataUrl(dataUrl);
+        setAmountUsd(String(intent.amount_usd));
+        if (intent.merchant_name?.trim()) setMerchantName(intent.merchant_name.trim());
+        setStatus("waiting");
+        void pollIntent(intent.intent_id, gen);
+      } catch (err: unknown) {
+        if (closedRef.current || gen !== genRef.current) return;
+        const statusCode =
+          err && typeof err === "object" && "status" in err
+            ? Number((err as { status: unknown }).status)
+            : 0;
+        if (statusCode === 429) {
+          setError("Too many checkout attempts. Please wait a moment and try again.");
+        } else {
+          setError(err instanceof Error ? err.message : "Could not start Bakong checkout.");
+        }
+        setStatus("error");
+      }
+    })();
+
+    return () => {
+      if (gen === genRef.current) genRef.current += 1;
+    };
+  }, [planCode, pollIntent]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+      closedRef.current = true;
+    };
+  }, [onClose]);
+
+  useEffect(() => {
+    if (status !== "succeeded") return;
+    const id = window.setTimeout(() => {
+      router.push("/profile");
+    }, 450);
+    return () => window.clearTimeout(id);
+  }, [status, router]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Subscribe"
+    >
+      <div
+        className="relative flex flex-col items-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close checkout"
+          className="mb-3 ml-auto flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/70 text-white transition-colors hover:bg-black/90"
+        >
+          <X size={16} />
+        </button>
+
+        {status === "succeeded" ? (
+          <div className="flex w-[260px] flex-col items-center gap-3 rounded-xl border border-border bg-surface p-8 text-center">
+            <div className="grid h-12 w-12 place-items-center rounded-full border border-success/30 bg-success/10 text-success">
+              <CheckCircle2 size={24} aria-hidden />
+            </div>
+            <p className="text-[14px] font-semibold text-text">Payment successful</p>
+            <p className="text-[12px] text-text-muted">Activating your subscription…</p>
+          </div>
+        ) : status === "error" || status === "expired" ? (
+          <div className="flex w-[260px] flex-col items-center gap-3 rounded-xl border border-border bg-surface p-6 text-center">
+            <p className="text-[13px] text-danger">
+              {status === "expired" ? "QR code expired — close and try again." : error}
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md bg-brand px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <KhqrCard
+              receiverName={merchantName}
+              amount={amountUsd}
+              currency="USD"
+              qrDataUrl={qrDataUrl}
+            />
+            <p className="mt-4 flex items-center gap-1.5 text-[13px] font-medium text-white/90">
+              <Loader2 size={14} className="animate-spin" aria-hidden />
+              {qrDataUrl ? "Waiting for payment…" : "Generating KHQR…"}
+            </p>
+            <p className="mt-1 max-w-[260px] text-center text-[12px] text-white/60">
+              Scan with Bakong or any banking app to activate your subscription.
+            </p>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+}

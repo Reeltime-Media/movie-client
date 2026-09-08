@@ -86,11 +86,17 @@ const PLAN_CODE_ALIASES: Record<string, string> = {
   premium_annual: "premium",
 };
 
+// Longest key first — "best-value" must win over "value" for a code like
+// "best_value_3m", where the shorter key is also a substring of the longer one.
+const TIERS_BY_KEY_LENGTH_DESC: PlanTier[] = [...ALL_PLAN_TIERS].sort(
+  (a, b) => b.key.length - a.key.length,
+);
+
 export function findPlanTier(planCode: string): PlanTier | undefined {
   const normalized = planCode.toLowerCase();
   const aliasKey = PLAN_CODE_ALIASES[normalized];
   if (aliasKey) return ALL_PLAN_TIERS.find((tier) => tier.key === aliasKey);
 
   const flattened = normalized.replace(/[_\s]/g, "-");
-  return ALL_PLAN_TIERS.find((tier) => flattened.includes(tier.key));
+  return TIERS_BY_KEY_LENGTH_DESC.find((tier) => flattened.includes(tier.key));
 }

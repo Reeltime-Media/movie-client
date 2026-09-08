@@ -242,6 +242,7 @@ export const en = {
   pricingSubscribe: "Subscribe",
   pricingSubscribeUnavailable: "Coming soon",
   pricingBarayDisabled: "Subscription checkout is temporarily unavailable.",
+  pricingMiniNeedsSeries: "Open this from a series you want to unlock, then choose Mini.",
   pricingBrowseSeries: "Browse series",
   pricingSignIn: "Sign in to subscribe",
   pricingLoadError: "Could not load plans. Please try again later.",

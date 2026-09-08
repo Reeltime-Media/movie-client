@@ -1,15 +1,27 @@
 "use client";
 
 import { Check, Star } from "lucide-react";
+import Link from "next/link";
 import type { CSSProperties } from "react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 import { PageShell } from "@/components/layout/PageShell";
+import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
+import { SubscriptionBakongCheckoutModal } from "@/components/pay/SubscriptionBakongCheckoutModal";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { useAuth } from "@/hooks/auth/use-auth";
-import { UNLOCK_TIERS, SUBSCRIPTION_TIERS, type PlanTier } from "@/lib/pricing-tiers";
+import { listSubscriptionPlans } from "@/lib/api/subscriptions";
+import { UNLOCK_TIERS, SUBSCRIPTION_TIERS, findPlanTier, type PlanTier } from "@/lib/pricing-tiers";
 import { pageTitleClassName } from "@/lib/ui/page-title";
-import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
+import {
+  cardClassName,
+  cardHighlightClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "@/lib/ui/surfaces";
+
+const MINI_TIER_KEY = "mini";
 
 const secondaryPlanButtonClassName =
   "inline-flex w-full cursor-pointer items-center justify-center rounded-lg bg-border-hover px-4 py-3.5 text-[14px] font-bold text-text transition-colors duration-200 hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
@@ -21,7 +33,7 @@ function PlanCard({
 }: {
   plan: PlanTier;
   delayMs: number;
-  onChoose: () => void;
+  onChoose: (plan: PlanTier) => void;
 }) {
   const { t } = useI18n();
 
@@ -57,7 +69,7 @@ function PlanCard({
 
       <button
         type="button"
-        onClick={onChoose}
+        onClick={() => onChoose(plan)}
         className={plan.recommended ? primaryButtonClassName : secondaryPlanButtonClassName}
       >
         {t(plan.ctaKey)}
@@ -66,18 +78,83 @@ function PlanCard({
   );
 }
 
-export default function PricingPage() {
+function PricingPageInner() {
   const { t } = useI18n();
   const router = useRouter();
+  const params = useSearchParams();
   const { loggedIn } = useAuth();
   const [notice, setNotice] = useState("");
+  const [showBrowseSeries, setShowBrowseSeries] = useState(false);
+  const [checkoutPlanCode, setCheckoutPlanCode] = useState<string | null>(null);
+  const [checkoutSeries, setCheckoutSeries] = useState<{
+    slug: string;
+    title: string;
+    watchHref: string;
+  } | null>(null);
+  // Maps a pricing-card tier key (e.g. "basic", "value") to the live plan code
+  // the admin actually has active — the card that gets a real checkout vs. the
+  // "unavailable" notice depends on whether a plan is currently configured for it.
+  const [tierPlanCodes, setTierPlanCodes] = useState<Record<string, string>>({});
 
-  function handleChoosePlan() {
+  // Set when this page was reached from a specific series' "subscribe to
+  // unlock" CTA (see seriesPricingHref) — that's the only context in which
+  // the Mini (per-series unlock) card has anything to purchase.
+  const seriesSlug = params.get("slug");
+  const seriesTitle = params.get("title") || seriesSlug || "this series";
+  const seriesSeason = params.get("season") || "1";
+  const seriesEpisode = params.get("episode") || "1";
+
+  useEffect(() => {
+    let cancelled = false;
+    listSubscriptionPlans()
+      .then((plans) => {
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        for (const plan of plans) {
+          const tier = findPlanTier(plan.code);
+          if (tier) map[tier.key] = plan.code;
+        }
+        setTierPlanCodes(map);
+      })
+      .catch(() => {
+        // Leave the map empty — every card falls back to the unavailable notice.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handleChoosePlan(plan: PlanTier) {
     if (!loggedIn) {
       router.push(`/login?next=${encodeURIComponent("/pricing")}`);
       return;
     }
-    setNotice(t("pricingBarayDisabled"));
+
+    if (plan.key === MINI_TIER_KEY) {
+      if (!seriesSlug) {
+        setNotice(t("pricingMiniNeedsSeries"));
+        setShowBrowseSeries(true);
+        return;
+      }
+      setNotice("");
+      setShowBrowseSeries(false);
+      setCheckoutSeries({
+        slug: seriesSlug,
+        title: seriesTitle,
+        watchHref: `/watch/series/${seriesSlug}/${seriesSeason}/${seriesEpisode}`,
+      });
+      return;
+    }
+
+    const planCode = tierPlanCodes[plan.key];
+    if (!planCode) {
+      setNotice(t("pricingBarayDisabled"));
+      setShowBrowseSeries(false);
+      return;
+    }
+    setNotice("");
+    setShowBrowseSeries(false);
+    setCheckoutPlanCode(planCode);
   }
 
   return (
@@ -92,7 +169,14 @@ export default function PricingPage() {
         </div>
 
         {notice ? (
-          <p className="mx-auto mt-4 max-w-lg text-center text-[13px] text-danger">{notice}</p>
+          <div className="mx-auto mt-4 flex max-w-lg flex-col items-center gap-3 text-center">
+            <p className="text-[13px] text-danger">{notice}</p>
+            {showBrowseSeries ? (
+              <Link href="/series" className={secondaryButtonClassName}>
+                {t("pricingBrowseSeries")}
+              </Link>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
@@ -114,6 +198,30 @@ export default function PricingPage() {
 
         <p className="mt-8 text-center text-[12px] text-text-muted">{t("pricingSecureNote")}</p>
       </section>
+
+      {checkoutPlanCode ? (
+        <SubscriptionBakongCheckoutModal
+          planCode={checkoutPlanCode}
+          onClose={() => setCheckoutPlanCode(null)}
+        />
+      ) : null}
+
+      {checkoutSeries ? (
+        <SeriesUnlockBakongCheckoutModal
+          seriesSlug={checkoutSeries.slug}
+          title={checkoutSeries.title}
+          watchHref={checkoutSeries.watchHref}
+          onClose={() => setCheckoutSeries(null)}
+        />
+      ) : null}
     </PageShell>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={<CheckoutSpinner fullWidth />}>
+      <PricingPageInner />
+    </Suspense>
   );
 }

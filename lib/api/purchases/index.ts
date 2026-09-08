@@ -1,13 +1,23 @@
 import { apiFetch } from "../core/client";
 import { invalidateClientCache } from "../core/client-cache";
 import { listMovies } from "../movies";
-import type { ContentListItemRead, PurchaseRead } from "../types";
+import type { ContentListItemRead, PurchaseRead, SeriesPurchaseRead } from "../types";
 
 const PURCHASES_CACHE_KEY = "user:purchases";
 
 /** Fresh every time — entitlement must not lag behind a just-completed payment. */
 export function listPurchases(): Promise<PurchaseRead[]> {
   return apiFetch<PurchaseRead[]>("/purchases/");
+}
+
+/** Series the signed-in user has bought a one-time unlock for. Fresh every
+ * time, same reasoning as `listPurchases`. */
+export function listPurchasedSeries(): Promise<SeriesPurchaseRead[]> {
+  return apiFetch<SeriesPurchaseRead[]>("/purchases/series");
+}
+
+export function hasPurchasedSeries(purchases: SeriesPurchaseRead[], seriesId: string): boolean {
+  return purchases.some((p) => p.series_id === seriesId);
 }
 
 /** Clear any legacy cache key after checkout (safe no-op if unused). */

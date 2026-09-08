@@ -37,6 +37,29 @@ export function getPaymentIntent(intentId: string): Promise<PaymentIntentRead> {
   return apiFetch<PaymentIntentRead>(`/payments/intents/${intentId}`);
 }
 
+/** Inline Bakong KHQR checkout for a subscription plan — no redirect. Poll
+ * getPaymentIntent(intent_id) for status, same as the movie flow. */
+export function createSubscriptionBakongIntent(
+  planCode: string,
+): Promise<BakongPaymentIntentRead> {
+  const query = `?plan_code=${encodeURIComponent(planCode)}`;
+  return apiFetch<BakongPaymentIntentRead>(`/payments/subscription-bakong-intent${query}`, {
+    method: "POST",
+  });
+}
+
+/** Inline Bakong KHQR checkout for a one-time "unlock this series" purchase —
+ * no redirect. Poll getPaymentIntent(intent_id) for status, same as the
+ * movie flow. */
+export function createSeriesUnlockBakongIntent(
+  seriesSlug: string,
+): Promise<BakongPaymentIntentRead> {
+  return apiFetch<BakongPaymentIntentRead>(
+    `/payments/series/${encodeURIComponent(seriesSlug)}/unlock-bakong-intent`,
+    { method: "POST" },
+  );
+}
+
 // BARAY DISABLED — subscription redirect checkout + success polling. Keep for later.
 // export function createSeriesSubscriptionIntent(
 //   seriesId: string,
