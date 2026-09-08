@@ -223,11 +223,12 @@ export const en = {
     "Premieres, late-night marathons, and stories that stick — the same mood as the theater, wherever you watch.",
   homeDecorCta: "Browse movies",
 
-  shortMoviesBadge: "Coming soon",
+  shortMoviesBadge: "Short movies",
   shortMoviesTitle: "Short movies",
   shortMoviesDesc:
-    "Bite-sized Khmer stories are on the way — quick watches for your commute, your break, or a late-night scroll.",
+    "Bite-sized stories — quick watches for your commute, your break, or a late-night scroll.",
   shortMoviesBrowseMovies: "Browse movies",
+  shortMoviesEmpty: "No short movies are available right now.",
 
   pricingBadge: "Series subscription",
   pricingTitle: "Choose Your Monthly Plan",

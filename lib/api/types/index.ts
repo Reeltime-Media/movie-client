@@ -66,6 +66,7 @@ export interface SeriesRead {
   banner_key: string | null;
   trailer_url: string | null;
   is_published: boolean;
+  is_short_movie: boolean;
   created_at: string;
   updated_at: string;
 }

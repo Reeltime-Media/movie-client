@@ -4,17 +4,23 @@ import { clientCached, CLIENT_CATALOG_TTL_MS } from "../core/client-cache";
 import type { SeasonRead, SeriesRead } from "../types";
 import type { CatalogListParams } from "../movies";
 
-function seriesListPath(params?: CatalogListParams): string {
+export type SeriesListParams = CatalogListParams & {
+  /** Only series flagged as short movies (see /short-movies). */
+  short?: boolean;
+};
+
+function seriesListPath(params?: SeriesListParams): string {
   const qs = new URLSearchParams();
   const search = params?.search?.trim();
   const genre = params?.genre?.trim();
   if (search) qs.set("search", search);
   if (genre) qs.set("genre", genre);
+  if (params?.short) qs.set("short", "1");
   const query = qs.toString();
   return query ? `/series/?${query}` : "/series/";
 }
 
-export async function listSeries(params?: CatalogListParams): Promise<SeriesRead[]> {
+export async function listSeries(params?: SeriesListParams): Promise<SeriesRead[]> {
   const path = seriesListPath(params);
   return clientCached(`series:list:${path}`, CLIENT_CATALOG_TTL_MS, () =>
     fetchAllPages<SeriesRead>(path, 100, catalogCache),
@@ -22,7 +28,7 @@ export async function listSeries(params?: CatalogListParams): Promise<SeriesRead
 }
 
 export async function listSeriesPage(
-  params?: CatalogListParams,
+  params?: SeriesListParams,
   limit = 8,
 ): Promise<SeriesRead[]> {
   const path = seriesListPath(params);
