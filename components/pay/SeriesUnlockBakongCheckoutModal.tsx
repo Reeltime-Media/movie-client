@@ -1,7 +1,6 @@
 "use client";
 
 import { CheckCircle2, Loader2, X } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { KhqrCard } from "@/components/pay/KhqrCard";
@@ -38,7 +37,6 @@ export function SeriesUnlockBakongCheckoutModal({
   watchHref,
   onClose,
 }: SeriesUnlockBakongCheckoutModalProps) {
-  const router = useRouter();
   const genRef = useRef(0);
   const closedRef = useRef(false);
   const [status, setStatus] = useState<BakongStatus>("loading");
@@ -134,10 +132,13 @@ export function SeriesUnlockBakongCheckoutModal({
   useEffect(() => {
     if (status !== "succeeded") return;
     const id = window.setTimeout(() => {
-      router.push(watchHref);
+      // Hard navigation, not router.push: episode/series/subscription data is
+      // client-cached for several minutes (see CLIENT_CATALOG_TTL_MS) — a soft
+      // nav would very likely still show the episode as locked right after paying.
+      window.location.href = watchHref;
     }, 450);
     return () => window.clearTimeout(id);
-  }, [status, router, watchHref]);
+  }, [status, watchHref]);
 
   return createPortal(
     <div

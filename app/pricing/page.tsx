@@ -1,25 +1,21 @@
 "use client";
 
 import { Check, Star } from "lucide-react";
-import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 import { PageShell } from "@/components/layout/PageShell";
+import { SeriesPickerModal } from "@/components/pay/SeriesPickerModal";
 import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
 import { SubscriptionBakongCheckoutModal } from "@/components/pay/SubscriptionBakongCheckoutModal";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { listSubscriptionPlans } from "@/lib/api/subscriptions";
+import type { SeriesRead } from "@/lib/api/types";
 import { UNLOCK_TIERS, SUBSCRIPTION_TIERS, findPlanTier, type PlanTier } from "@/lib/pricing-tiers";
 import { pageTitleClassName } from "@/lib/ui/page-title";
-import {
-  cardClassName,
-  cardHighlightClassName,
-  primaryButtonClassName,
-  secondaryButtonClassName,
-} from "@/lib/ui/surfaces";
+import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
 
 const MINI_TIER_KEY = "mini";
 
@@ -84,7 +80,7 @@ function PricingPageInner() {
   const params = useSearchParams();
   const { loggedIn } = useAuth();
   const [notice, setNotice] = useState("");
-  const [showBrowseSeries, setShowBrowseSeries] = useState(false);
+  const [pickingSeries, setPickingSeries] = useState(false);
   const [checkoutPlanCode, setCheckoutPlanCode] = useState<string | null>(null);
   const [checkoutSeries, setCheckoutSeries] = useState<{
     slug: string;
@@ -131,13 +127,11 @@ function PricingPageInner() {
     }
 
     if (plan.key === MINI_TIER_KEY) {
+      setNotice("");
       if (!seriesSlug) {
-        setNotice(t("pricingMiniNeedsSeries"));
-        setShowBrowseSeries(true);
+        setPickingSeries(true);
         return;
       }
-      setNotice("");
-      setShowBrowseSeries(false);
       setCheckoutSeries({
         slug: seriesSlug,
         title: seriesTitle,
@@ -149,12 +143,19 @@ function PricingPageInner() {
     const planCode = tierPlanCodes[plan.key];
     if (!planCode) {
       setNotice(t("pricingBarayDisabled"));
-      setShowBrowseSeries(false);
       return;
     }
     setNotice("");
-    setShowBrowseSeries(false);
     setCheckoutPlanCode(planCode);
+  }
+
+  function handlePickSeries(series: SeriesRead) {
+    setPickingSeries(false);
+    setCheckoutSeries({
+      slug: series.slug,
+      title: series.title,
+      watchHref: `/watch/series/${series.slug}/1/1`,
+    });
   }
 
   return (
@@ -169,14 +170,7 @@ function PricingPageInner() {
         </div>
 
         {notice ? (
-          <div className="mx-auto mt-4 flex max-w-lg flex-col items-center gap-3 text-center">
-            <p className="text-[13px] text-danger">{notice}</p>
-            {showBrowseSeries ? (
-              <Link href="/series" className={secondaryButtonClassName}>
-                {t("pricingBrowseSeries")}
-              </Link>
-            ) : null}
-          </div>
+          <p className="mx-auto mt-4 max-w-lg text-center text-[13px] text-danger">{notice}</p>
         ) : null}
 
         <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
@@ -213,6 +207,10 @@ function PricingPageInner() {
           watchHref={checkoutSeries.watchHref}
           onClose={() => setCheckoutSeries(null)}
         />
+      ) : null}
+
+      {pickingSeries ? (
+        <SeriesPickerModal onSelect={handlePickSeries} onClose={() => setPickingSeries(false)} />
       ) : null}
     </PageShell>
   );

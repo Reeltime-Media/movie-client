@@ -238,7 +238,6 @@ export const km = {
   pricingSubscribe: "ចូលជាសមាជិក",
   pricingSubscribeUnavailable: "មកដល់ឆាប់ៗ",
   pricingBarayDisabled: "ការទូទាត់សមាជិកភាពមិនអាចប្រើបានបណ្តោះអាសន្នទេ។",
-  pricingMiniNeedsSeries: "សូមបើកទំព័រនេះពីរឿងភាគដែលអ្នកចង់ដោះសោ រួចជ្រើសរើសគម្រោង Mini។",
   pricingBrowseSeries: "រកមើលរឿងភាគ",
   pricingSignIn: "ចូលជាសមាជិក",
   pricingLoadError: "មិនអាចផ្ទុកគម្រោងបានទេ។ សូមព្យាយាមម្តងទៀត។",
