@@ -13,11 +13,12 @@ import { prefetchPlaybackUrl } from "@/lib/watch/playback-cache";
 
 const BAKONG_TIMEOUT_MS = 10 * 60 * 1000;
 
-/** Bakong settle latency is mostly poll wait — start fast, then back off. */
+/** Bakong settle latency is mostly poll wait. Official KHQR SDK waits 5s
+ *  in the first 5 minutes — faster than that 429s NBC and the QR never flips. */
 function nextPollDelayMs(elapsedMs: number): number {
-  if (elapsedMs < 60_000) return 1500;
-  if (elapsedMs < 180_000) return 2500;
-  return 4000;
+  if (elapsedMs < 300_000) return 5000;
+  if (elapsedMs < 900_000) return 10000;
+  return 15000;
 }
 
 type BakongStatus = "loading" | "waiting" | "succeeded" | "expired" | "error";
@@ -54,8 +55,8 @@ export function BakongCheckoutModal({
   const pollIntent = useCallback(async (intentId: string, gen: number) => {
     const startedAt = Date.now();
     const deadline = startedAt + BAKONG_TIMEOUT_MS;
-    // First check almost immediately — don't burn 4s before looking for payment.
-    let delayMs = 400;
+    // First check after 2.5s — NBC's SDK starts at 5s; don't stampede on open.
+    let delayMs = 2500;
     while (Date.now() < deadline) {
       if (closedRef.current || gen !== genRef.current) return;
       await sleep(delayMs);
@@ -64,7 +65,16 @@ export function BakongCheckoutModal({
       let intent;
       try {
         intent = await getPaymentIntent(intentId);
-      } catch {
+      } catch (err: unknown) {
+        const statusCode =
+          err && typeof err === "object" && "status" in err
+            ? Number((err as { status: unknown }).status)
+            : 0;
+        if (statusCode === 404) {
+          setError("This checkout session expired. Close and try again.");
+          setStatus("error");
+          return;
+        }
         delayMs = nextPollDelayMs(Date.now() - startedAt);
         continue;
       }
@@ -110,6 +120,11 @@ export function BakongCheckoutModal({
             : 0;
         if (statusCode === 429) {
           setError("Too many checkout attempts. Please wait a moment and try again.");
+        } else if (statusCode === 409) {
+          invalidatePurchasesCache();
+          void prefetchPlaybackUrl(contentId);
+          setStatus("succeeded");
+          return;
         } else {
           setError(err instanceof Error ? err.message : "Could not start Bakong checkout.");
         }
