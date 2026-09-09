@@ -52,6 +52,8 @@ export function BakongCheckoutModal({
   const [amountUsd, setAmountUsd] = useState<string>("");
   const [merchantName, setMerchantName] = useState("Reeltime Media");
   const [error, setError] = useState("");
+  const [waitingSince, setWaitingSince] = useState<number | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   const pollIntent = useCallback(async (intentId: string, gen: number) => {
     const startedAt = Date.now();
@@ -117,6 +119,7 @@ export function BakongCheckoutModal({
         setQrDataUrl(dataUrl);
         setAmountUsd(String(intent.amount_usd));
         if (intent.merchant_name?.trim()) setMerchantName(intent.merchant_name.trim());
+        setWaitingSince(Date.now());
         setStatus("waiting");
         void pollIntent(intent.intent_id, gen);
       } catch (err: unknown) {
@@ -159,6 +162,12 @@ export function BakongCheckoutModal({
   }, [onClose]);
 
   useEffect(() => {
+    if (status !== "waiting") return;
+    const id = window.setInterval(() => setNowTick(Date.now()), 5000);
+    return () => window.clearInterval(id);
+  }, [status]);
+
+  useEffect(() => {
     if (status !== "succeeded") return;
     const id = window.setTimeout(() => {
       router.push(movieWatchHref(watchSlug));
@@ -169,6 +178,13 @@ export function BakongCheckoutModal({
   const amount =
     amountUsd ||
     (priceLabel ? priceLabel.replace(/[^\d.]/g, "") : "");
+
+  const waitingElapsedMs =
+    waitingSince != null ? Math.max(0, nowTick - waitingSince) : 0;
+  const waitingCopy =
+    waitingElapsedMs >= 120_000
+      ? "Still confirming — contact support if you already paid."
+      : "Confirming payment… usually under 10 seconds";
 
   return createPortal(
     <div
@@ -224,7 +240,7 @@ export function BakongCheckoutModal({
             />
             <p className="mt-4 flex items-center gap-1.5 text-[13px] font-medium text-white/90">
               <Loader2 size={14} className="animate-spin" aria-hidden />
-              {qrDataUrl ? "Waiting for payment…" : "Generating KHQR…"}
+              {qrDataUrl ? waitingCopy : "Generating KHQR…"}
             </p>
             <p className="mt-1 max-w-[260px] text-center text-[12px] text-white/60">
               Scan with Bakong or any banking app to pay for {title}.
