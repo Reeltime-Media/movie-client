@@ -14,11 +14,11 @@ const BAKONG_TIMEOUT_MS = 10 * 60 * 1000;
 /** Bakong settle latency is mostly poll wait. Official KHQR SDK waits 5s
  *  in the first 5 minutes — faster than that 429s NBC and the QR never flips. */
 function nextPollDelayMs(elapsedMs: number): number {
-  // Active checkout only — Bakong's only auto-paid signal is NBC check.
-  // Fast while the modal is open; stop when closed (no background burn).
-  if (elapsedMs < 180_000) return 3000;
-  if (elapsedMs < 600_000) return 5000;
-  return 10000;
+  // Keep polls >= unpaid NBC cache (~15s) so most UI ticks hit cache, not NBC.
+  // Unlock usually within one cache window after the customer pays.
+  if (elapsedMs < 300_000) return 8000;
+  if (elapsedMs < 900_000) return 15000;
+  return 30000;
 }
 
 type BakongStatus = "loading" | "waiting" | "succeeded" | "expired" | "error";
@@ -49,7 +49,7 @@ export function SubscriptionBakongCheckoutModal({
     const startedAt = Date.now();
     const deadline = startedAt + BAKONG_TIMEOUT_MS;
     // First check after 2.5s — NBC's SDK starts at 5s; don't stampede on open.
-    let delayMs = 2500;
+    let delayMs = 5000;
     while (Date.now() < deadline) {
       if (closedRef.current || gen !== genRef.current) return;
       await sleep(delayMs);
