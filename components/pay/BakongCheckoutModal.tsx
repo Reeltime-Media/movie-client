@@ -16,11 +16,10 @@ const BAKONG_TIMEOUT_MS = 20 * 60 * 1000;
 /** Bakong settle latency is mostly poll wait. Match unpaid cache (~45s) so
  *  UI polls mostly hit cache instead of burning NBC daily quota. */
 function nextPollDelayMs(elapsedMs: number): number {
-  // Keep polls >= unpaid NBC cache (~15s) so most UI ticks hit cache, not NBC.
-  // Unlock usually within one cache window after the customer pays.
-  if (elapsedMs < 300_000) return 8000;
-  if (elapsedMs < 900_000) return 15000;
-  return 30000;
+  // Snappy unlock (~5–10s) while limiting NBC burn vs old 3s polls.
+  if (elapsedMs < 180_000) return 5000;
+  if (elapsedMs < 600_000) return 10000;
+  return 20000;
 }
 
 type BakongStatus = "loading" | "waiting" | "succeeded" | "expired" | "error";
@@ -58,7 +57,7 @@ export function BakongCheckoutModal({
     const startedAt = Date.now();
     const deadline = startedAt + BAKONG_TIMEOUT_MS;
     // First check after 5s — align with gateway unpaid cache; don't stampede.
-    let delayMs = 5000;
+    let delayMs = 3000;
     while (Date.now() < deadline) {
       if (closedRef.current || gen !== genRef.current) return;
       await sleep(delayMs);
