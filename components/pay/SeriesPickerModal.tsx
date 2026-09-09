@@ -3,6 +3,7 @@
 import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { CdnImage } from "@/components/ui/CdnImage";
 import { posterThumbUrl, posterUrl } from "@/lib/api/core/config";
 import { listSeries } from "@/lib/api/series";
 import type { SeriesRead } from "@/lib/api/types";
@@ -96,7 +97,10 @@ export function SeriesPickerModal({ onSelect, onClose }: SeriesPickerModalProps)
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
               {filtered.map((s) => {
-                const image = posterThumbUrl(s.poster_key, 300, s.updated_at) ?? posterUrl(s.poster_key, s.updated_at);
+                // Width 400 matches the thumb variant actually generated on upload
+                // (see optimize_r2_image) — CdnImage falls back to the full poster
+                // if that specific thumb is missing, but only recognizes -w400/-w220.
+                const image = posterThumbUrl(s.poster_key, 400, s.updated_at) ?? posterUrl(s.poster_key, s.updated_at);
                 return (
                   <button
                     key={s.id}
@@ -106,12 +110,12 @@ export function SeriesPickerModal({ onSelect, onClose }: SeriesPickerModalProps)
                   >
                     <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-border bg-surface-elevated transition-colors group-hover:border-border-hover">
                       {image ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- small picker thumbnail, not worth next/image's overhead here
-                        <img
+                        <CdnImage
                           src={image}
                           alt={s.title}
-                          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                          loading="lazy"
+                          fill
+                          sizes="(min-width: 768px) 20vw, 33vw"
+                          className="object-cover transition-transform duration-200 group-hover:scale-105"
                         />
                       ) : null}
                     </div>
