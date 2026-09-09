@@ -11,14 +11,16 @@ import { movieWatchHref } from "@/lib/movie-routes";
 import { qrStringToDataUrl, warmQrCodeModule } from "@/lib/pay/khqr-image";
 import { prefetchPlaybackUrl } from "@/lib/watch/playback-cache";
 
-const BAKONG_TIMEOUT_MS = 10 * 60 * 1000;
+const BAKONG_TIMEOUT_MS = 20 * 60 * 1000;
 
-/** Bakong settle latency is mostly poll wait. Official KHQR SDK waits 5s
- *  in the first 5 minutes — faster than that 429s NBC and the QR never flips. */
+/** Bakong settle latency is mostly poll wait. Match unpaid cache (~45s) so
+ *  UI polls mostly hit cache instead of burning NBC daily quota. */
 function nextPollDelayMs(elapsedMs: number): number {
-  if (elapsedMs < 300_000) return 5000;
-  if (elapsedMs < 900_000) return 10000;
-  return 15000;
+  // Active checkout only — Bakong's only auto-paid signal is NBC check.
+  // Fast while the modal is open; stop when closed (no background burn).
+  if (elapsedMs < 180_000) return 3000;
+  if (elapsedMs < 600_000) return 5000;
+  return 10000;
 }
 
 type BakongStatus = "loading" | "waiting" | "succeeded" | "expired" | "error";
@@ -55,7 +57,7 @@ export function BakongCheckoutModal({
   const pollIntent = useCallback(async (intentId: string, gen: number) => {
     const startedAt = Date.now();
     const deadline = startedAt + BAKONG_TIMEOUT_MS;
-    // First check after 2.5s — NBC's SDK starts at 5s; don't stampede on open.
+    // First check after 5s — align with gateway unpaid cache; don't stampede.
     let delayMs = 2500;
     while (Date.now() < deadline) {
       if (closedRef.current || gen !== genRef.current) return;
@@ -105,6 +107,12 @@ export function BakongCheckoutModal({
       try {
         const intent = await createMovieBakongIntent(contentId);
         if (closedRef.current || gen !== genRef.current) return;
+        if (intent.status === "succeeded") {
+          invalidatePurchasesCache();
+          void prefetchPlaybackUrl(contentId);
+          setStatus("succeeded");
+          return;
+        }
         const dataUrl = await qrStringToDataUrl(intent.qr_string);
         if (closedRef.current || gen !== genRef.current) return;
         setQrDataUrl(dataUrl);
@@ -195,7 +203,9 @@ export function BakongCheckoutModal({
         ) : status === "error" || status === "expired" ? (
           <div className="flex w-[260px] flex-col items-center gap-3 rounded-xl border border-border bg-surface p-6 text-center">
             <p className="text-[13px] text-danger">
-              {status === "expired" ? "QR code expired — close and try again." : error}
+              {status === "expired"
+                ? "Still waiting on payment confirmation. If you already paid, close and open Watch again — we will unlock the movie automatically."
+                : error}
             </p>
             <button
               type="button"

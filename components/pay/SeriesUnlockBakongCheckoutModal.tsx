@@ -8,14 +8,15 @@ import { createSeriesUnlockBakongIntent, getPaymentIntent } from "@/lib/api/paym
 import { invalidatePurchasesCache } from "@/lib/api/purchases";
 import { qrStringToDataUrl, warmQrCodeModule } from "@/lib/pay/khqr-image";
 
-const BAKONG_TIMEOUT_MS = 10 * 60 * 1000;
+const BAKONG_TIMEOUT_MS = 20 * 60 * 1000;
 
-/** Bakong settle latency is mostly poll wait. Official KHQR SDK waits 5s
- *  in the first 5 minutes — faster than that 429s NBC and the QR never flips. */
+/** Match unpaid cache (~45s) — slower polls protect NBC daily quota. */
 function nextPollDelayMs(elapsedMs: number): number {
-  if (elapsedMs < 300_000) return 5000;
-  if (elapsedMs < 900_000) return 10000;
-  return 15000;
+  // Active checkout only — Bakong's only auto-paid signal is NBC check.
+  // Fast while the modal is open; stop when closed (no background burn).
+  if (elapsedMs < 180_000) return 3000;
+  if (elapsedMs < 600_000) return 5000;
+  return 10000;
 }
 
 type BakongStatus = "loading" | "waiting" | "succeeded" | "expired" | "error";
