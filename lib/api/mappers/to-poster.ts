@@ -38,10 +38,14 @@ export function movieToPoster(
   index = 0,
   ownedIds?: Set<string>,
   isAdmin = false,
+  hasSubscription = false,
 ): PosterCardProps {
   const { gradient, accent } = pick(index);
   const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
-  const isOwned = isFree || ownedIds?.has(movie.id) || isAdmin;
+  // Every subscription plan is marketed as "access to all movies" (see
+  // lib/pricing-tiers.ts), so a subscriber counts as owning every paid movie
+  // too, not just series episodes.
+  const isOwned = isFree || ownedIds?.has(movie.id) || isAdmin || hasSubscription;
   const price =
     !isFree && movie.price_usd
       ? `$${parseFloat(movie.price_usd).toFixed(2)}`
@@ -120,9 +124,10 @@ export function movieToBanner(
   movie: ContentListItemRead,
   ownedIds?: Set<string>,
   isAdmin = false,
+  hasSubscription = false,
 ): BannerCardProps {
   const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
-  const owned = isFree || Boolean(ownedIds?.has(movie.id)) || isAdmin;
+  const owned = isFree || Boolean(ownedIds?.has(movie.id)) || isAdmin || hasSubscription;
   const price =
     !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
   return {

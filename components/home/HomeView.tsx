@@ -14,6 +14,7 @@ import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { listPurchases } from "@/lib/api/purchases";
 import { listWatchProgress } from "@/lib/api/playback";
+import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
 import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
@@ -51,7 +52,11 @@ export function HomeView({
   const isAdmin = isAdminUser(user);
 
   const [ownedIds, setOwnedIds] = useState<Set<string>>(() => new Set());
+  const [subscriptionActive, setSubscriptionActive] = useState(false);
   const [continuePosters, setContinuePosters] = useState<PosterCardProps[]>([]);
+  // Gated on loggedIn (rather than reset via setState in the fetch effect) so
+  // a logout can't leave a stale "subscribed" badge on movie posters.
+  const hasSubscription = loggedIn && subscriptionActive;
 
   const freeTodayRailRef = useRef<HTMLDivElement>(null);
   const comingSoonRailRef = useRef<HTMLDivElement>(null);
@@ -66,8 +71,11 @@ export function HomeView({
   }, [movies]);
 
   const moviePosters = useMemo(
-    () => movies.slice(0, RAIL_LIMIT).map((m, i) => movieToPoster(m, i, ownedIds, isAdmin)),
-    [movies, ownedIds, isAdmin],
+    () =>
+      movies
+        .slice(0, RAIL_LIMIT)
+        .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription)),
+    [movies, ownedIds, isAdmin, hasSubscription],
   );
 
   const seriesBanners = useMemo(
@@ -76,8 +84,9 @@ export function HomeView({
   );
 
   const topMovieBanners = useMemo<BannerCardProps[]>(
-    () => movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds, isAdmin)),
-    [movies, ownedIds, isAdmin],
+    () =>
+      movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription)),
+    [movies, ownedIds, isAdmin, hasSubscription],
   );
 
   const libraryPosters = useMemo(
@@ -85,8 +94,8 @@ export function HomeView({
       movies
         .filter((m) => ownedIds.has(m.id))
         .slice(0, RAIL_LIMIT)
-        .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin)),
-    [movies, ownedIds, isAdmin],
+        .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription)),
+    [movies, ownedIds, isAdmin, hasSubscription],
   );
 
   const trendingPosters = moviePosters.length > 0 ? moviePosters : initialTrending.slice(0, RAIL_LIMIT);
@@ -108,6 +117,20 @@ export function HomeView({
   useEffect(() => {
     if (!loggedIn) return;
     let cancelled = false;
+    listMySubscriptions()
+      .catch(swallow("home: load subscriptions", []))
+      .then((subs) => {
+        if (cancelled) return;
+        setSubscriptionActive(hasActiveSubscription(subs));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loggedIn]);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    let cancelled = false;
     listWatchProgress()
       .catch(swallow("home: load watch progress", [] as WatchProgressRead[]))
       .then((progress) => {
@@ -117,14 +140,14 @@ export function HomeView({
           if (posters.length >= RAIL_LIMIT) break;
           const movie = movieById.get(row.content_id);
           if (!movie) continue;
-          posters.push(movieToPoster(movie, posters.length, ownedIds, isAdmin));
+          posters.push(movieToPoster(movie, posters.length, ownedIds, isAdmin, hasSubscription));
         }
         setContinuePosters(posters);
       });
     return () => {
       cancelled = true;
     };
-  }, [loggedIn, movieById, ownedIds, isAdmin]);
+  }, [loggedIn, movieById, ownedIds, isAdmin, hasSubscription]);
 
   const displayBanners = useMemo((): PromotionBannerRead[] => {
     if (promotionBanners.length > 0) return promotionBanners;
@@ -217,7 +240,12 @@ export function HomeView({
         </section>
       ) : null}
 
-      <HomeGenreRails movies={movies} ownedIds={ownedIds} isAdmin={isAdmin} />
+      <HomeGenreRails
+        movies={movies}
+        ownedIds={ownedIds}
+        isAdmin={isAdmin}
+        hasSubscription={hasSubscription}
+      />
 
       {libraryPosters.length > 0 ? (
         <section className="pt-8 pb-12">

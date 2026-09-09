@@ -11,6 +11,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { listPurchases } from "@/lib/api/purchases";
+import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
 import { movieToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
@@ -105,7 +106,11 @@ export function MoviesView({
   const [freeOnly, setFreeOnly] = useState(initialFree);
   const [searchQuery, setSearchQuery] = useState("");
   const [ownedIds, setOwnedIds] = useState<Set<string> | null>(null);
+  const [subscriptionActive, setSubscriptionActive] = useState(false);
   const [page, setPage] = useState(0);
+  // Gated on loggedIn (rather than reset via setState in the fetch effect) so
+  // a logout can't leave a stale "subscribed" badge on movie posters.
+  const hasSubscription = loggedIn && subscriptionActive;
 
   // Sync when navigating from a home genre rail (e.g. /movies?genre=Thriller)
   // or the nav dropdown, using the adjust-state-during-render pattern.
@@ -148,14 +153,20 @@ export function MoviesView({
   );
 
   const allPosters = useMemo(
-    () => filteredMovies.map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin)),
-    [filteredMovies, ownedIds, isAdmin],
+    () =>
+      filteredMovies.map((m, i) =>
+        movieToPoster(m, i, ownedIds ?? undefined, isAdmin, hasSubscription),
+      ),
+    [filteredMovies, ownedIds, isAdmin, hasSubscription],
   );
 
   // Top 10 always uses unfiltered movies
   const top10Posters = useMemo(
-    () => movies.slice(0, TOP_COUNT).map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin)),
-    [movies, ownedIds, isAdmin],
+    () =>
+      movies
+        .slice(0, TOP_COUNT)
+        .map((m, i) => movieToPoster(m, i, ownedIds ?? undefined, isAdmin, hasSubscription)),
+    [movies, ownedIds, isAdmin, hasSubscription],
   );
 
   const totalPages = Math.max(1, Math.ceil(allPosters.length / PAGE_SIZE));
@@ -176,6 +187,18 @@ export function MoviesView({
       });
     return () => { cancelled = true; };
   }, [movies, loggedIn]);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    let cancelled = false;
+    listMySubscriptions()
+      .catch(swallow("movies: load subscriptions", []))
+      .then((subs) => {
+        if (cancelled) return;
+        setSubscriptionActive(hasActiveSubscription(subs));
+      });
+    return () => { cancelled = true; };
+  }, [loggedIn]);
 
   return (
     <PageShell fullWidth>

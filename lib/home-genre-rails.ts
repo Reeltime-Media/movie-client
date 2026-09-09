@@ -19,13 +19,14 @@ export function buildHomeGenreRails(
   movies: ContentListItemRead[],
   ownedIds: Set<string>,
   isAdmin: boolean,
+  hasSubscription = false,
 ): HomeGenreRail[] {
   return collectGenreLabels(movies)
     .slice(0, GENRE_RAIL_LIMIT)
     .map((label) => {
       const posters = filterByGenreLabel(movies, label)
         .slice(0, RAIL_LIMIT)
-        .map((movie, index) => movieToPoster(movie, index, ownedIds, isAdmin));
+        .map((movie, index) => movieToPoster(movie, index, ownedIds, isAdmin, hasSubscription));
       return { label, posters };
     })
     .filter((rail) => rail.posters.length > 0);

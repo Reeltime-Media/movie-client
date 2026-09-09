@@ -10,6 +10,7 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 import { posterUrl } from "@/lib/api/core";
 import { listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
+import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
 import { listEpisodes, listSeries } from "@/lib/api/series";
 import { movieCardHref } from "@/lib/movie-routes";
 import { useAuth } from "@/hooks/auth/use-auth";
@@ -140,15 +141,20 @@ function SearchPageInner() {
     let cancelled = false;
 
     const purchasesPromise = listPurchases().catch(swallow("search: load purchases", []));
+    const subsPromise = loggedIn
+      ? listMySubscriptions().catch(swallow("search: load subscriptions", []))
+      : Promise.resolve([]);
 
     Promise.all([
       listMovies({ search: q }),
       listSeries({ search: q }),
       purchasesPromise,
+      subsPromise,
     ])
-      .then(async ([movies, seriesList, purchases]) => {
+      .then(async ([movies, seriesList, purchases, subs]) => {
         if (cancelled) return;
         const ownedIds = new Set(purchases.map((p) => p.content_id));
+        const hasSubscription = hasActiveSubscription(subs);
 
         const episodeCounts = await Promise.all(
           seriesList.map((s) =>
@@ -162,7 +168,7 @@ function SearchPageInner() {
 
         const movieResults: SearchResult[] = movies.map((m) => {
           const isFree = !m.price_usd || parseFloat(m.price_usd) === 0;
-          const isOwned = isFree || ownedIds.has(m.id);
+          const isOwned = isFree || ownedIds.has(m.id) || hasSubscription;
           return {
             kind: "movie",
             data: m,

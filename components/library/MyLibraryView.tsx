@@ -12,7 +12,11 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 import { getMe } from "@/lib/api/auth";
 import { listFavorites } from "@/lib/api/favorites";
 import { listOwnedMovies } from "@/lib/api/purchases";
-import { listMySubscriptions, isSubscriptionActive } from "@/lib/api/subscriptions";
+import {
+  hasActiveSubscription,
+  listMySubscriptions,
+  isSubscriptionActive,
+} from "@/lib/api/subscriptions";
 import { movieToPoster } from "@/lib/api/mappers";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { useAuth } from "@/hooks/auth/use-auth";
@@ -226,13 +230,18 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
 
       const isAdmin = isAdminUser(me);
       const purchasedIds = new Set(ownedMovies.map((m) => m.id));
+      const hasSubscription = hasActiveSubscription(subs);
       setOwnedCount(ownedMovies.length);
-      setOwnedPosters(ownedMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin)));
+      setOwnedPosters(
+        ownedMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin, hasSubscription)),
+      );
 
       const favIds = new Set(favorites.map((f) => f.content_id));
       setFavoriteCount(favIds.size);
       const favMovies = catalogMovies.filter((m) => favIds.has(m.id));
-      setFavoritePosters(favMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin)));
+      setFavoritePosters(
+        favMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin, hasSubscription)),
+      );
 
       if (me) {
         setUser(me);

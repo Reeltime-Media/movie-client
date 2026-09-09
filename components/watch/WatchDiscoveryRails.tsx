@@ -57,10 +57,11 @@ export function WatchDiscoveryRails({
       : Promise.resolve([]);
 
     if (movieSlug) {
-      Promise.all([getRelatedMovies(movieSlug, 8), purchasesPromise])
-        .then(([movies, purchases]) => {
+      Promise.all([getRelatedMovies(movieSlug, 8), purchasesPromise, subsPromise])
+        .then(([movies, purchases, subs]) => {
           const ownedIds = new Set(purchases.map((p) => p.content_id));
-          const posters = movies.map((m, i) => movieToPoster(m, i, ownedIds, isAdmin));
+          const hasSub = hasActiveSubscription(subs);
+          const posters = movies.map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSub));
           setMoreLikeThis(posters);
           setTrending([...posters].reverse());
         })

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { getMovie } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
+import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
 import type { ContentRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/playback";
 import { isAdminUser } from "@/lib/auth/is-admin";
@@ -131,19 +132,24 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       }
 
       const purchasesPromise = listPurchases().catch(swallow("watch: load purchases", []));
+      const subsPromise = loggedIn
+        ? listMySubscriptions().catch(swallow("watch: load subscriptions", []))
+        : Promise.resolve([]);
       const playbackPromise = getCachedPlaybackUrl(m.id)
         ? resolvePlaybackUrl(m.id)
         : prefetchPlaybackUrl(m.id).then((url) => url ?? resolvePlaybackUrl(m.id));
 
       try {
-        const [purchases, url, progress] = await Promise.all([
+        const [purchases, subs, url, progress] = await Promise.all([
           purchasesPromise,
+          subsPromise,
           playbackPromise,
           loggedIn ? getWatchProgress(m.id).catch(() => null) : Promise.resolve(null),
         ]);
         if (cancelled) return;
 
-        const entitled = purchases.some((p) => p.content_id === m.id);
+        const entitled =
+          purchases.some((p) => p.content_id === m.id) || hasActiveSubscription(subs);
         setCanPlay(entitled);
         if (entitled) {
           if (progress && !progress.completed && progress.position_seconds > 0) {
@@ -175,14 +181,21 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     }
 
     const purchasesPromise = listPurchases().catch(swallow("watch: load purchases", []));
+    const subsPromise = loggedIn
+      ? listMySubscriptions().catch(swallow("watch: load subscriptions", []))
+      : Promise.resolve([]);
 
-    Promise.all([getMovie(slug), purchasesPromise])
-      .then(async ([m, purchases]) => {
+    Promise.all([getMovie(slug), purchasesPromise, subsPromise])
+      .then(async ([m, purchases, subs]) => {
         if (cancelled) return;
         setMovie(m);
 
         const free = isMovieFree(m);
-        const entitled = isAdmin || free || purchases.some((p) => p.content_id === m.id);
+        const entitled =
+          isAdmin ||
+          free ||
+          purchases.some((p) => p.content_id === m.id) ||
+          hasActiveSubscription(subs);
         setCanPlay(entitled);
 
         if (!entitled) {

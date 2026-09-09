@@ -14,6 +14,7 @@ type HomeGenreRailsProps = {
   movies: ContentListItemRead[];
   ownedIds: Set<string>;
   isAdmin: boolean;
+  hasSubscription?: boolean;
 };
 
 function GenreRail({
@@ -43,12 +44,17 @@ function GenreRail({
   );
 }
 
-export function HomeGenreRails({ movies, ownedIds, isAdmin }: HomeGenreRailsProps) {
+export function HomeGenreRails({
+  movies,
+  ownedIds,
+  isAdmin,
+  hasSubscription = false,
+}: HomeGenreRailsProps) {
   const { t } = useI18n();
 
   const rails = useMemo(
-    () => buildHomeGenreRails(movies, ownedIds, isAdmin),
-    [movies, ownedIds, isAdmin],
+    () => buildHomeGenreRails(movies, ownedIds, isAdmin, hasSubscription),
+    [movies, ownedIds, isAdmin, hasSubscription],
   );
 
   if (rails.length === 0) return null;
