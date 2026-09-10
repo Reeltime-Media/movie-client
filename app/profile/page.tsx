@@ -267,7 +267,10 @@ export default function ProfilePage() {
             <div
               className="cinematic-banner -mx-5 -my-4 space-y-3 rounded-b-md p-5"
               style={{
-                background: "linear-gradient(120deg, #1a0508 0%, #3d0c12 40%, #0d1a2e 80%, #0a0a0a 100%)",
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 55%, rgba(10,10,10,0.8) 100%), url('/asset/cinema-seats.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
               }}
             >
               <div className="flex items-center gap-2">
@@ -308,7 +311,10 @@ export default function ProfilePage() {
             <div
               className="cinematic-banner -mx-5 -my-4 space-y-4 rounded-b-md p-5"
               style={{
-                background: "linear-gradient(120deg, #1a0508 0%, #3d0c12 40%, #0d1a2e 80%, #0a0a0a 100%)",
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 55%, rgba(10,10,10,0.8) 100%), url('/asset/cinema-seats.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
               }}
             >
               <div className="flex items-start justify-between gap-4">
