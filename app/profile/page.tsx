@@ -2,7 +2,6 @@
 
 import {
   Check,
-  CheckCircle2,
   Crown,
   Eye,
   EyeOff,
@@ -307,24 +306,33 @@ export default function ProfilePage() {
               ) : null}
             </div>
           ) : (
-            <div className="space-y-3">
-              <p className="text-[13px] text-text-muted">
-                You&apos;re on the free plan. Subscribe to unlock every series with no per-title fees.
-              </p>
-              <ul className="space-y-2">
-                {["Full series seasons", "No per-title fees", "New episodes weekly"].map((perk) => (
-                  <li key={perk} className="flex items-center gap-2 text-[12px] text-text-muted">
-                    <CheckCircle2 size={13} className="shrink-0 text-success" />
-                    {perk}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/pricing"
-                className="mt-1 flex w-full items-center justify-center rounded-md bg-brand py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
-              >
-                Subscribe · $6.99/mo
-              </Link>
+            <div
+              className="cinematic-banner -mx-5 -my-4 space-y-4 rounded-b-md p-5"
+              style={{
+                background:
+                  "repeating-linear-gradient(180deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 22px, rgba(0,0,0,0.35) 22px, rgba(0,0,0,0.35) 26px), linear-gradient(120deg, #1a0508 0%, #3d0c12 40%, #0d1a2e 80%, #0a0a0a 100%)",
+              }}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-[15px] font-extrabold text-text">Unlock More Entertainment</h3>
+                  <p className="text-[12px] text-text-muted">
+                    Enjoy movies, series, and exclusive content
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-warning/40 text-warning">
+                    <Crown size={15} />
+                  </span>
+                  <Link
+                    href="/pricing"
+                    className="rounded-md bg-brand px-4 py-2 text-[12px] font-bold whitespace-nowrap text-white transition-colors hover:bg-brand-hover"
+                  >
+                    View Plans
+                  </Link>
+                </div>
+              </div>
+              <div className="border-t border-white/15" />
             </div>
           )}
         </SectionCard>
