@@ -28,11 +28,11 @@ import type { UserRead, SubscriptionRead, WatchProgressRead } from "@/lib/api/ty
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-border bg-surface">
+    <div className="flex h-full flex-col rounded-md border border-border bg-surface">
       <div className="border-b border-border px-5 py-4">
         <h2 className="text-[14px] font-bold tracking-[-0.01em]">{title}</h2>
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div className="flex-1 px-5 py-4">{children}</div>
     </div>
   );
 }
@@ -265,7 +265,7 @@ export default function ProfilePage() {
         <SectionCard title="Current Plan">
           {activeSub ? (
             <div
-              className="cinematic-banner -mx-5 -my-4 space-y-3 rounded-b-md p-5"
+              className="cinematic-banner -mx-5 -my-4 h-[calc(100%+2rem)] space-y-3 rounded-b-md p-5"
               style={{
                 backgroundImage:
                   "linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 55%, rgba(10,10,10,0.8) 100%), url('/asset/cinema-seats.png')",
@@ -309,7 +309,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div
-              className="cinematic-banner -mx-5 -my-4 space-y-4 rounded-b-md p-5"
+              className="cinematic-banner -mx-5 -my-4 h-[calc(100%+2rem)] space-y-4 rounded-b-md p-5"
               style={{
                 backgroundImage:
                   "linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 55%, rgba(10,10,10,0.8) 100%), url('/asset/cinema-seats.png')",
