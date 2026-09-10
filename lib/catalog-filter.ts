@@ -9,6 +9,8 @@ const CATALOG_GENRE_KEYS = [
   "genreSciFi",
   "genreHorror",
   "genreComedy",
+  "genreAdventure",
+  "genreAnimation",
 ] as const satisfies readonly TranslationKey[];
 
 export type CatalogGenreKey = (typeof CATALOG_GENRE_KEYS)[number];
@@ -22,6 +24,8 @@ const GENRE_KEY_TO_LABEL: Partial<Record<TranslationKey, string>> = {
   genreComedy: "Comedy",
   genreCrime: "Crime",
   genreHorror: "Horror",
+  genreAdventure: "Adventure",
+  genreAnimation: "Animation",
 };
 
 export type CatalogSearchable = {

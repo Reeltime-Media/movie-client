@@ -50,6 +50,8 @@ describe("genreKeyFromLabel", () => {
     expect(genreKeyFromLabel("Thriller")).toBe("genreThriller");
     expect(genreKeyFromLabel("sci-fi")).toBe("genreSciFi");
     expect(genreKeyFromLabel("SCI FI")).toBe("genreSciFi");
+    expect(genreKeyFromLabel("Adventure")).toBe("genreAdventure");
+    expect(genreKeyFromLabel("Animation")).toBe("genreAnimation");
   });
 
   it("falls back to genreAll for unknown or empty labels", () => {

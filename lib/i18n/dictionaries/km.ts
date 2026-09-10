@@ -44,6 +44,8 @@ export const km = {
   genreCrime: "ឧក្រិដ្ឋកម្ម",
   genreAction: "ប្រយុទ្ធ",
   genreHorror: "រន្ធត់ខ្លាំង",
+  genreAdventure: "ផ្សងព្រេង",
+  genreAnimation: "គំនូរជីវចល",
 
   navAllMovies: "ភាពយន្តទាំងអស់",
   navAllSeries: "រឿងភាគទាំងអស់",

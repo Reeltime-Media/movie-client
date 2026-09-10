@@ -48,6 +48,8 @@ export const en = {
   genreCrime: "Crime",
   genreAction: "Action",
   genreHorror: "Horror",
+  genreAdventure: "Adventure",
+  genreAnimation: "Animation",
 
   navAllMovies: "All Movies",
   navAllSeries: "All Series",
