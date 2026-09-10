@@ -75,7 +75,13 @@ async function proxyToApi(request: NextRequest, pathSegments: string[]) {
   // on relayed Response objects (status/headers arrive, body doesn't).
   const bodyBuffer = await upstream.arrayBuffer();
 
-  return new NextResponse(bodyBuffer, {
+  // A Response with a null-body status (204/205/304) throws if constructed
+  // with any body at all — even an empty one — per the Fetch spec. These
+  // statuses never carry a body anyway, so `bodyBuffer` is always empty here.
+  const NULL_BODY_STATUSES = new Set([204, 205, 304]);
+  const body = NULL_BODY_STATUSES.has(upstream.status) ? null : bodyBuffer;
+
+  return new NextResponse(body, {
     status: upstream.status,
     headers: responseHeaders,
   });
