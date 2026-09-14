@@ -41,6 +41,8 @@ export const en = {
   footerFollowUs: "Follow us",
   footerMadeIn: "Made in Cambodia",
 
+  legalLastUpdated: "Last updated",
+
   genreAll: "All",
   genreDrama: "Drama",
   genreThriller: "Thriller",

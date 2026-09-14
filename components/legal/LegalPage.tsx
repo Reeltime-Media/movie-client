@@ -1,4 +1,7 @@
+"use client";
+
 import { PageShell } from "@/components/layout/PageShell";
+import { useI18n } from "@/components/providers/LocaleProvider";
 import { pageTitleClassName } from "@/lib/ui/page-title";
 
 export type LegalSection = {
@@ -14,14 +17,21 @@ export type LegalDocument = {
   sections: LegalSection[];
 };
 
-export function LegalPage({ document }: { document: LegalDocument }) {
+export function LegalPage({
+  documents,
+}: {
+  documents: { en: LegalDocument; km: LegalDocument };
+}) {
+  const { locale, t } = useI18n();
+  const document = documents[locale];
+
   return (
     <PageShell footer>
       <section className="px-6 pb-20 pt-14 md:px-8 md:pt-16">
         <div className="mx-auto max-w-3xl">
           <h1 className={pageTitleClassName}>{document.title}</h1>
           <p className="mt-2 text-[12px] font-medium text-text-disabled">
-            Last updated: {document.lastUpdated}
+            {t("legalLastUpdated")}: {document.lastUpdated}
           </p>
           <p className="mt-6 text-[13px] leading-relaxed text-text-muted">{document.intro}</p>
 
