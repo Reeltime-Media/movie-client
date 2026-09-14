@@ -33,6 +33,7 @@ export const en = {
   footerPrivacy: "Privacy policy",
   footerTerms: "Terms of service",
   footerHelp: "Help center",
+  footerDeleteAccount: "Delete account",
   footerContact: "Contact us",
   footerBrowse: "Browse",
   footerAccount: "Account",

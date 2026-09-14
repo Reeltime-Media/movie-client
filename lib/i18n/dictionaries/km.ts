@@ -35,6 +35,7 @@ export const km = {
   footerPrivacy: "ភាពឯកជន",
   footerTerms: "លក្ខខណ្ឌ",
   footerHelp: "ជំនួយ",
+  footerDeleteAccount: "លុបគណនី",
 
   genreAll: "ទាំងអស់",
   genreDrama: "រឿងដើម",
