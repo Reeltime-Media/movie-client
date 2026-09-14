@@ -192,11 +192,21 @@ export default function RegisterPage() {
 
             <p className="text-[11px] leading-relaxed text-text-disabled">
               By creating an account you agree to our{" "}
-              <Link href="#" className="text-text-muted underline underline-offset-2 hover:text-text">
+              <Link
+                href="/terms-of-service"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-text-muted underline underline-offset-2 hover:text-text"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="#" className="text-text-muted underline underline-offset-2 hover:text-text">
+              <Link
+                href="/privacy-policy"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-text-muted underline underline-offset-2 hover:text-text"
+              >
                 Privacy Policy
               </Link>
               .

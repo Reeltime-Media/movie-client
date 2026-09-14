@@ -25,8 +25,8 @@ const accountLinks: FooterLink[] = [
 
 const supportLinks: FooterLink[] = [
   { href: "#", labelKey: "footerHelp" },
-  { href: "#", labelKey: "footerPrivacy" },
-  { href: "#", labelKey: "footerTerms" },
+  { href: "/privacy-policy", labelKey: "footerPrivacy" },
+  { href: "/terms-of-service", labelKey: "footerTerms" },
   { href: "#", labelKey: "footerContact" },
 ];
 
