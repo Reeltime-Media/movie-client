@@ -55,6 +55,7 @@ export async function resetPassword(token: string, password: string): Promise<vo
 export async function updateMe(data: {
   full_name?: string;
   password?: string;
+  current_password?: string;
 }): Promise<UserRead> {
   const user = await apiFetch<UserRead>("/users/me", { method: "PATCH", body: data });
   saveUserSnapshot(user);

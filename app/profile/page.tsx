@@ -144,16 +144,21 @@ export default function ProfilePage() {
     e.preventDefault();
     setPwError("");
     setPwSuccess(false);
+    if (!user) return;
+    if (user.has_password && !currentPw.trim()) { setPwError("Current password is required."); return; }
     if (!newPw.trim()) { setPwError("New password is required."); return; }
     if (newPw.length < 6) { setPwError("Password must be at least 6 characters."); return; }
     setPwSaving(true);
     try {
-      await updateMe({ password: newPw });
+      await updateMe({
+        password: newPw,
+        ...(user.has_password ? { current_password: currentPw } : {}),
+      });
       setPwSuccess(true);
       setCurrentPw("");
       setNewPw("");
-    } catch {
-      setPwError("Failed to update password. Please try again.");
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Failed to update password. Please try again.");
     } finally {
       setPwSaving(false);
     }
