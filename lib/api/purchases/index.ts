@@ -10,8 +10,7 @@ export function listPurchases(): Promise<PurchaseRead[]> {
   return apiFetch<PurchaseRead[]>("/purchases/");
 }
 
-/** Series the signed-in user has bought a one-time unlock for. Fresh every
- * time, same reasoning as `listPurchases`. */
+/** Series unlocked with a one-time Bakong purchase (user or guest cookie). */
 export function listPurchasedSeries(): Promise<SeriesPurchaseRead[]> {
   return apiFetch<SeriesPurchaseRead[]>("/purchases/series");
 }

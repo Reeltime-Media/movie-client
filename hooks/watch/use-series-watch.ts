@@ -73,9 +73,9 @@ export function useSeriesWatch({
     const subsPromise = loggedIn
       ? listMySubscriptions().catch(swallow("watch: load subscriptions", []))
       : Promise.resolve([]);
-    const seriesPurchasesPromise = loggedIn
-      ? listPurchasedSeries().catch(swallow("watch: load series purchases", []))
-      : Promise.resolve([]);
+    const seriesPurchasesPromise = listPurchasedSeries().catch(
+      swallow("watch: load series purchases", []),
+    );
 
     if (initialSeries && initialSeries.slug === seriesSlug) {
       Promise.all([subsPromise, seriesPurchasesPromise]).then(([subs, seriesPurchases]) => {
@@ -120,24 +120,23 @@ export function useSeriesWatch({
 
   const warmPlayback = useCallback(
     (ep: ContentRead | undefined | null) => {
-      if (!ep || !loggedIn) return;
+      if (!ep) return;
       const entitled = isAdmin || ep.is_free === true || hasSubscription;
       if (!entitled) return;
       void prefetchPlaybackUrl(ep.id);
     },
-    [loggedIn, hasSubscription, isAdmin],
+    [hasSubscription, isAdmin],
   );
 
   const prefetchEpisode = useCallback(
     (episodeId: string) => {
-      if (!loggedIn) return;
       if (!(isAdmin || hasSubscription)) {
         const ep = activeSeason?.episodes.find((e) => e.id === episodeId);
         if (!ep?.is_free) return;
       }
       void prefetchPlaybackUrl(episodeId);
     },
-    [loggedIn, hasSubscription, isAdmin, activeSeason],
+    [hasSubscription, isAdmin, activeSeason],
   );
 
   // Reset playback state when the target episode or entitlement inputs change
@@ -145,7 +144,7 @@ export function useSeriesWatch({
   // seeded pages pick up cached playback immediately). The effect below then
   // re-resolves playback asynchronously.
   const playbackEntitled = Boolean(
-    episode && loggedIn && (isAdmin || episode.is_free === true || hasSubscription),
+    episode && (isAdmin || episode.is_free === true || hasSubscription),
   );
   const playbackKey = `${episode?.id ?? "none"}|${playbackEntitled}`;
   const [prevPlaybackKey, setPrevPlaybackKey] = useState<string | null>(null);
@@ -231,7 +230,7 @@ export function useSeriesWatch({
       : "/pricing";
     const isFree = episode?.is_free === true;
     const entitled = Boolean(episode && (isAdmin || isFree || hasSubscription));
-    const canPlay = loggedIn && entitled;
+    const canPlay = entitled;
     const playerTitle =
       series && episode
         ? `${series.title}: S${seasonNum} · ${episode.title}`

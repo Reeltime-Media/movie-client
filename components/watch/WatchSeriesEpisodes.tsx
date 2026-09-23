@@ -7,7 +7,6 @@ import { useState } from "react";
 import { GenreFilterSelect } from "@/components/catalog/GenreFilterSelect";
 import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
 import { useI18n } from "@/components/providers/LocaleProvider";
-import { useAuth } from "@/hooks/auth/use-auth";
 import type { SeasonRead } from "@/lib/api/types";
 
 export function WatchSeriesEpisodes({
@@ -32,7 +31,6 @@ export function WatchSeriesEpisodes({
 }) {
   const router = useRouter();
   const { t } = useI18n();
-  const { loggedIn } = useAuth();
   const [checkoutEpisode, setCheckoutEpisode] = useState<number | null>(null);
   const seasonData = seasons.find((s) => s.season_number === activeSeason);
   const episodes = seasonData?.episodes ?? [];
@@ -45,12 +43,6 @@ export function WatchSeriesEpisodes({
   if (seasons.length === 0) return null;
 
   function handleLockedEpisodeClick(epNum: number) {
-    if (!loggedIn) {
-      router.push(
-        `/login?next=${encodeURIComponent(`/watch/series/${seriesSlug}/${activeSeason}/${epNum}`)}`,
-      );
-      return;
-    }
     setCheckoutEpisode(epNum);
   }
 

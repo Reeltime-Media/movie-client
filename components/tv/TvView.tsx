@@ -12,7 +12,7 @@ import { WatchPlayerBand } from "@/components/watch/WatchPageSection";
 import { TvChannelCard } from "@/components/tv/TvChannelCard";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
-import { authorizeTvChannel } from "@/lib/api/tv";
+import { authorizeTvChannel, prefetchTvChannels } from "@/lib/api/tv";
 import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import type { TvChannelRead } from "@/lib/api/types";
 import { isAdminUser } from "@/lib/auth/is-admin";
@@ -190,6 +190,10 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
     (channel: TvChannelRead) => channel.is_free || (loggedIn && hasSubscription) || isAdmin,
     [loggedIn, hasSubscription, isAdmin],
   );
+
+  useEffect(() => {
+    prefetchTvChannels(channels, isEntitled);
+  }, [channels, isEntitled]);
 
   const selectChannel = useCallback(
     (channel: TvChannelRead) => {

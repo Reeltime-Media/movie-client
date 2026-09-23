@@ -3,12 +3,13 @@
 import { Calendar, Check, Clock, Loader2, PlayCircle, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { useFavorites } from "@/components/providers/FavoritesProvider";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { CdnImage } from "@/components/ui/CdnImage";
+import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
 import { WatchSeriesEpisodes } from "@/components/watch/WatchSeriesEpisodes";
@@ -76,8 +77,8 @@ export function WatchSeriesClient({
   initialSeries = null,
   initialSeasons = [],
 }: WatchSeriesClientProps) {
-  const router = useRouter();
   const { t } = useI18n();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const {
     series,
     seasons,
@@ -86,13 +87,10 @@ export function WatchSeriesClient({
     playbackUrl,
     playbackLoading,
     resumeTime,
-    loggedIn,
     seasonNum,
     episodeNum,
     activeSeason,
     episode,
-    loginNext,
-    payHref,
     canPlay,
     playerTitle,
     hasSubscription,
@@ -215,17 +213,11 @@ export function WatchSeriesClient({
                   {!canPlay ? (
                     <button
                       type="button"
-                      onClick={() =>
-                        router.push(
-                          loggedIn
-                            ? payHref
-                            : `/login?next=${encodeURIComponent(loginNext)}`,
-                        )
-                      }
+                      onClick={() => setCheckoutOpen(true)}
                       className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
                     >
                       <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
-                      {loggedIn ? "Subscribe to watch" : "Sign in to watch"}
+                      Buy · $2.50
                     </button>
                   ) : null}
                   <FavouriteButton contentId={series.id} />
@@ -324,6 +316,14 @@ export function WatchSeriesClient({
           </div>
         </WatchDetailBody>
       </section>
+      {checkoutOpen ? (
+        <SeriesUnlockBakongCheckoutModal
+          seriesSlug={series.slug}
+          title={series.title}
+          watchHref={`/watch/series/${series.slug}/${seasonNum}/${episodeNum}`}
+          onClose={() => setCheckoutOpen(false)}
+        />
+      ) : null}
     </PageShell>
   );
 }

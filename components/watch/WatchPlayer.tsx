@@ -255,10 +255,12 @@ export function WatchPlayer({
         startFragPrefetch: true,
         ...(live
           ? {
-              liveSyncDurationCount: 4,
-              liveMaxLatencyDurationCount: 8,
-              maxBufferLength: 16,
-              maxMaxBufferLength: 24,
+              // 2 independent 2s segments is enough to start; 4 was ~8s of
+              // extra buffer before the first frame.
+              liveSyncDurationCount: 2,
+              liveMaxLatencyDurationCount: 6,
+              maxBufferLength: 8,
+              maxMaxBufferLength: 16,
               backBufferLength: 0,
               manifestLoadPolicy: {
                 default: {

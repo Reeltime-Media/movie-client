@@ -1,1 +1,1 @@
-export { listTvChannels, authorizeTvChannel } from "./tv";
+export { listTvChannels, authorizeTvChannel, prefetchTvChannels } from "./tv";
