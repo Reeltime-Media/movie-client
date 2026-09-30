@@ -1,7 +1,7 @@
 import { fetchAllPages, fetchPage } from "../core/pagination";
 import { apiFetch, catalogCache } from "../core/client";
 import { clientCached, CLIENT_CATALOG_TTL_MS } from "../core/client-cache";
-import type { SeasonRead, SeriesRead } from "../types";
+import type { ContentRead, SeasonRead, SeriesRead } from "../types";
 import type { CatalogListParams } from "../movies";
 
 export type SeriesListParams = CatalogListParams & {
@@ -44,10 +44,29 @@ export async function getSeries(slug: string): Promise<SeriesRead> {
   );
 }
 
+/** Group flat paginated episodes into SeasonRead[] for existing UI. */
+export function groupEpisodesIntoSeasons(episodes: ContentRead[]): SeasonRead[] {
+  const seasons = new Map<number, ContentRead[]>();
+  for (const ep of episodes) {
+    const sn = ep.season_number ?? 1;
+    const list = seasons.get(sn);
+    if (list) list.push(ep);
+    else seasons.set(sn, [ep]);
+  }
+  return [...seasons.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([season_number, eps]) => ({ season_number, episodes: eps }));
+}
+
 export async function listEpisodes(slug: string): Promise<SeasonRead[]> {
-  return clientCached(`series:${slug}:episodes`, CLIENT_CATALOG_TTL_MS, () =>
-    apiFetch<SeasonRead[]>(`/series/${slug}/episodes`, catalogCache),
-  );
+  return clientCached(`series:${slug}:episodes`, CLIENT_CATALOG_TTL_MS, async () => {
+    const episodes = await fetchAllPages<ContentRead>(
+      `/series/${slug}/episodes`,
+      100,
+      catalogCache,
+    );
+    return groupEpisodesIntoSeasons(episodes);
+  });
 }
 
 export async function getRelatedSeries(

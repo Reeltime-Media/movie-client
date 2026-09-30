@@ -1,5 +1,6 @@
 import { apiFetch } from "../core/client";
 import { invalidateClientCache } from "../core/client-cache";
+import { fetchAllPages } from "../core/pagination";
 import { listMovies } from "../movies";
 import type { ContentListItemRead, PurchaseRead, SeriesPurchaseRead } from "../types";
 
@@ -27,7 +28,7 @@ export function invalidatePurchasesCache(): void {
 /** Movies the signed-in user has purchased. */
 export async function listOwnedMovies(): Promise<ContentListItemRead[]> {
   try {
-    return await apiFetch<ContentListItemRead[]>("/library/owned");
+    return await fetchAllPages<ContentListItemRead>("/library/owned", 100);
   } catch {
     const [purchases, movies] = await Promise.all([
       listPurchases().catch(() => [] as PurchaseRead[]),

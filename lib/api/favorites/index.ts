@@ -1,3 +1,4 @@
+import { fetchAllPages } from "../core/pagination";
 import { apiFetch } from "../core/client";
 
 export type FavoriteRead = {
@@ -6,7 +7,7 @@ export type FavoriteRead = {
 };
 
 export function listFavorites(): Promise<FavoriteRead[]> {
-  return apiFetch<FavoriteRead[]>("/favorites/");
+  return fetchAllPages<FavoriteRead>("/favorites/", 100);
 }
 
 export function addFavorite(contentId: string): Promise<FavoriteRead> {
