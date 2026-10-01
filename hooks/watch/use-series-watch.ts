@@ -243,7 +243,6 @@ export function useSeriesWatch({
     seriesSlug,
     seasonNum,
     episodeNum,
-    loggedIn,
     isAdmin,
     hasSubscription,
   ]);
