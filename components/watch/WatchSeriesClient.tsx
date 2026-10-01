@@ -1,15 +1,15 @@
 "use client";
 
-import { Calendar, Check, Clock, Loader2, PlayCircle, Plus, Star } from "lucide-react";
+import { Calendar, Clock, Loader2, PlayCircle, Star } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
-import { useFavorites } from "@/components/providers/FavoritesProvider";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
+import { FavouriteButton } from "@/components/watch/FavouriteButton";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
 import { WatchSeriesEpisodes } from "@/components/watch/WatchSeriesEpisodes";
@@ -37,32 +37,6 @@ const MovieComments = dynamic(
   () => import("@/components/comments/MovieComments").then((m) => m.MovieComments),
   { ssr: false },
 );
-
-function FavouriteButton({ contentId }: { contentId: string }) {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const { t } = useI18n();
-  const active = isFavorite(contentId);
-
-  return (
-    <button
-      type="button"
-      onClick={() => void toggleFavorite(contentId)}
-      className={[
-        "inline-flex shrink-0 items-center gap-1.5 rounded-md px-4 py-2 text-[13px] font-bold transition-colors",
-        active
-          ? "border border-border bg-surface-elevated text-text hover:border-border-hover"
-          : "bg-brand text-white hover:bg-brand-hover",
-      ].join(" ")}
-    >
-      {active ? (
-        <Check size={15} aria-hidden />
-      ) : (
-        <Plus size={15} aria-hidden />
-      )}
-      {active ? t("favoriteRemove") : t("favoriteAdd")}
-    </button>
-  );
-}
 
 type WatchSeriesClientProps = {
   seriesSlug: string;

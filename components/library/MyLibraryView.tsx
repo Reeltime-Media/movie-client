@@ -144,7 +144,7 @@ const EMPTY_CONTENT: Record<
   favourites: {
     Icon: Heart,
     heading: "No favourites yet",
-    body: "Tap the heart on any movie to save it here.",
+    body: "Add any movie or series to your favourites to see it here.",
     ctaHref: "/movies",
     cta: "Browse movies",
   },

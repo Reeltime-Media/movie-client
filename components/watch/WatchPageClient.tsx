@@ -11,6 +11,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
+import { FavouriteButton } from "@/components/watch/FavouriteButton";
 import { RatingInput } from "@/components/watch/RatingInput";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
@@ -208,8 +209,8 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                     <RatingInput contentId={movie.id} onAggregateChange={setRatingOverride} />
                   </div>
 
-                  {!canPlay ? (
-                    <div className="pt-1">
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {!canPlay ? (
                       <button
                         type="button"
                         onClick={() => setCheckoutOpen(true)}
@@ -218,8 +219,9 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                         <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
                         {priceLabel ? `Buy · ${priceLabel}` : "Buy to watch"}
                       </button>
-                    </div>
-                  ) : null}
+                    ) : null}
+                    <FavouriteButton contentId={movie.id} />
+                  </div>
                 </div>
 
                 {/* Description */}
