@@ -17,13 +17,13 @@ import {
   listMySubscriptions,
   isSubscriptionActive,
 } from "@/lib/api/subscriptions";
-import { movieToPoster } from "@/lib/api/mappers";
+import { movieToPoster, seriesToPoster } from "@/lib/api/mappers";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { swallow } from "@/lib/log";
 import { getUserSnapshot, saveUserSnapshot } from "@/lib/user-session";
 import type { TranslationKey } from "@/lib/i18n";
-import type { ContentListItemRead, SubscriptionRead, UserRead } from "@/lib/api/types";
+import type { ContentListItemRead, SeriesRead, SubscriptionRead, UserRead } from "@/lib/api/types";
 import type { PosterCardProps } from "@/types/poster-card";
 
 type LibraryTab = "owned" | "favourites" | "watchlist";
@@ -183,9 +183,11 @@ type MyLibraryViewProps = {
    * sequential) full-catalog fetch on the client.
    */
   catalogMovies: ContentListItemRead[];
+  /** Public series catalog — a favourite's content_id may be a series id. */
+  catalogSeries: SeriesRead[];
 };
 
-export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
+export function MyLibraryView({ catalogMovies, catalogSeries }: MyLibraryViewProps) {
   const router = useRouter();
   const { t } = useI18n();
   const { loggedIn } = useAuth();
@@ -236,12 +238,21 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
         ownedMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin, hasSubscription)),
       );
 
-      const favIds = new Set(favorites.map((f) => f.content_id));
-      setFavoriteCount(favIds.size);
-      const favMovies = catalogMovies.filter((m) => favIds.has(m.id));
-      setFavoritePosters(
-        favMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin, hasSubscription)),
-      );
+      // A favourite is a movie or a series id; keep the API's newest-first order.
+      const moviesById = new Map(catalogMovies.map((m) => [m.id, m]));
+      const seriesById = new Map(catalogSeries.map((s) => [s.id, s]));
+      const favPosters: PosterCardProps[] = [];
+      for (const { content_id } of favorites) {
+        const movie = moviesById.get(content_id);
+        const series = seriesById.get(content_id);
+        const i = favPosters.length;
+        if (movie) favPosters.push(movieToPoster(movie, i, purchasedIds, isAdmin, hasSubscription));
+        else if (series) favPosters.push(seriesToPoster(series, i, { hasSubscription, isAdmin }));
+      }
+      // Count what can be shown, so an unpublished favourite doesn't leave a
+      // non-zero badge over the empty state.
+      setFavoriteCount(favPosters.length);
+      setFavoritePosters(favPosters);
 
       if (me) {
         setUser(me);
@@ -261,7 +272,7 @@ export function MyLibraryView({ catalogMovies }: MyLibraryViewProps) {
     return () => {
       cancelled = true;
     };
-  }, [router, loggedIn, favoriteIds, catalogMovies]);
+  }, [router, loggedIn, favoriteIds, catalogMovies, catalogSeries]);
 
   const activePosters =
     activeTab === "owned" ? ownedPosters : activeTab === "favourites" ? favoritePosters : [];
