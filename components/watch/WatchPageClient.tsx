@@ -281,7 +281,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
                   style={{ viewTransitionName: `poster-${movie.id}` }}
                 >
                   <CdnImage
-                    src={posterThumbUrl(movie.poster_key, 220, movie.updated_at) ?? ""}
+                    src={posterThumbUrl(movie.poster_key, 400, movie.updated_at) ?? ""}
                     alt={title}
                     fill
                     sizes="110px"

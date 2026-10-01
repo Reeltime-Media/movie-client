@@ -5,7 +5,7 @@ import { useState } from "react";
 import { isR2ImageUrl } from "@/lib/api/core/config";
 
 type CdnImageProps = ImageProps & {
-  /** Used when the primary src 404s (e.g. missing -w400 thumb). */
+  /** Used when the primary src 404s (e.g. a missing -w400 thumb). */
   fallbackSrc?: string | null;
 };
 
@@ -21,9 +21,7 @@ function CdnImageInner({
 
   const resolvedFallback =
     fallbackSrc ||
-    (src.includes("-w400.") || src.includes("-w220.")
-      ? src.replace(/-w\d+(\.[^.?#]+)/, "$1")
-      : undefined);
+    (/-w\d+\.[^.?#]+/.test(src) ? src.replace(/-w\d+(\.[^.?#]+)/, "$1") : undefined);
 
   const activeSrc = useFallback && resolvedFallback ? resolvedFallback : src;
   const skipOptimization = unoptimized ?? isR2ImageUrl(activeSrc);
@@ -50,7 +48,8 @@ function CdnImageInner({
  * Posters on R2 are full-resolution uploads (often several MB); running them
  * through /_next/image hits the 7s fetch timeout in dev and adds latency in prod.
  *
- * When a `-w400` thumb is missing (older uploads), falls back to the full poster URL.
+ * When any `-w{width}` thumb is missing, falls back to the full poster URL.
+ * Only -w400 thumbs are generated on upload (optimize_r2_image), so request 400.
  */
 export function CdnImage({ src, alt, ...props }: CdnImageProps) {
   if (typeof src !== "string" || !src) {

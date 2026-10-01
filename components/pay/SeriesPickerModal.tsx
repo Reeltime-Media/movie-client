@@ -99,7 +99,7 @@ export function SeriesPickerModal({ onSelect, onClose }: SeriesPickerModalProps)
               {filtered.map((s) => {
                 // Width 400 matches the thumb variant actually generated on upload
                 // (see optimize_r2_image) — CdnImage falls back to the full poster
-                // if that specific thumb is missing, but only recognizes -w400/-w220.
+                // if that specific thumb is missing.
                 const image = posterThumbUrl(s.poster_key, 400, s.updated_at) ?? posterUrl(s.poster_key, s.updated_at);
                 return (
                   <button
