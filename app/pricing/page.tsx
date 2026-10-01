@@ -12,8 +12,15 @@ import { SubscriptionBakongCheckoutModal } from "@/components/pay/SubscriptionBa
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { listSubscriptionPlans } from "@/lib/api/subscriptions";
+import { getCatalogPricing } from "@/lib/api/payments";
 import type { SeriesRead } from "@/lib/api/types";
-import { UNLOCK_TIERS, SUBSCRIPTION_TIERS, findPlanTier, type PlanTier } from "@/lib/pricing-tiers";
+import {
+  UNLOCK_TIERS,
+  SUBSCRIPTION_TIERS,
+  findPlanTier,
+  formatUsdAmount,
+  type PlanTier,
+} from "@/lib/pricing-tiers";
 import { pageTitleClassName } from "@/lib/ui/page-title";
 import { cardClassName, cardHighlightClassName, primaryButtonClassName } from "@/lib/ui/surfaces";
 
@@ -91,6 +98,7 @@ function PricingPageInner() {
   // the admin actually has active — the card that gets a real checkout vs. the
   // "unavailable" notice depends on whether a plan is currently configured for it.
   const [tierPlanCodes, setTierPlanCodes] = useState<Record<string, string>>({});
+  const [tierPrices, setTierPrices] = useState<Record<string, string>>({});
 
   // Set when this page was reached from a specific series' "subscribe to
   // unlock" CTA (see seriesPricingHref) — that's the only context in which
@@ -102,23 +110,34 @@ function PricingPageInner() {
 
   useEffect(() => {
     let cancelled = false;
-    listSubscriptionPlans()
-      .then((plans) => {
+    Promise.all([listSubscriptionPlans(), getCatalogPricing()])
+      .then(([plans, catalog]) => {
         if (cancelled) return;
         const map: Record<string, string> = {};
+        const prices: Record<string, string> = {
+          [MINI_TIER_KEY]: formatUsdAmount(catalog.series_unlock_usd),
+        };
         for (const plan of plans) {
           const tier = findPlanTier(plan.code);
-          if (tier) map[tier.key] = plan.code;
+          if (!tier) continue;
+          map[tier.key] = plan.code;
+          prices[tier.key] = formatUsdAmount(plan.price_usd);
         }
         setTierPlanCodes(map);
+        setTierPrices(prices);
       })
       .catch(() => {
-        // Leave the map empty — every card falls back to the unavailable notice.
+        // Leave maps empty — cards fall back to static tier copy / unavailable notice.
       });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  function displayTier(plan: PlanTier): PlanTier {
+    const live = tierPrices[plan.key];
+    return live ? { ...plan, price: live } : plan;
+  }
 
   function handleChoosePlan(plan: PlanTier) {
     if (!loggedIn) {
@@ -175,7 +194,12 @@ function PricingPageInner() {
 
         <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
           {UNLOCK_TIERS.map((plan, index) => (
-            <PlanCard key={plan.key} plan={plan} delayMs={80 + index * 60} onChoose={handleChoosePlan} />
+            <PlanCard
+              key={plan.key}
+              plan={displayTier(plan)}
+              delayMs={80 + index * 60}
+              onChoose={handleChoosePlan}
+            />
           ))}
         </div>
 
@@ -183,7 +207,7 @@ function PricingPageInner() {
           {SUBSCRIPTION_TIERS.map((plan, index) => (
             <PlanCard
               key={plan.key}
-              plan={plan}
+              plan={displayTier(plan)}
               delayMs={200 + index * 60}
               onChoose={handleChoosePlan}
             />

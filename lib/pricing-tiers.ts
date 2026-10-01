@@ -9,10 +9,18 @@ export type PlanTier = {
   recommended?: boolean;
 };
 
+/** Format a USD amount from the API for display (e.g. "2.50"). */
+export function formatUsdAmount(amount: string | number | null | undefined): string {
+  const n = typeof amount === "number" ? amount : parseFloat(String(amount ?? ""));
+  if (!Number.isFinite(n)) return "";
+  return n.toFixed(2);
+}
+
 export const UNLOCK_TIERS: PlanTier[] = [
   {
     key: "mini",
     nameKey: "pricingPlanMiniName",
+    // Fallback only — pricing page overlays /payments/pricing.series_unlock_usd.
     price: "2.50",
     bulletKeys: ["pricingBulletUnlockEachSeries"],
     ctaKey: "pricingPlanMiniCta",

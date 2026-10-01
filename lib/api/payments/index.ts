@@ -25,6 +25,16 @@ export interface BakongPaymentIntentRead {
   merchant_name: string;
 }
 
+export interface CatalogPricingRead {
+  series_unlock_usd: string;
+  min_paid_usd: string;
+}
+
+/** Flat catalog amounts charged by checkout — keep UI in sync with the API. */
+export function getCatalogPricing(): Promise<CatalogPricingRead> {
+  return apiFetch<CatalogPricingRead>("/payments/pricing");
+}
+
 /** Inline Bakong KHQR checkout — no redirect. Poll getPaymentIntent(intent_id)
  * for status; the server actively checks Bakong on each poll (no webhook). */
 export function createMovieBakongIntent(contentId: string): Promise<BakongPaymentIntentRead> {

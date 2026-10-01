@@ -17,6 +17,7 @@ import { useSeriesWatch } from "@/hooks/watch/use-series-watch";
 import { posterThumbUrl } from "@/lib/api/core";
 import { primaryGenre } from "@/lib/catalog-filter";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
+import { formatUsdAmount } from "@/lib/pricing-tiers";
 
 // Lazy-loaded: pulls in hls.js, which we don't want in the initial bundle.
 const WatchPlayerSkeleton = dynamic(
@@ -217,7 +218,7 @@ export function WatchSeriesClient({
                       className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
                     >
                       <PlayCircle size={16} className="fill-white text-brand" aria-hidden />
-                      Buy · $2.50
+                      Buy · ${formatUsdAmount(series.unlock_price_usd) || "2.50"}
                     </button>
                   ) : null}
                   <FavouriteButton contentId={series.id} />

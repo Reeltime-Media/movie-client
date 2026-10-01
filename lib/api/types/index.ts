@@ -62,6 +62,8 @@ export interface SeriesRead {
   release_year: number | null;
   rating: string | null;
   monthly_price_usd: string | null;
+  /** One-time unlock charged at Bakong checkout (from API constant). */
+  unlock_price_usd?: string | null;
   poster_key: string | null;
   banner_key: string | null;
   trailer_url: string | null;
