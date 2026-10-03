@@ -24,6 +24,8 @@ export interface ContentListItemRead {
   title_km?: string | null;
   description: string | null;
   genres: string[];
+  /** Region code set in the admin (e.g. "CH", "KR", "Hindi", "US", "INDO"). */
+  region?: string | null;
   poster_key: string | null;
   banner_key: string | null;
   price_usd: string | null;
@@ -59,6 +61,8 @@ export interface SeriesRead {
   title_km?: string | null;
   description: string | null;
   genres: string[];
+  /** Region code taken from the episodes (series list endpoints only). */
+  region?: string | null;
   release_year: number | null;
   rating: string | null;
   monthly_price_usd: string | null;

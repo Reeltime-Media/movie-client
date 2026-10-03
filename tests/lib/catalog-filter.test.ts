@@ -5,8 +5,10 @@ import {
   genreKeyFromLabel,
   matchesGenre,
   matchesGenreLabel,
+  matchesRegion,
   matchesSearch,
   primaryGenre,
+  regionLabelKey,
   type CatalogSearchable,
 } from "@/lib/catalog-filter";
 
@@ -100,5 +102,39 @@ describe("collectGenreLabels", () => {
   it("ignores blank genre entries and duplicate genres within one item", () => {
     const items = [item({ genres: ["", "Action", "action"] })];
     expect(collectGenreLabels(items)).toEqual(["Action"]);
+  });
+});
+
+describe("matchesRegion", () => {
+  it("matches everything when no region is selected", () => {
+    expect(matchesRegion({ region: "CH" }, "")).toBe(true);
+    expect(matchesRegion({ region: null }, undefined)).toBe(true);
+  });
+
+  it("matches region codes case-insensitively", () => {
+    expect(matchesRegion({ region: "CH" }, "CH")).toBe(true);
+    expect(matchesRegion({ region: "Hindi" }, "hindi")).toBe(true);
+    expect(matchesRegion({ region: "INDO" }, " indo ")).toBe(true);
+  });
+
+  it("rejects other or missing regions", () => {
+    expect(matchesRegion({ region: "KR" }, "CH")).toBe(false);
+    expect(matchesRegion({ region: null }, "US")).toBe(false);
+    expect(matchesRegion({}, "US")).toBe(false);
+  });
+});
+
+describe("regionLabelKey", () => {
+  it("maps known region codes to the nav label for movies or series", () => {
+    expect(regionLabelKey("CH", "movies")).toBe("navChineseMovies");
+    expect(regionLabelKey("KR", "series")).toBe("navKoreanSeries");
+    expect(regionLabelKey("hindi", "movies")).toBe("navIndiaMovies");
+    expect(regionLabelKey("INDO", "series")).toBe("navIndonesiaSeries");
+    expect(regionLabelKey("US", "movies")).toBe("navCatHollywood");
+  });
+
+  it("returns undefined for empty or unknown codes", () => {
+    expect(regionLabelKey("", "movies")).toBeUndefined();
+    expect(regionLabelKey("XX", "movies")).toBeUndefined();
   });
 });

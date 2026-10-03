@@ -1,3 +1,4 @@
+import { CATALOG_REGIONS, type CatalogRegionCode } from "@/lib/catalog-filter";
 import type { TranslationKey } from "@/lib/i18n";
 
 type NavDropdownItem = {
@@ -16,26 +17,31 @@ export type NavLink = {
 };
 
 /**
- * Category entries for the Movies/Series dropdowns. Genre hrefs rely on the
- * matching genre label being set on content in the admin (e.g. "Khmer").
+ * Category entries for the Movies/Series dropdowns. Country entries filter on
+ * the region code set on content in the admin (e.g. `?region=CH`); the rest
+ * rely on the matching genre label being set (e.g. "Khmer").
  */
 function categoryDropdown(base: "/movies" | "/series"): NavDropdownItem[] {
   const forMovies = base === "/movies";
   const genre = (label: string) => `${base}?genre=${encodeURIComponent(label)}`;
+  const region = (code: CatalogRegionCode): NavDropdownItem => ({
+    labelKey: CATALOG_REGIONS[code][forMovies ? "movies" : "series"],
+    href: `${base}?region=${encodeURIComponent(code)}`,
+  });
   return [
     { labelKey: forMovies ? "navAllMovies" : "navAllSeries", href: base },
     { labelKey: "navCatFree", href: `${base}?free=1` },
     { labelKey: "genreAction", href: genre("Action") },
-    { labelKey: "navCatHollywood", href: genre("Hollywood") },
+    region("US"),
     { labelKey: "genreHorror", href: genre("Horror") },
     { labelKey: "navCatCartoon", href: genre("Cartoon") },
     { labelKey: "navCatLoveStory", href: genre("Love story") },
     { labelKey: forMovies ? "navKhmerMovies" : "navKhmerSeries", href: genre("Khmer") },
-    { labelKey: forMovies ? "navChineseMovies" : "navChineseSeries", href: genre("Chinese") },
-    { labelKey: forMovies ? "navKoreanMovies" : "navKoreanSeries", href: genre("Korean") },
-    { labelKey: forMovies ? "navIndiaMovies" : "navIndiaSeries", href: genre("India") },
+    region("CH"),
+    region("KR"),
+    region("Hindi"),
     { labelKey: forMovies ? "navJapanMovies" : "navJapanSeries", href: genre("Japan") },
-    { labelKey: forMovies ? "navIndonesiaMovies" : "navIndonesiaSeries", href: genre("Indonesia") },
+    region("INDO"),
   ];
 }
 

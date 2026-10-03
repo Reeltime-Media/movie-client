@@ -10,11 +10,11 @@ const SERIES_EPISODE_PREFETCH_LIMIT = 12;
 export const revalidate = 300;
 
 type SeriesPageProps = {
-  searchParams: Promise<{ genre?: string; free?: string }>;
+  searchParams: Promise<{ genre?: string; free?: string; region?: string }>;
 };
 
 export default async function SeriesPage({ searchParams }: SeriesPageProps) {
-  const { genre, free } = await searchParams;
+  const { genre, free, region } = await searchParams;
   // Short movies get their own page (/short-movies) — exclude them here so
   // the same series doesn't show up twice across the two catalogs.
   const seriesList = await listSeries({ short: false }).catch(swallow("series: load series", []));
@@ -32,6 +32,7 @@ export default async function SeriesPage({ searchParams }: SeriesPageProps) {
       seasons={seasons}
       initialGenreLabel={genre?.trim() ?? ""}
       initialFree={free === "1"}
+      region={region?.trim() ?? ""}
     />
   );
 }

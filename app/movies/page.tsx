@@ -7,11 +7,11 @@ import { swallow } from "@/lib/log";
 export const revalidate = 300;
 
 type MoviesPageProps = {
-  searchParams: Promise<{ genre?: string; free?: string }>;
+  searchParams: Promise<{ genre?: string; free?: string; region?: string }>;
 };
 
 export default async function MoviesPage({ searchParams }: MoviesPageProps) {
-  const { genre, free } = await searchParams;
+  const { genre, free, region } = await searchParams;
   const movies = await listMovies().catch(swallow("movies: load catalog", []));
 
   return (
@@ -19,6 +19,7 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
       movies={movies}
       initialGenreLabel={genre?.trim() ?? ""}
       initialFree={free === "1"}
+      region={region?.trim() ?? ""}
     />
   );
 }

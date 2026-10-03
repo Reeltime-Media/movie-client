@@ -20,7 +20,9 @@ import {
   collectGenreLabels,
   genreKeyFromLabel,
   matchesGenreLabel,
+  matchesRegion,
   matchesSearch,
+  regionLabelKey,
 } from "@/lib/catalog-filter";
 import { seasonsHaveFreeEpisodes } from "@/lib/api/series/series-free";
 import { swallow } from "@/lib/log";
@@ -41,6 +43,8 @@ type SeriesViewProps = {
   initialGenreLabel?: string;
   /** Show only series with free episodes (?free=1, e.g. from the nav dropdown). */
   initialFree?: boolean;
+  /** Region code from ?region= (e.g. "CH" from the nav dropdown), or empty for all. */
+  region?: string;
 };
 
 function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
@@ -93,6 +97,7 @@ export function SeriesView({
   seasons,
   initialGenreLabel = ALL_GENRES,
   initialFree = false,
+  region = "",
 }: SeriesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
@@ -117,6 +122,12 @@ export function SeriesView({
     setFreeOnly(initialFree);
     setPage(0);
   }
+  const [prevRegion, setPrevRegion] = useState(region);
+  if (prevRegion !== region) {
+    setPrevRegion(region);
+    setPage(0);
+  }
+  const regionTitleKey = regionLabelKey(region, "series");
 
   const genreOptions = useMemo(() => {
     const labels = collectGenreLabels(seriesList);
@@ -138,9 +149,10 @@ export function SeriesView({
         (s, i) =>
           matchesSearch(s, searchQuery) &&
           matchesGenreLabel(s, activeGenre || null) &&
+          matchesRegion(s, region) &&
           (!freeOnly || seasonsHaveFreeEpisodes(seasons[i] ?? [])),
       ),
-    [seriesList, seasons, searchQuery, activeGenre, freeOnly],
+    [seriesList, seasons, searchQuery, activeGenre, freeOnly, region],
   );
 
   const allPosters = useMemo(
@@ -162,7 +174,7 @@ export function SeriesView({
   const safePage = Math.min(page, totalPages - 1);
   const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
   const hasActiveFilters =
-    searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES || freeOnly;
+    searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES || freeOnly || region !== "";
 
   useEffect(() => {
     if (!loggedIn || !seriesList.length) return;
@@ -188,7 +200,7 @@ export function SeriesView({
             className={["rt-page-fade-up max-w-[18ch]", pageTitleOnHeroClassName].join(" ")}
             style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
           >
-            {t("seriesHeroTitle")}
+            {t(regionTitleKey ?? "seriesHeroTitle")}
           </h1>
         </div>
       </div>

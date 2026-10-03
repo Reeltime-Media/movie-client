@@ -28,6 +28,20 @@ const GENRE_KEY_TO_LABEL: Partial<Record<TranslationKey, string>> = {
   genreAnimation: "Animation",
 };
 
+/**
+ * Region codes stored on `content.region` (set in the admin), with the nav
+ * labels used for the Movies/Series dropdowns and the filtered page title.
+ */
+export const CATALOG_REGIONS = {
+  US: { movies: "navCatHollywood", series: "navCatHollywood" },
+  CH: { movies: "navChineseMovies", series: "navChineseSeries" },
+  KR: { movies: "navKoreanMovies", series: "navKoreanSeries" },
+  Hindi: { movies: "navIndiaMovies", series: "navIndiaSeries" },
+  INDO: { movies: "navIndonesiaMovies", series: "navIndonesiaSeries" },
+} as const satisfies Record<string, { movies: TranslationKey; series: TranslationKey }>;
+
+export type CatalogRegionCode = keyof typeof CATALOG_REGIONS;
+
 export type CatalogSearchable = {
   title: string;
   description?: string | null;
@@ -90,6 +104,32 @@ export function matchesGenreLabel(
   const needle = normalizeGenreLabel(label);
   const primary = primaryGenre(item.genres);
   return primary != null && normalizeGenreLabel(primary) === needle;
+}
+
+function normalizeRegion(code: string): string {
+  return code.trim().toLowerCase();
+}
+
+/** Match a region code from ?region= (case-insensitive); empty matches everything. */
+export function matchesRegion(
+  item: { region?: string | null },
+  code: string | null | undefined,
+): boolean {
+  if (!code?.trim()) return true;
+  return item.region != null && normalizeRegion(item.region) === normalizeRegion(code);
+}
+
+/** Nav label for a known region code (e.g. "CH" → "Chinese Movies"), else undefined. */
+export function regionLabelKey(
+  code: string | null | undefined,
+  kind: "movies" | "series",
+): TranslationKey | undefined {
+  if (!code?.trim()) return undefined;
+  const needle = normalizeRegion(code);
+  for (const [known, labels] of Object.entries(CATALOG_REGIONS)) {
+    if (normalizeRegion(known) === needle) return labels[kind];
+  }
+  return undefined;
 }
 
 export function filterByGenreLabel<T extends CatalogSearchable>(

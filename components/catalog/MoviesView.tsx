@@ -21,7 +21,9 @@ import {
   collectGenreLabels,
   genreKeyFromLabel,
   matchesGenreLabel,
+  matchesRegion,
   matchesSearch,
+  regionLabelKey,
 } from "@/lib/catalog-filter";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { ContentListItemRead } from "@/lib/api/types";
@@ -38,6 +40,8 @@ type MoviesViewProps = {
   initialGenreLabel?: string;
   /** Show only free movies (?free=1, e.g. from the nav dropdown). */
   initialFree?: boolean;
+  /** Region code from ?region= (e.g. "CH" from the nav dropdown), or empty for all. */
+  region?: string;
 };
 
 function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
@@ -97,6 +101,7 @@ export function MoviesView({
   movies,
   initialGenreLabel = ALL_GENRES,
   initialFree = false,
+  region = "",
 }: MoviesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
@@ -126,6 +131,12 @@ export function MoviesView({
     setFreeOnly(initialFree);
     setPage(0);
   }
+  const [prevRegion, setPrevRegion] = useState(region);
+  if (prevRegion !== region) {
+    setPrevRegion(region);
+    setPage(0);
+  }
+  const regionTitleKey = regionLabelKey(region, "movies");
 
   const genreOptions = useMemo(() => {
     const labels = collectGenreLabels(movies);
@@ -147,9 +158,10 @@ export function MoviesView({
         (m) =>
           matchesSearch(m, searchQuery) &&
           matchesGenreLabel(m, activeGenre || null) &&
+          matchesRegion(m, region) &&
           (!freeOnly || m.is_free),
       ),
-    [movies, searchQuery, activeGenre, freeOnly],
+    [movies, searchQuery, activeGenre, freeOnly, region],
   );
 
   const allPosters = useMemo(
@@ -174,7 +186,7 @@ export function MoviesView({
   const pagePosters = allPosters.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   const hasActiveFilters =
-    searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES || freeOnly;
+    searchQuery.trim().length > 0 || activeGenre !== ALL_GENRES || freeOnly || region !== "";
 
   useEffect(() => {
     if (!movies.length) return;
@@ -212,7 +224,7 @@ export function MoviesView({
             className={["rt-page-fade-up max-w-[18ch]", pageTitleOnHeroClassName].join(" ")}
             style={{ "--rt-enter-delay": "55ms" } as CSSProperties}
           >
-            {t("moviesTitle")}
+            {t(regionTitleKey ?? "moviesTitle")}
           </h1>
         </div>
       </div>
