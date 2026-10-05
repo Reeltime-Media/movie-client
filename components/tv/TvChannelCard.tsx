@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Loader2, Lock } from "lucide-react";
+import { CheckCircle2, Loader2, Lock, Play } from "lucide-react";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { posterUrl } from "@/lib/api/core";
@@ -52,7 +52,7 @@ export function TvChannelCard({
         onClick={() => onSelect(channel)}
         className={[
           "rt-card-hover group relative block aspect-video w-full overflow-hidden rounded-md border bg-surface-elevated transition-colors",
-          isSelected ? "border-brand" : "border-border hover:border-border-hover",
+          isSelected ? "border-brand ring-1 ring-brand/40" : "border-border hover:border-border-hover",
           isLive ? "cursor-pointer" : "cursor-not-allowed opacity-50",
         ].join(" ")}
       >
@@ -62,7 +62,7 @@ export function TvChannelCard({
             alt=""
             fill
             sizes="(min-width: 1024px) 220px, (min-width: 640px) 200px, 42vw"
-            className="object-contain p-5"
+            className="object-contain p-5 transition-transform duration-200 group-hover:scale-[1.04]"
           />
         ) : (
           <div
@@ -74,11 +74,22 @@ export function TvChannelCard({
           </div>
         )}
 
+        {/* Bottom gradient for selected / hover affordance */}
+        <div
+          aria-hidden
+          className={[
+            "pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-200",
+            isSelected
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
+          ].join(" ")}
+        />
+
         {/* Live/offline — top left */}
         <div className="absolute left-2 top-2 z-10">
           {isLive ? (
             <span className="inline-flex items-center gap-1 rounded-sm bg-brand px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white" aria-hidden />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" aria-hidden />
               {t("tvLive")}
             </span>
           ) : (
@@ -105,6 +116,22 @@ export function TvChannelCard({
           )}
         </div>
 
+        {/* Play / now-playing affordance */}
+        {isLive && !isLoading ? (
+          <div className="absolute inset-0 z-10 flex items-center justify-center">
+            {isSelected ? (
+              <span className="rounded-sm bg-brand px-2 py-1 text-[10px] font-bold tracking-[0.06em] text-white uppercase">
+                {t("tvNowPlaying")}
+              </span>
+            ) : (
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                <Play size={16} fill="currentColor" aria-hidden />
+                <span className="sr-only">{t("tvPlayChannel")}</span>
+              </span>
+            )}
+          </div>
+        ) : null}
+
         {isLoading ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
             <Loader2 size={22} className="animate-spin text-white" aria-hidden />
@@ -114,7 +141,13 @@ export function TvChannelCard({
 
       <p className="mt-2 truncate text-[13px] font-semibold text-text">{channel.name}</p>
       <p className="mt-0.5 text-[11px] font-medium text-text-muted">
-        {channel.is_free ? t("tvFree") : locked ? t("tvSubscriptionRequired") : t("tvSubscribed")}
+        {isSelected
+          ? t("tvNowPlaying")
+          : channel.is_free
+            ? t("tvFree")
+            : locked
+              ? t("tvSubscriptionRequired")
+              : t("tvSubscribed")}
       </p>
     </div>
   );

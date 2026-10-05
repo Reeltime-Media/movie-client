@@ -3,13 +3,19 @@ import type { TvChannelAuthorizeRead, TvChannelRead } from "../types";
 
 const _authCache = new Map<string, { url: string; expiresAt: number }>();
 
+/** Short TTL so home / TV pages don't freeze live vs offline for minutes. */
+const tvChannelsCache: RequestInit = {
+  next: { revalidate: 30 },
+} as RequestInit;
+
 /**
- * Public channel list — never cached client-side (unlike movies/series)
- * because `status` ("live" / "offline") needs to stay fresh, not sit behind
- * a multi-minute catalog TTL.
+ * Public channel list — short revalidate on the server so `status`
+ * ("live" / "offline") stays fresher than the multi-minute catalog TTL.
  */
-export function listTvChannels(): Promise<TvChannelRead[]> {
-  return apiFetch<TvChannelRead[]>("/tv/channels");
+export function listTvChannels(
+  init: RequestInit = tvChannelsCache,
+): Promise<TvChannelRead[]> {
+  return apiFetch<TvChannelRead[]>("/tv/channels", init);
 }
 
 /**

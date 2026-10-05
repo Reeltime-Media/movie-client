@@ -1,16 +1,14 @@
 import { ShortMoviesView } from "@/components/catalog/ShortMoviesView";
-import { listSeries, listEpisodes } from "@/lib/api/series";
-import type { SeasonRead } from "@/lib/api/types";
+import { listSeries } from "@/lib/api/series";
 import { swallow } from "@/lib/log";
 
 // Public catalog is cached/revalidated on the server (ISR), same as /series.
 export const revalidate = 300;
 
 export default async function ShortMoviesPage() {
+  // Free-episode CTAs use `free_episode_count` from the list API — skip the
+  // per-series listEpisodes fan-out that blocked this page.
   const seriesList = await listSeries({ short: true }).catch(swallow("short-movies: load series", []));
-  const seasons = await Promise.all(
-    seriesList.map((s) => listEpisodes(s.slug).catch(() => [] as SeasonRead[])),
-  );
 
-  return <ShortMoviesView seriesList={seriesList} seasons={seasons} />;
+  return <ShortMoviesView seriesList={seriesList} />;
 }

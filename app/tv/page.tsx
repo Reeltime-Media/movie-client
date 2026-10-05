@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { TvPageSkeleton } from "@/components/layout/skeletons/PageSkeletons";
 import { TvView } from "@/components/tv/TvView";
 import { listTvChannels } from "@/lib/api/tv";
 import { swallow } from "@/lib/log";
@@ -11,7 +13,13 @@ import { swallow } from "@/lib/log";
 export const dynamic = "force-dynamic";
 
 export default async function TvPage() {
-  const channels = await listTvChannels().catch(swallow("tv: load channels", []));
+  const channels = await listTvChannels({ cache: "no-store" }).catch(
+    swallow("tv: load channels", []),
+  );
 
-  return <TvView channels={channels} />;
+  return (
+    <Suspense fallback={<TvPageSkeleton />}>
+      <TvView channels={channels} />
+    </Suspense>
+  );
 }

@@ -73,6 +73,8 @@ export interface SeriesRead {
   trailer_url: string | null;
   is_published: boolean;
   is_short_movie: boolean;
+  /** Published free episode count from list endpoints (0 if unknown). */
+  free_episode_count?: number;
   created_at: string;
   updated_at: string;
 }

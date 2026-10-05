@@ -12,6 +12,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { TvChannelRail } from "@/components/tv/TvChannelRail";
 import { listPurchases } from "@/lib/api/purchases";
 import { listWatchProgress } from "@/lib/api/playback";
 import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
@@ -23,7 +24,12 @@ import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
 import type { HeroFeaturedSlide } from "@/lib/api/catalog";
 import type { PromotionBannerRead } from "@/lib/api/catalog";
-import type { ContentListItemRead, SeriesRead, WatchProgressRead } from "@/lib/api/types";
+import type {
+  ContentListItemRead,
+  SeriesRead,
+  TvChannelRead,
+  WatchProgressRead,
+} from "@/lib/api/types";
 
 type HomeViewProps = {
   movies: ContentListItemRead[];
@@ -31,6 +37,7 @@ type HomeViewProps = {
   initialTrending: PosterCardProps[];
   initialFreeToday: PosterCardProps[];
   initialComingSoon: PosterCardProps[];
+  tvChannels: TvChannelRead[];
   promotionBanners: PromotionBannerRead[];
   heroFeatured: HeroFeaturedSlide[];
 };
@@ -43,6 +50,7 @@ export function HomeView({
   initialTrending,
   initialFreeToday,
   initialComingSoon,
+  tvChannels,
   promotionBanners,
   heroFeatured,
 }: HomeViewProps) {
@@ -183,6 +191,17 @@ export function HomeView({
         />
       </div>
 
+      {tvChannels.length > 0 ? (
+        <ScrollReveal as="section" className="pt-8 pb-6">
+          <TvChannelRail
+            channels={tvChannels}
+            isEntitled={(channel) =>
+              channel.is_free || (loggedIn && hasSubscription) || isAdmin
+            }
+          />
+        </ScrollReveal>
+      ) : null}
+
       {initialFreeToday.length > 0 && (
         <ScrollReveal as="section" className="pt-8 pb-6">
           <SectionHeader title={t("homeFreeTodayTitle")} scrollRef={freeTodayRailRef} />
@@ -190,17 +209,17 @@ export function HomeView({
         </ScrollReveal>
       )}
 
+      <ScrollReveal as="section" className="pt-8 pb-6">
+        <SectionHeader title={t("homeMostWatchedTitle")} showSeeAll seeAllHref="/movies" seeAllLabel={t("sectionSeeAll")} />
+        <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
+      </ScrollReveal>
+
       {initialComingSoon.length > 0 && (
         <ScrollReveal as="section" className="pt-8 pb-6">
           <SectionHeader title={t("homeComingSoonTitle")} scrollRef={comingSoonRailRef} />
           <PosterScrollRail posters={initialComingSoon} gutter="sm" scrollRef={comingSoonRailRef} />
         </ScrollReveal>
       )}
-
-      <ScrollReveal as="section" className="pt-8 pb-6">
-        <SectionHeader title={t("homeMostWatchedTitle")} showSeeAll seeAllHref="/movies" seeAllLabel={t("sectionSeeAll")} />
-        <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
-      </ScrollReveal>
 
       <section className="pt-8 pb-6">
         <SectionHeader

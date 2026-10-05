@@ -84,8 +84,13 @@ export function seriesToPoster(
     typeof options === "boolean" ? { hasSubscription: options } : (options ?? {});
   const hasSubscription = Boolean(opts.hasSubscription) || Boolean(opts.isAdmin);
   const seasons = opts.seasons ?? [];
-  const hasFreeEpisodes = seasonsHaveFreeEpisodes(seasons);
-  const firstFree = hasFreeEpisodes ? findFirstFreeEpisode(seasons) : null;
+  const firstFree = findFirstFreeEpisode(seasons);
+  // Prefer concrete free-episode coords when seasons were prefetched; otherwise
+  // trust the list payload's free_episode_count (avoids N+1 episode fetches).
+  const hasFreeEpisodes =
+    firstFree !== null ||
+    seasonsHaveFreeEpisodes(seasons) ||
+    (series.free_episode_count ?? 0) > 0;
 
   let watchLabel = "View series";
   let watchHref = `/watch/series/${series.slug}/1/1`;
@@ -95,6 +100,8 @@ export function seriesToPoster(
   } else if (firstFree) {
     watchLabel = "Watch now";
     watchHref = freeEpisodeWatchHref(series.slug, firstFree);
+  } else if (hasFreeEpisodes) {
+    watchLabel = "Watch now";
   } else {
     watchLabel = "View series";
   }

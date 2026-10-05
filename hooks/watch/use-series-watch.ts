@@ -162,7 +162,12 @@ export function useSeriesWatch({
     let cancelled = false;
     const isFree = episode.is_free === true;
 
-    const progressPromise = getWatchProgress(episode.id).catch(() => null);
+    // Guests have no watch-progress row — and the endpoint requires login,
+    // so calling it unconditionally would 401 and trip the global
+    // redirect-to-login interceptor before our own .catch() ever runs.
+    const progressPromise = loggedIn
+      ? getWatchProgress(episode.id).catch(() => null)
+      : Promise.resolve(null);
 
     const resolvePlayback = async () => {
       if (isFree || isAdmin) {

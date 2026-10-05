@@ -15,6 +15,8 @@ type CinematicDecorProps = {
    * (e.g. movies/series hero). Ignored when the strip is already in an inset card.
    */
   viewportBleed?: boolean;
+  /** Horizontal alignment of hero copy. Default keeps left-aligned catalog heroes. */
+  contentAlign?: "start" | "center";
   children: ReactNode;
 };
 
@@ -27,11 +29,13 @@ export function CinematicDecor({
   minHeightClass = "min-h-[220px] sm:min-h-[260px] md:min-h-[300px]",
   showBrandGlow = false,
   viewportBleed = false,
+  contentAlign = "start",
   children,
 }: CinematicDecorProps) {
   const bleed = viewportBleed
     ? "relative left-auto rt-full-bleed shrink-0"
     : "relative";
+  const centered = contentAlign === "center";
 
   return (
     <div
@@ -47,7 +51,12 @@ export function CinematicDecor({
       {showBrandGlow ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_0%_-20%,rgba(229,9,20,0.22),transparent_55%)]"
+          className={[
+            "pointer-events-none absolute inset-0",
+            centered
+              ? "bg-[radial-gradient(ellipse_80%_70%_at_50%_-10%,rgba(229,9,20,0.22),transparent_55%)]"
+              : "bg-[radial-gradient(ellipse_100%_70%_at_0%_-20%,rgba(229,9,20,0.22),transparent_55%)]",
+          ].join(" ")}
         />
       ) : null}
       <div
@@ -57,9 +66,21 @@ export function CinematicDecor({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-black/10 md:from-black/80 md:via-black/35"
+        className={[
+          "pointer-events-none absolute inset-0",
+          centered
+            ? "bg-gradient-to-b from-black/55 via-black/45 to-black/80"
+            : "bg-gradient-to-r from-black/85 via-black/40 to-black/10 md:from-black/80 md:via-black/35",
+        ].join(" ")}
       />
-      <div className="relative z-[1] flex min-h-[inherit] flex-col justify-end px-6 py-8 md:px-8 md:pb-10 md:pt-14">
+      <div
+        className={[
+          "relative z-[1] flex min-h-[inherit] flex-col px-6 py-8 md:px-8 md:pb-10 md:pt-14",
+          centered
+            ? "items-center justify-center text-center"
+            : "justify-end",
+        ].join(" ")}
+      >
         {children}
       </div>
     </div>

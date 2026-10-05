@@ -83,7 +83,7 @@ export function BakongCheckoutModal({
       }
       if (closedRef.current || gen !== genRef.current) return;
 
-      if (intent.status === "succeeded") {
+      if (intent.status === "succeeded" || intent.status === "superseded") {
         invalidatePurchasesCache();
         void prefetchPlaybackUrl(contentId);
         setStatus("succeeded");
@@ -108,7 +108,7 @@ export function BakongCheckoutModal({
       try {
         const intent = await createMovieBakongIntent(contentId);
         if (closedRef.current || gen !== genRef.current) return;
-        if (intent.status === "succeeded") {
+        if (intent.status === "succeeded" || intent.status === "superseded") {
           invalidatePurchasesCache();
           void prefetchPlaybackUrl(contentId);
           setStatus("succeeded");

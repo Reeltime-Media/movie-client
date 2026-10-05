@@ -1,10 +1,20 @@
 "use client";
 
-import { AlertCircle, Loader2, LogIn, Lock, Radio, Tv as TvIcon, X } from "lucide-react";
+import {
+  AlertCircle,
+  Loader2,
+  LogIn,
+  Lock,
+  PlayCircle,
+  Radio,
+  Tv as TvIcon,
+  X,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CinematicDecor } from "@/components/home/CinematicDecor";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
@@ -42,10 +52,12 @@ type Selection =
   | { status: "offline"; channel: TvChannelRead }
   | { status: "error"; channel: TvChannelRead; message: string };
 
+type ChannelFilter = "all" | "live" | "free";
+
 function LiveBadge({ label }: { label: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-sm bg-brand px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-white">
-      <span className="h-1.5 w-1.5 rounded-full bg-white" aria-hidden />
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" aria-hidden />
       {label}
     </span>
   );
@@ -87,7 +99,10 @@ function StatusBand({
   const { channel } = selection;
 
   return (
-    <section className="rt-page-fade-up border-b border-border">
+    <section
+      id="tv-player"
+      className="rt-page-fade-up scroll-mt-16 border-b border-border"
+    >
       <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 md:px-8">
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-[14px] font-bold text-text">{channel.name}</span>
@@ -163,9 +178,33 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
   const { loggedIn } = useAuth();
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
+  const searchParams = useSearchParams();
+  const channelParam = searchParams.get("channel");
   const [hasSubscription, setHasSubscription] = useState(false);
   const [selection, setSelection] = useState<Selection>({ status: "idle" });
+  const [filter, setFilter] = useState<ChannelFilter>("all");
   const selectionGenRef = useRef(0);
+  const deepLinkedParamRef = useRef<string | null>(null);
+  const channelGridRef = useRef<HTMLElement | null>(null);
+
+  const liveCount = useMemo(
+    () => channels.filter((c) => c.status === "live").length,
+    [channels],
+  );
+  const freeCount = useMemo(
+    () => channels.filter((c) => c.is_free).length,
+    [channels],
+  );
+  const firstFreeLive = useMemo(
+    () => channels.find((c) => c.is_free && c.status === "live") ?? null,
+    [channels],
+  );
+
+  const filteredChannels = useMemo(() => {
+    if (filter === "live") return channels.filter((c) => c.status === "live");
+    if (filter === "free") return channels.filter((c) => c.is_free);
+    return channels;
+  }, [channels, filter]);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -232,10 +271,40 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
     [loggedIn, t],
   );
 
+  // Home rail deep-links with `/tv?channel={slug}` — auto-select once per param.
+  useEffect(() => {
+    if (!channelParam || channels.length === 0) return;
+    if (deepLinkedParamRef.current === channelParam) return;
+    const match = channels.find(
+      (channel) => channel.slug === channelParam || channel.id === channelParam,
+    );
+    if (!match) return;
+    deepLinkedParamRef.current = channelParam;
+    selectChannel(match);
+  }, [channelParam, channels, selectChannel]);
+
+  const selectedChannelId = selection.status === "idle" ? null : selection.channel.id;
+
+  // Bring the player into view when a channel is selected.
+  useEffect(() => {
+    if (!selectedChannelId) return;
+    document.getElementById("tv-player")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedChannelId]);
+
   const closeBand = useCallback(() => {
     selectionGenRef.current += 1;
     setSelection({ status: "idle" });
   }, []);
+
+  const browseChannels = useCallback(() => {
+    channelGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const filters: { id: ChannelFilter; label: string; count: number }[] = [
+    { id: "all", label: t("tvFilterAll"), count: channels.length },
+    { id: "live", label: t("tvFilterLive"), count: liveCount },
+    { id: "free", label: t("tvFilterFree"), count: freeCount },
+  ];
 
   return (
     <PageShell fullWidth>
@@ -244,9 +313,11 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
         imageDescription="A dark theater with rows of empty seats"
         showBrandGlow
         viewportBleed
+        contentAlign="center"
+        minHeightClass="min-h-[280px] sm:min-h-[320px] md:min-h-[360px]"
       >
         <span
-          className={["rt-page-fade-up mb-3 inline-flex", kickerBadgeClassName].join(" ")}
+          className={["rt-page-fade-up mb-3 w-fit", kickerBadgeClassName].join(" ")}
           style={{ "--rt-enter-delay": "40ms" } as CSSProperties}
         >
           <Radio size={12} aria-hidden />
@@ -259,11 +330,49 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
           {t("tvHeroTitle")}
         </h1>
         <p
-          className="rt-page-fade-up mt-2 max-w-lg text-[13px] leading-relaxed text-white/70"
+          className="rt-page-fade-up mx-auto mt-2 max-w-lg text-[13px] leading-relaxed text-white/70"
           style={{ "--rt-enter-delay": "140ms" } as CSSProperties}
         >
           {t("tvHeroDesc")}
         </p>
+
+        {channels.length > 0 ? (
+          <div
+            className="rt-page-fade-up mt-5 flex flex-col items-center gap-4"
+            style={{ "--rt-enter-delay": "200ms" } as CSSProperties}
+          >
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {firstFreeLive ? (
+                <button
+                  type="button"
+                  onClick={() => selectChannel(firstFreeLive)}
+                  className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-brand-hover"
+                >
+                  <PlayCircle size={15} aria-hidden />
+                  {t("tvHeroWatchFree")}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={browseChannels}
+                className="inline-flex items-center justify-center rounded-md border border-white/18 bg-white/12 px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-white/20"
+              >
+                {t("tvHeroBrowse")}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] font-medium text-white/65">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand" aria-hidden />
+                {t("tvHeroLiveCount").replace("{count}", String(liveCount))}
+              </span>
+              <span className="text-white/25" aria-hidden>
+                ·
+              </span>
+              <span>{t("tvHeroFreeCount").replace("{count}", String(freeCount))}</span>
+            </div>
+          </div>
+        ) : null}
       </CinematicDecor>
 
       {selection.status !== "idle" ? (
@@ -271,27 +380,82 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
       ) : null}
 
       <section
-        className="rt-page-fade-up px-4 py-6 sm:px-6 md:px-8"
+        ref={channelGridRef}
+        id="tv-channels"
+        className="rt-page-fade-up scroll-mt-20 px-4 py-6 sm:px-6 md:px-8"
         style={{ "--rt-enter-delay": "220ms" } as CSSProperties}
       >
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-[17px] font-bold tracking-[-0.01em] text-text">
-            {t("tvSectionAllChannels")}
-          </h2>
-          {selection.status === "idle" && channels.length > 0 ? (
-            <p className="text-[12px] text-text-muted">{t("tvSelectPrompt")}</p>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-[17px] font-bold tracking-[-0.01em] text-text">
+              {t("tvSectionAllChannels")}
+            </h2>
+            {selection.status === "idle" && channels.length > 0 ? (
+              <p className="mt-1 text-[12px] text-text-muted">{t("tvSelectPrompt")}</p>
+            ) : null}
+          </div>
+
+          {channels.length > 0 ? (
+            <div
+              role="tablist"
+              aria-label={t("tvFilterAria")}
+              className="flex flex-wrap gap-1.5"
+            >
+              {filters.map((item) => {
+                const active = filter === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setFilter(item.id)}
+                    className={[
+                      "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-semibold transition-colors",
+                      active
+                        ? "bg-brand text-white"
+                        : "border border-border bg-surface text-text-muted hover:border-border-hover hover:text-text",
+                    ].join(" ")}
+                  >
+                    {item.label}
+                    <span
+                      className={[
+                        "rounded-sm px-1 text-[10px] font-bold tabular-nums",
+                        active ? "bg-white/20 text-white" : "bg-surface-elevated text-text-disabled",
+                      ].join(" ")}
+                    >
+                      {item.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           ) : null}
         </div>
 
         {channels.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-16 text-center">
-            <TvIcon size={28} className="text-text-disabled" aria-hidden />
-            <p className="text-[14px] font-semibold text-text-muted">{t("tvEmptyTitle")}</p>
-            <p className="max-w-sm text-[13px] text-text-disabled">{t("tvEmptyDesc")}</p>
+          <div className="flex flex-col items-center gap-3 rounded-md border border-border bg-surface px-6 py-16 text-center">
+            <div className="grid h-12 w-12 place-items-center rounded-md border border-border bg-surface-elevated text-text-muted">
+              <TvIcon size={22} aria-hidden />
+            </div>
+            <p className="text-[14px] font-semibold text-text">{t("tvEmptyTitle")}</p>
+            <p className="max-w-sm text-[13px] leading-relaxed text-text-muted">{t("tvEmptyDesc")}</p>
+          </div>
+        ) : filteredChannels.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-md border border-border bg-surface px-6 py-12 text-center">
+            <p className="text-[14px] font-semibold text-text">{t("tvFilterEmptyTitle")}</p>
+            <p className="max-w-sm text-[13px] text-text-muted">{t("tvFilterEmptyDesc")}</p>
+            <button
+              type="button"
+              onClick={() => setFilter("all")}
+              className="mt-2 rounded-md border border-border bg-surface-elevated px-4 py-2 text-[12px] font-semibold text-text transition-colors hover:border-border-hover"
+            >
+              {t("tvFilterAll")}
+            </button>
           </div>
         ) : (
           <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-            {channels.map((channel) => (
+            {filteredChannels.map((channel) => (
               <li key={channel.id}>
                 <TvChannelCard
                   channel={channel}

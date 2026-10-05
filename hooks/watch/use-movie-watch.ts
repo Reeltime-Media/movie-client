@@ -6,12 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { getMovie } from "@/lib/api/movies";
-import { listPurchases } from "@/lib/api/purchases";
-import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
 import type { ContentRead } from "@/lib/api/types";
 import { getWatchProgress } from "@/lib/api/playback";
 import { isAdminUser } from "@/lib/auth/is-admin";
-import { swallow } from "@/lib/log";
 import {
   getCachedPlaybackUrl,
   prefetchPlaybackUrl,
@@ -22,6 +19,14 @@ function isMovieFree(movie: ContentRead) {
   // "Free movies today" picks are free regardless of their normal price.
   if (movie.is_free_today) return true;
   return !movie.price_usd || parseFloat(movie.price_usd) === 0;
+}
+
+type ApiError = Error & { status?: number };
+
+function isForbidden(err: unknown): boolean {
+  return Boolean(
+    err && typeof err === "object" && "status" in err && Number((err as ApiError).status) === 403,
+  );
 }
 
 /**
@@ -45,6 +50,15 @@ function startingPlaybackState(
   return { canPlay: free || isAdmin, playbackUrl: null, playbackLoading: true };
 }
 
+async function loadResumeTime(contentId: string, loggedIn: boolean): Promise<number | null> {
+  if (!loggedIn) return null;
+  const progress = await getWatchProgress(contentId).catch(() => null);
+  if (progress && !progress.completed && progress.position_seconds > 0) {
+    return progress.position_seconds;
+  }
+  return null;
+}
+
 type UseMovieWatchOptions = {
   /** When provided (e.g. from Server Component), skips the initial metadata fetch. */
   initialMovie?: ContentRead | null;
@@ -59,6 +73,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
   const isSeeded = Boolean(initialMovie && initialMovie.slug === slug);
   const seedMovie = isSeeded ? initialMovie : null;
   const seedPlayback = startingPlaybackState(seedMovie, isAdmin);
+  const seedIsFree = seedMovie ? isMovieFree(seedMovie) : false;
 
   const [movie, setMovie] = useState<ContentRead | null>(seedMovie);
   const [loading, setLoading] = useState(!isSeeded && Boolean(slug));
@@ -77,9 +92,10 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     setLoading(!isSeeded && Boolean(slug));
   }
 
-  // Reset playback state when the entitlement inputs change; the effect below
-  // re-resolves entitlement asynchronously after each such change.
-  const playbackKey = `${slug}|${loggedIn}|${isAdmin}`;
+  // Free movies don't depend on login — omit loggedIn from the key so auth
+  // hydration doesn't tear down a stream that already started for a guest.
+  const playbackKey =
+    seedIsFree || isAdmin ? `${slug}|free|${isAdmin}` : `${slug}|${loggedIn}|${isAdmin}`;
   const [prevPlaybackKey, setPrevPlaybackKey] = useState(playbackKey);
   if (prevPlaybackKey !== playbackKey) {
     setPrevPlaybackKey(playbackKey);
@@ -101,76 +117,54 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
 
     let cancelled = false;
 
+    async function startPlayback(m: ContentRead) {
+      const cachedUrl = getCachedPlaybackUrl(m.id);
+      if (cachedUrl) {
+        setPlaybackUrl(cachedUrl);
+        setPlaybackLoading(false);
+      } else {
+        setPlaybackLoading(true);
+      }
+
+      // Progress must NOT gate the stream URL — a 404 resume lookup was adding
+      // a full RTT before the player could mount. Apply it after authorize.
+      const progressPromise = loadResumeTime(m.id, loggedIn);
+
+      try {
+        const url = await resolvePlaybackUrl(m.id);
+        if (cancelled) return;
+        setCanPlay(true);
+        setPlaybackUrl(url);
+        setPlaybackLoading(false);
+      } catch (err) {
+        if (cancelled) return;
+        if (isForbidden(err)) {
+          setCanPlay(false);
+          setPlaybackUrl(null);
+          setResumeTime(null);
+          setPlaybackLoading(false);
+          return;
+        }
+        setPlaybackUrl(null);
+        setPlaybackLoading(false);
+        return;
+      }
+
+      const resume = await progressPromise;
+      if (!cancelled && resume !== null) setResumeTime(resume);
+    }
+
     async function resolveEntitlement(m: ContentRead) {
       const free = isMovieFree(m);
 
       if (free || isAdmin) {
-        // Guests have no watch-progress row — and the endpoint requires login,
-        // so calling it unconditionally would 401 and trip the global
-        // redirect-to-login interceptor before our own .catch() ever runs.
-        const progressPromise = loggedIn
-          ? getWatchProgress(m.id).catch(() => null)
-          : Promise.resolve(null);
-        const playbackPromise = resolvePlaybackUrl(m.id);
-
-        try {
-          const [progress, url] = await Promise.all([progressPromise, playbackPromise]);
-          if (cancelled) return;
-          setCanPlay(true);
-          if (progress && !progress.completed && progress.position_seconds > 0) {
-            setResumeTime(progress.position_seconds);
-          } else {
-            setResumeTime(null);
-          }
-          setPlaybackUrl(url);
-        } catch {
-          if (!cancelled) setPlaybackUrl(null);
-        } finally {
-          if (!cancelled) setPlaybackLoading(false);
-        }
+        await startPlayback(m);
         return;
       }
 
-      const purchasesPromise = listPurchases().catch(swallow("watch: load purchases", []));
-      const subsPromise = loggedIn
-        ? listMySubscriptions().catch(swallow("watch: load subscriptions", []))
-        : Promise.resolve([]);
-      const playbackPromise = getCachedPlaybackUrl(m.id)
-        ? resolvePlaybackUrl(m.id)
-        : prefetchPlaybackUrl(m.id).then((url) => url ?? resolvePlaybackUrl(m.id));
-
-      try {
-        const [purchases, subs, url, progress] = await Promise.all([
-          purchasesPromise,
-          subsPromise,
-          playbackPromise,
-          loggedIn ? getWatchProgress(m.id).catch(() => null) : Promise.resolve(null),
-        ]);
-        if (cancelled) return;
-
-        const entitled =
-          purchases.some((p) => p.content_id === m.id) || hasActiveSubscription(subs);
-        setCanPlay(entitled);
-        if (entitled) {
-          if (progress && !progress.completed && progress.position_seconds > 0) {
-            setResumeTime(progress.position_seconds);
-          } else {
-            setResumeTime(null);
-          }
-          setPlaybackUrl(url);
-        } else {
-          setResumeTime(null);
-          setPlaybackUrl(null);
-        }
-      } catch {
-        if (!cancelled) {
-          setCanPlay(false);
-          setPlaybackUrl(null);
-          setResumeTime(null);
-        }
-      } finally {
-        if (!cancelled) setPlaybackLoading(false);
-      }
+      // Authorize is the source of truth for entitlement (server re-checks).
+      // Don't wait on purchases/subscriptions lists — those were doubling TTFF.
+      await startPlayback(m);
     }
 
     if (initialMovie && initialMovie.slug === slug) {
@@ -180,53 +174,21 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
       };
     }
 
-    const purchasesPromise = listPurchases().catch(swallow("watch: load purchases", []));
-    const subsPromise = loggedIn
-      ? listMySubscriptions().catch(swallow("watch: load subscriptions", []))
-      : Promise.resolve([]);
-
-    Promise.all([getMovie(slug), purchasesPromise, subsPromise])
-      .then(async ([m, purchases, subs]) => {
+    // Unseeded: fetch movie metadata first, then start playback. Purchases/subs
+    // stay off the critical path (authorize decides).
+    getMovie(slug)
+      .then(async (m) => {
         if (cancelled) return;
         setMovie(m);
-
         const free = isMovieFree(m);
-        const entitled =
-          isAdmin ||
-          free ||
-          purchases.some((p) => p.content_id === m.id) ||
-          hasActiveSubscription(subs);
-        setCanPlay(entitled);
-
-        if (!entitled) {
-          setPlaybackUrl(null);
-          setResumeTime(null);
+        if (free || isAdmin) {
+          setCanPlay(true);
+          await startPlayback(m);
           return;
         }
-
-        const cachedUrl = getCachedPlaybackUrl(m.id);
-        if (cachedUrl) {
-          setPlaybackUrl(cachedUrl);
-          setPlaybackLoading(false);
-        } else {
-          setPlaybackLoading(true);
-        }
-
-        try {
-          const [progress, url] = await Promise.all([
-            loggedIn ? getWatchProgress(m.id).catch(() => null) : Promise.resolve(null),
-            resolvePlaybackUrl(m.id),
-          ]);
-          if (cancelled) return;
-          if (progress && !progress.completed && progress.position_seconds > 0) {
-            setResumeTime(progress.position_seconds);
-          }
-          setPlaybackUrl(url);
-        } catch {
-          if (!cancelled) setPlaybackUrl(null);
-        } finally {
-          if (!cancelled) setPlaybackLoading(false);
-        }
+        // Optimistic loading spinner while authorize decides.
+        setPlaybackLoading(true);
+        await startPlayback(m);
       })
       .catch(() => !cancelled && setNotFound(true))
       .finally(() => !cancelled && setLoading(false));

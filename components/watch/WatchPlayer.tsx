@@ -248,7 +248,9 @@ export function WatchPlayer({
 
     if (Hls.isSupported()) {
       const hls = new Hls({
-        startLevel: -1,
+        // VOD: start at the lowest rung so the first fragment is small, then
+        // ABR climbs. Live keeps auto (-1) so we stay near the live edge.
+        startLevel: live ? -1 : 0,
         capLevelToPlayerSize: true,
         // Fetch the first fragment as soon as the manifest is known, in parallel
         // with media attach, so the first frame paints sooner.
@@ -356,7 +358,15 @@ export function WatchPlayer({
         video.load();
       };
     }
-  }, [hlsSrc, fallbackSrc, live, initialTime, applyPendingSeek, updateProgressUi]);
+  }, [hlsSrc, fallbackSrc, live, applyPendingSeek, updateProgressUi]);
+
+  // Resume can arrive after authorize (progress is intentionally off the
+  // critical path). Apply a late seek without tearing down the HLS instance.
+  useEffect(() => {
+    if (!(initialTime > 0)) return;
+    pendingSeekRef.current = initialTime;
+    applyPendingSeek();
+  }, [initialTime, applyPendingSeek]);
 
   useEffect(() => {
     const video = videoRef.current;

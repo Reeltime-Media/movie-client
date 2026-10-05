@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { seriesToPoster } from "@/lib/api/mappers";
 import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
-import type { SeasonRead, SeriesRead } from "@/lib/api/types";
+import type { SeriesRead } from "@/lib/api/types";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { marketingImages } from "@/lib/marketing-images";
 import { swallow } from "@/lib/log";
@@ -20,10 +20,9 @@ import { kickerBadgeClassName } from "@/lib/ui/surfaces";
 
 type ShortMoviesViewProps = {
   seriesList: SeriesRead[];
-  seasons: SeasonRead[][];
 };
 
-export function ShortMoviesView({ seriesList, seasons }: ShortMoviesViewProps) {
+export function ShortMoviesView({ seriesList }: ShortMoviesViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
   const { user } = useUser();
@@ -46,10 +45,8 @@ export function ShortMoviesView({ seriesList, seasons }: ShortMoviesViewProps) {
 
   const posters = useMemo(
     () =>
-      seriesList.map((s, i) =>
-        seriesToPoster(s, i, { hasSubscription, isAdmin, seasons: seasons[i] ?? [] }),
-      ),
-    [seriesList, seasons, hasSubscription, isAdmin],
+      seriesList.map((s, i) => seriesToPoster(s, i, { hasSubscription, isAdmin })),
+    [seriesList, hasSubscription, isAdmin],
   );
 
   return (

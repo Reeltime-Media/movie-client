@@ -2,6 +2,11 @@ export function movieWatchHref(slug: string): string {
   return `/watch?slug=${encodeURIComponent(slug)}`;
 }
 
+/** Live TV page with the given channel pre-selected (auto-starts if live). */
+export function tvChannelHref(channelSlug: string): string {
+  return `/tv?channel=${encodeURIComponent(channelSlug)}`;
+}
+
 /**
  * Marker href for unpaid movies. Flip cards detect this and open the Bakong
  * modal instead of navigating. Visiting the URL redirects to `/watch`.

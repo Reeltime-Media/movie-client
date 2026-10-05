@@ -72,7 +72,7 @@ export function SubscriptionBakongCheckoutModal({
       }
       if (closedRef.current || gen !== genRef.current) return;
 
-      if (intent.status === "succeeded") {
+      if (intent.status === "succeeded" || intent.status === "superseded") {
         invalidateSubscriptionsCache();
         setStatus("succeeded");
         return;

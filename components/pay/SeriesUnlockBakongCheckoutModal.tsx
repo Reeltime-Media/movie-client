@@ -74,7 +74,7 @@ export function SeriesUnlockBakongCheckoutModal({
       }
       if (closedRef.current || gen !== genRef.current) return;
 
-      if (intent.status === "succeeded") {
+      if (intent.status === "succeeded" || intent.status === "superseded") {
         invalidatePurchasesCache();
         setStatus("succeeded");
         return;

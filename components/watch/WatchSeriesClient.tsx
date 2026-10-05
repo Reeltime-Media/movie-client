@@ -14,7 +14,7 @@ import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody, WatchPlayerBand } from "@/components/watch/WatchPageSection";
 import { WatchSeriesEpisodes } from "@/components/watch/WatchSeriesEpisodes";
 import { useSeriesWatch } from "@/hooks/watch/use-series-watch";
-import { posterThumbUrl } from "@/lib/api/core";
+import { posterThumbUrl, posterUrl } from "@/lib/api/core";
 import { primaryGenre } from "@/lib/catalog-filter";
 import type { SeasonRead, SeriesRead } from "@/lib/api/types";
 import { formatUsdAmount } from "@/lib/pricing-tiers";
@@ -166,6 +166,7 @@ export function WatchSeriesClient({
               >
                 <CdnImage
                   src={posterThumbUrl(series.poster_key, 400, series.updated_at) ?? ""}
+                  fallbackSrc={posterUrl(series.poster_key, series.updated_at)}
                   alt={series.title}
                   fill
                   sizes="160px"

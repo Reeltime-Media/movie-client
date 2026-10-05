@@ -11,14 +11,14 @@ import { posterUrl } from "@/lib/api/core";
 import { listMovies } from "@/lib/api/movies";
 import { listPurchases } from "@/lib/api/purchases";
 import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
-import { listEpisodes, listSeries } from "@/lib/api/series";
+import { listSeries } from "@/lib/api/series";
 import { movieCardHref } from "@/lib/movie-routes";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
 import { primaryGenre } from "@/lib/catalog-filter";
-import type { ContentListItemRead, SeasonRead, SeriesRead } from "@/lib/api/types";
+import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
 
 
 function HighlightedText({ text, query }: { text: string; query: string }) {
@@ -42,7 +42,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 
 type SearchResult =
   | { kind: "movie"; data: ContentListItemRead; href: string }
-  | { kind: "series"; data: SeriesRead; episodeCount: number };
+  | { kind: "series"; data: SeriesRead; freeEpisodeCount: number };
 
 function ResultRow({ result, query }: { result: SearchResult; query: string }) {
   const imgSrc = posterUrl(result.data.poster_key, result.data.updated_at);
@@ -53,8 +53,8 @@ function ResultRow({ result, query }: { result: SearchResult; query: string }) {
 
   const subtitle =
     result.kind === "series"
-      ? result.episodeCount > 0
-        ? `${result.episodeCount} Episodes`
+      ? result.freeEpisodeCount > 0
+        ? `Free Ep ${result.freeEpisodeCount}`
         : "Series"
       : result.data.runtime
         ? result.data.runtime
@@ -151,20 +151,10 @@ function SearchPageInner() {
       purchasesPromise,
       subsPromise,
     ])
-      .then(async ([movies, seriesList, purchases, subs]) => {
+      .then(([movies, seriesList, purchases, subs]) => {
         if (cancelled) return;
         const ownedIds = new Set(purchases.map((p) => p.content_id));
         const hasSubscription = hasActiveSubscription(subs);
-
-        const episodeCounts = await Promise.all(
-          seriesList.map((s) =>
-            listEpisodes(s.slug)
-              .then((seasons: SeasonRead[]) =>
-                seasons.reduce((sum, season) => sum + season.episodes.length, 0),
-              )
-              .catch(() => 0),
-          ),
-        );
 
         const movieResults: SearchResult[] = movies.map((m) => {
           const isFree = !m.price_usd || parseFloat(m.price_usd) === 0;
@@ -176,10 +166,10 @@ function SearchPageInner() {
           };
         });
 
-        const seriesResults: SearchResult[] = seriesList.map((s, i) => ({
+        const seriesResults: SearchResult[] = seriesList.map((s) => ({
           kind: "series",
           data: s,
-          episodeCount: episodeCounts[i],
+          freeEpisodeCount: s.free_episode_count ?? 0,
         }));
 
         if (!cancelled) setFetched({ q, results: [...movieResults, ...seriesResults] });

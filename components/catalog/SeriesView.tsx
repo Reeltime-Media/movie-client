@@ -24,10 +24,9 @@ import {
   matchesSearch,
   regionLabelKey,
 } from "@/lib/catalog-filter";
-import { seasonsHaveFreeEpisodes } from "@/lib/api/series/series-free";
 import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
-import type { SeasonRead, SeriesRead } from "@/lib/api/types";
+import type { SeriesRead } from "@/lib/api/types";
 
 const COLS = 5;
 const ROWS = 4;
@@ -38,7 +37,6 @@ const ALL_GENRES = "";
 
 type SeriesViewProps = {
   seriesList: SeriesRead[];
-  seasons: SeasonRead[][];
   /** Raw genre label from ?genre= (e.g. "Khmer"), or empty for all. */
   initialGenreLabel?: string;
   /** Show only series with free episodes (?free=1, e.g. from the nav dropdown). */
@@ -94,7 +92,6 @@ function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
 
 export function SeriesView({
   seriesList,
-  seasons,
   initialGenreLabel = ALL_GENRES,
   initialFree = false,
   region = "",
@@ -146,28 +143,30 @@ export function SeriesView({
   const filteredSeries = useMemo(
     () =>
       seriesList.filter(
-        (s, i) =>
+        (s) =>
           matchesSearch(s, searchQuery) &&
           matchesGenreLabel(s, activeGenre || null) &&
           matchesRegion(s, region) &&
-          (!freeOnly || seasonsHaveFreeEpisodes(seasons[i] ?? [])),
+          (!freeOnly || (s.free_episode_count ?? 0) > 0),
       ),
-    [seriesList, seasons, searchQuery, activeGenre, freeOnly, region],
+    [seriesList, searchQuery, activeGenre, freeOnly, region],
   );
 
   const allPosters = useMemo(
-    () => filteredSeries.map((s) => {
-      const index = seriesList.findIndex((row) => row.id === s.id);
-      return seriesToPoster(s, index, { hasSubscription, isAdmin, seasons: seasons[index] ?? [] });
-    }),
-    [filteredSeries, seriesList, seasons, hasSubscription, isAdmin],
+    () =>
+      filteredSeries.map((s) => {
+        const index = seriesList.findIndex((row) => row.id === s.id);
+        return seriesToPoster(s, index, { hasSubscription, isAdmin });
+      }),
+    [filteredSeries, seriesList, hasSubscription, isAdmin],
   );
 
   const top10Posters = useMemo(
-    () => seriesList.slice(0, TOP_COUNT).map((s, i) =>
-      seriesToPoster(s, i, { hasSubscription, isAdmin, seasons: seasons[i] ?? [] }),
-    ),
-    [seriesList, seasons, hasSubscription, isAdmin],
+    () =>
+      seriesList
+        .slice(0, TOP_COUNT)
+        .map((s, i) => seriesToPoster(s, i, { hasSubscription, isAdmin })),
+    [seriesList, hasSubscription, isAdmin],
   );
 
   const totalPages = Math.max(1, Math.ceil(allPosters.length / PAGE_SIZE));

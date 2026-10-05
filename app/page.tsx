@@ -4,19 +4,22 @@ import { listHeroFeatured } from "@/lib/api/catalog";
 import { listMoviesPage } from "@/lib/api/movies";
 import { listPromotionBanners } from "@/lib/api/catalog";
 import { listSeriesPage } from "@/lib/api/series";
+import { listTvChannels } from "@/lib/api/tv";
 import { movieToPoster } from "@/lib/api/mappers";
 import { swallow } from "@/lib/log";
 
 /** Enough movies for trending + genre rails without draining the full catalog. */
 const HOME_MOVIE_LIMIT = 60;
 const HOME_SERIES_LIMIT = 12;
+/** Teaser of live TV on home — live channels first, then offline. */
+const HOME_TV_LIMIT = 12;
 
 // Public catalog is cached/revalidated on the server (ISR). Must be a literal —
 // Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
 export const revalidate = 300;
 
 export default async function Home() {
-  const [movies, seriesList, promotionBanners, heroFeatured, freeToday, comingSoon] =
+  const [movies, seriesList, promotionBanners, heroFeatured, freeToday, comingSoon, tvChannels] =
     await Promise.all([
       listMoviesPage(undefined, HOME_MOVIE_LIMIT).catch(swallow("home: load movies", [])),
       listSeriesPage(undefined, HOME_SERIES_LIMIT).catch(swallow("home: load series", [])),
@@ -24,7 +27,12 @@ export default async function Home() {
       listHeroFeatured("home").catch(swallow("home: load hero featured", [])),
       listFreeToday().catch(swallow("home: load free today", [])),
       listComingSoon().catch(swallow("home: load coming soon", [])),
+      listTvChannels().catch(swallow("home: load tv channels", [])),
     ]);
+
+  const homeTvChannels = [...tvChannels]
+    .sort((a, b) => Number(b.status === "live") - Number(a.status === "live"))
+    .slice(0, HOME_TV_LIMIT);
 
   // Public (signed-out) posters, rendered into the initial HTML for a fast LCP.
   // HomeView re-derives entitlement badges client-side once the user is known.
@@ -51,6 +59,7 @@ export default async function Home() {
       initialTrending={initialTrending}
       initialFreeToday={initialFreeToday}
       initialComingSoon={initialComingSoon}
+      tvChannels={homeTvChannels}
       promotionBanners={promotionBanners}
       heroFeatured={heroFeatured}
     />

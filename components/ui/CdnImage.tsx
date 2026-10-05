@@ -22,7 +22,6 @@ function CdnImageInner({
   const resolvedFallback =
     fallbackSrc ||
     (/-w\d+\.[^.?#]+/.test(src) ? src.replace(/-w\d+(\.[^.?#]+)/, "$1") : undefined);
-
   const activeSrc = useFallback && resolvedFallback ? resolvedFallback : src;
   const skipOptimization = unoptimized ?? isR2ImageUrl(activeSrc);
 

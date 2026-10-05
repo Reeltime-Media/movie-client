@@ -96,12 +96,11 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     if (!canPlay && !loading) void warmQrCodeModule();
   }, [canPlay, loading]);
 
-  // Once we know the user can play, start downloading the player chunk right
-  // away so it lands before/while the tokenized playback URL resolves, rather
-  // than after. Skipped for paywalled viewers, who never mount the player.
+  // Warm hls.js (~200KB) on mount so it downloads in parallel with authorize,
+  // not after canPlay flips. import() is cached for the later dynamic().
   useEffect(() => {
-    if (canPlay) prewarmWatchPlayer();
-  }, [canPlay]);
+    prewarmWatchPlayer();
+  }, []);
 
   // Keep all hooks above the early returns below so hook order stays stable
   // across the loading → loaded transition.
