@@ -11,19 +11,17 @@ type MoviesPageProps = {
 
 export default async function MoviesPage({ searchParams }: MoviesPageProps) {
   const { genre, free, region } = await searchParams;
-  let loadError = false;
-  const movies = await listMovies().catch(() => {
-    loadError = true;
-    return [];
-  });
+  const result = await listMovies()
+    .then((movies) => ({ movies, loadError: false as const }))
+    .catch(() => ({ movies: [] as Awaited<ReturnType<typeof listMovies>>, loadError: true as const }));
 
   return (
     <MoviesView
-      movies={movies}
+      movies={result.movies}
       initialGenreLabel={genre?.trim() ?? ""}
       initialFree={free === "1"}
       region={region?.trim() ?? ""}
-      loadError={loadError}
+      loadError={result.loadError}
     />
   );
 }

@@ -80,14 +80,6 @@ export function HomeView({
     return map;
   }, [movies]);
 
-  const moviePosters = useMemo(
-    () =>
-      movies
-        .slice(0, RAIL_LIMIT)
-        .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription)),
-    [movies, ownedIds, isAdmin, hasSubscription],
-  );
-
   const seriesBanners = useMemo(
     () => seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s)),
     [seriesList],

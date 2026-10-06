@@ -278,7 +278,9 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
     );
     if (!match) return;
     deepLinkedParamRef.current = channelParam;
-    selectChannel(match);
+    // Defer so the effect doesn't synchronously cascade setState (React Compiler).
+    const timer = window.setTimeout(() => selectChannel(match), 0);
+    return () => window.clearTimeout(timer);
   }, [channelParam, channels, selectChannel]);
 
   const selectedChannelId = selection.status === "idle" ? null : selection.channel.id;

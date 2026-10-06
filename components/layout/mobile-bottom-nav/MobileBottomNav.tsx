@@ -25,9 +25,12 @@ export function MobileBottomNav() {
 
   const moreActive = moreBottomNavTabs.some(({ href }) => isNavActive(pathname, href));
 
-  useEffect(() => {
-    setMoreOpen(false);
-  }, [pathname]);
+  // Close the More sheet when the route changes (adjust-state-during-render).
+  const [morePathname, setMorePathname] = useState(pathname);
+  if (morePathname !== pathname) {
+    setMorePathname(pathname);
+    if (moreOpen) setMoreOpen(false);
+  }
 
   useEffect(() => {
     if (!moreOpen) return;

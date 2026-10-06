@@ -366,6 +366,8 @@ export function WatchPlayer({
         video.load();
       };
     }
+    // initialTime is applied by a dedicated effect so late resume doesn't remount HLS.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see late-seek effect below
   }, [hlsSrc, fallbackSrc, live, applyPendingSeek, updateProgressUi]);
 
   // Resume can arrive after authorize (progress is intentionally off the

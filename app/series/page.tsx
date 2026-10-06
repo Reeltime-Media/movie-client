@@ -15,19 +15,20 @@ export default async function SeriesPage({ searchParams }: SeriesPageProps) {
   // the same series doesn't show up twice across the two catalogs.
   // Free-episode badges/filters use `free_episode_count` from the list API —
   // do NOT prefetch listEpisodes here (that was an N+1 waterfall).
-  let loadError = false;
-  const seriesList = await listSeries({ short: false }).catch(() => {
-    loadError = true;
-    return [];
-  });
+  const result = await listSeries({ short: false })
+    .then((seriesList) => ({ seriesList, loadError: false as const }))
+    .catch(() => ({
+      seriesList: [] as Awaited<ReturnType<typeof listSeries>>,
+      loadError: true as const,
+    }));
 
   return (
     <SeriesView
-      seriesList={seriesList}
+      seriesList={result.seriesList}
       initialGenreLabel={genre?.trim() ?? ""}
       initialFree={free === "1"}
       region={region?.trim() ?? ""}
-      loadError={loadError}
+      loadError={result.loadError}
     />
   );
 }

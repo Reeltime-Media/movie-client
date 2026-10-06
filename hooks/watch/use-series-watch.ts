@@ -297,7 +297,10 @@ export function useSeriesWatch({
   );
 
   useEffect(() => {
-    refreshSeriesWatchProgress();
+    if (seasons.length === 0) return;
+    // Schedule so we never call setState synchronously inside the effect body.
+    const timer = window.setTimeout(() => refreshSeriesWatchProgress(), 0);
+    return () => window.clearTimeout(timer);
   }, [refreshSeriesWatchProgress, seasonNum, episodeNum, seasons]);
 
   useEffect(() => {
@@ -319,7 +322,7 @@ export function useSeriesWatch({
       seriesWatchProgress.find((row) => contentIdsMatch(row.content_id, episode.id)) ??
       null
     );
-  }, [seriesWatchProgress, episode?.id]);
+  }, [seriesWatchProgress, episode]);
 
   const lastWatchedEpisodeId = useMemo(() => {
     if (!isLoggedIn() || seasons.length === 0) return null;
@@ -335,7 +338,6 @@ export function useSeriesWatch({
       seriesSlug: series?.slug,
     });
   }, [
-    loggedIn,
     seasons,
     seriesWatchProgress,
     episode?.id,
@@ -347,7 +349,7 @@ export function useSeriesWatch({
   const episodeWatchProgress = useMemo(() => {
     if (!isLoggedIn() || seasons.length === 0) return new Map<string, number>();
     return episodeWatchFractions(seriesWatchProgress, seasons, series?.slug);
-  }, [loggedIn, seasons, seriesWatchProgress, series?.slug]);
+  }, [seasons, seriesWatchProgress, series?.slug]);
 
   useEffect(() => {
     if (!activeSeason || !episode) return;
