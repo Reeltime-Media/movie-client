@@ -4,7 +4,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { pageTitleClassName } from "@/lib/ui/page-title";
 
-export type LegalSection = {
+type LegalSection = {
   heading: string;
   paragraphs?: string[];
   bullets?: string[];

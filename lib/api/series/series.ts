@@ -45,7 +45,7 @@ export async function getSeries(slug: string): Promise<SeriesRead> {
 }
 
 /** Group flat paginated episodes into SeasonRead[] for existing UI. */
-export function groupEpisodesIntoSeasons(episodes: ContentRead[]): SeasonRead[] {
+function groupEpisodesIntoSeasons(episodes: ContentRead[]): SeasonRead[] {
   const seasons = new Map<number, ContentRead[]>();
   for (const ep of episodes) {
     const sn = ep.season_number ?? 1;

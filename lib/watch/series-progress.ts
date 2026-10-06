@@ -1,6 +1,6 @@
 import type { SeasonRead, WatchProgressRead } from "@/lib/api/types";
 
-export function normalizeContentId(id: string): string {
+function normalizeContentId(id: string): string {
   return id.trim().toLowerCase();
 }
 
@@ -8,7 +8,7 @@ export function contentIdsMatch(a: string, b: string): boolean {
   return normalizeContentId(a) === normalizeContentId(b);
 }
 
-export function collectEpisodeIds(seasons: SeasonRead[]): Set<string> {
+function collectEpisodeIds(seasons: SeasonRead[]): Set<string> {
   const ids = new Set<string>();
   for (const season of seasons) {
     for (const ep of season.episodes) {
@@ -32,7 +32,7 @@ export function mergeProgressRow(
 }
 
 /** Map a progress row to the episode id used in the current season catalog. */
-export function mapProgressRowToEpisodeId(
+function mapProgressRowToEpisodeId(
   row: WatchProgressRead,
   seasons: SeasonRead[],
 ): string | null {

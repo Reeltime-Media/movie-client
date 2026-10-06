@@ -22,9 +22,3 @@ export const moreBottomNavTabs: BottomNavTab[] = [
   { href: "/short-movies", labelKey: "navShortMovies", Icon: Clapperboard },
   { href: "/profile", labelKey: "navProfile", Icon: User },
 ];
-
-/** @deprecated Prefer primaryBottomNavTabs + moreBottomNavTabs. */
-export const bottomNavTabs: BottomNavTab[] = [
-  ...primaryBottomNavTabs,
-  ...moreBottomNavTabs,
-];

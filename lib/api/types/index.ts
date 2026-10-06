@@ -129,7 +129,7 @@ export interface SubscriptionPlanRead {
   updated_at: string;
 }
 
-export interface WatchProgressContentRead {
+interface WatchProgressContentRead {
   id: string;
   type?: string;
   slug?: string;
