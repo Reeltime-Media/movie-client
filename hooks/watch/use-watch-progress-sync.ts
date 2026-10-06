@@ -14,21 +14,30 @@ export function useWatchProgressSync({
   contentId,
   getPosition,
   getDuration,
+  onProgressSaved,
 }: {
   contentId?: string;
   getPosition: () => number;
   getDuration: () => number;
+  /** Fired after a progress row is successfully upserted (sidebar refresh). */
+  onProgressSaved?: (payload: {
+    contentId: string;
+    positionSeconds: number;
+    completed: boolean;
+  }) => void;
 }) {
   const lastSavedAtRef = useRef(0);
   const hasQualifiedRef = useRef(false);
   const contentIdRef = useRef(contentId);
   const getPositionRef = useRef(getPosition);
   const getDurationRef = useRef(getDuration);
+  const onProgressSavedRef = useRef(onProgressSaved);
 
   useEffect(() => {
     contentIdRef.current = contentId;
     getPositionRef.current = getPosition;
     getDurationRef.current = getDuration;
+    onProgressSavedRef.current = onProgressSaved;
   });
 
   const save = useCallback((position: number, completed: boolean, keepalive = false) => {
@@ -47,9 +56,17 @@ export function useWatchProgressSync({
         completed,
       },
       { keepalive },
-    ).catch(() => {
-      /* ignore — resume tracking is best-effort */
-    });
+    )
+      .then(() => {
+        onProgressSavedRef.current?.({
+          contentId: id,
+          positionSeconds: Math.floor(position),
+          completed,
+        });
+      })
+      .catch(() => {
+        /* ignore — resume tracking is best-effort */
+      });
   }, []);
 
   useEffect(() => {

@@ -74,6 +74,7 @@ export function WatchPlayer({
   fill = false,
   live = false,
   initialTime = 0,
+  onProgressSaved,
 }: {
   contentId?: string;
   hlsSrc: string;
@@ -87,6 +88,12 @@ export function WatchPlayer({
   live?: boolean;
   /** Resume position in seconds (skipped when 0). */
   initialTime?: number;
+  /** Called after watch progress is saved (e.g. refresh episode “last watched”). */
+  onProgressSaved?: (payload: {
+    contentId: string;
+    positionSeconds: number;
+    completed: boolean;
+  }) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -132,6 +139,7 @@ export function WatchPlayer({
     contentId,
     getPosition,
     getDuration,
+    onProgressSaved,
   });
 
   const updateProgressUi = useCallback(() => {
@@ -712,8 +720,17 @@ export function WatchPlayer({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      // Let focused buttons / links keep their native Space activation.
+      if (
+        target?.closest(
+          'button, a, [role="button"], [role="menuitem"], [role="slider"], [contenteditable="true"]',
+        )
+      ) {
+        return;
+      }
       const v = videoRef.current;
       if (!v) return;
       if (e.code === "Space") {

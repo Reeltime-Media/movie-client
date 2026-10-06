@@ -9,7 +9,15 @@ import { getSeries, listEpisodes } from "@/lib/api/series";
 import { hasPurchasedSeries, listPurchasedSeries } from "@/lib/api/purchases";
 import { listMySubscriptions, hasActiveSubscription } from "@/lib/api/subscriptions";
 import type { ContentRead, SeasonRead, SeriesRead } from "@/lib/api/types";
-import { getWatchProgress } from "@/lib/api/playback";
+import { getWatchProgress, listWatchProgress } from "@/lib/api/playback";
+import { isLoggedIn } from "@/lib/api/core";
+import type { WatchProgressRead } from "@/lib/api/types";
+import {
+  contentIdsMatch,
+  episodeWatchFractions,
+  mergeProgressRow,
+  pickLastWatchedEpisodeId,
+} from "@/lib/watch/series-progress";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
 import { seriesPricingHref } from "@/lib/series-pricing";
@@ -51,7 +59,10 @@ export function useSeriesWatch({
   const [hasSubscription, setHasSubscription] = useState(false);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const [playbackLoading, setPlaybackLoading] = useState(false);
+  const [playbackError, setPlaybackError] = useState(false);
+  const [playbackRetryKey, setPlaybackRetryKey] = useState(0);
   const [resumeTime, setResumeTime] = useState<number | null>(null);
+  const [seriesWatchProgress, setSeriesWatchProgress] = useState<WatchProgressRead[]>([]);
 
   // Reset content state when the series changes (adjust-state-during-render pattern).
   const [prevSeriesSlug, setPrevSeriesSlug] = useState(seriesSlug);
@@ -153,8 +164,16 @@ export function useSeriesWatch({
     const cached = playbackEntitled && episode ? getCachedPlaybackUrl(episode.id) : undefined;
     setPlaybackUrl(cached ?? null);
     setPlaybackLoading(playbackEntitled && !cached);
+    setPlaybackError(false);
     setResumeTime(null);
   }
+
+  const retryPlayback = useCallback(() => {
+    setPlaybackError(false);
+    setPlaybackUrl(null);
+    setPlaybackLoading(true);
+    setPlaybackRetryKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
     if (!episode || !playbackEntitled) return;
@@ -194,17 +213,24 @@ export function useSeriesWatch({
     Promise.all([progressPromise, resolvePlayback()])
       .then(([progress, url]) => {
         if (cancelled) return;
-        if (progress && !progress.completed && progress.position_seconds > 0) {
-          setResumeTime(progress.position_seconds);
+        if (progress) {
+          setSeriesWatchProgress((prev) => mergeProgressRow(prev, progress));
+          if (!progress.completed && progress.position_seconds > 0) {
+            setResumeTime(progress.position_seconds);
+          } else {
+            setResumeTime(null);
+          }
         } else {
           setResumeTime(null);
         }
+        setPlaybackError(false);
         setPlaybackUrl(url);
       })
       .catch(() => {
         if (!cancelled) {
           setPlaybackUrl(null);
           setResumeTime(null);
+          setPlaybackError(true);
         }
       })
       .finally(() => !cancelled && setPlaybackLoading(false));
@@ -212,7 +238,116 @@ export function useSeriesWatch({
     return () => {
       cancelled = true;
     };
-  }, [episode, playbackEntitled, hasSubscription, isAdmin, loggedIn, seriesSlug, seasonNum, episodeNum]);
+  }, [
+    episode,
+    playbackEntitled,
+    hasSubscription,
+    isAdmin,
+    loggedIn,
+    seriesSlug,
+    seasonNum,
+    episodeNum,
+    playbackRetryKey,
+  ]);
+
+  const refreshSeriesWatchProgress = useCallback(() => {
+    if (seasons.length === 0) return;
+    if (!isLoggedIn()) {
+      setSeriesWatchProgress([]);
+      return;
+    }
+    listWatchProgress()
+      .catch(swallow("series watch: load progress list", []))
+      .then((rows) => {
+        setSeriesWatchProgress((prev) => {
+          const merged = new Map<string, WatchProgressRead>();
+          for (const row of rows) {
+            merged.set(row.content_id.trim().toLowerCase(), row);
+          }
+          for (const row of prev) {
+            const key = row.content_id.trim().toLowerCase();
+            const existing = merged.get(key);
+            if (!existing || row.last_watched_at > existing.last_watched_at) {
+              merged.set(key, row);
+            }
+          }
+          return [...merged.values()];
+        });
+      });
+  }, [seasons.length]);
+
+  const applyLocalWatchProgress = useCallback(
+    (patch: {
+      contentId: string;
+      positionSeconds: number;
+      completed: boolean;
+    }) => {
+      if (!isLoggedIn()) return;
+      setSeriesWatchProgress((prev) =>
+        mergeProgressRow(prev, {
+          user_id: "",
+          content_id: patch.contentId,
+          position_seconds: patch.positionSeconds,
+          completed: patch.completed,
+          last_watched_at: new Date().toISOString(),
+        }),
+      );
+    },
+    [],
+  );
+
+  useEffect(() => {
+    refreshSeriesWatchProgress();
+  }, [refreshSeriesWatchProgress, seasonNum, episodeNum, seasons]);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    const timer = window.setInterval(refreshSeriesWatchProgress, 25_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshSeriesWatchProgress();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [loggedIn, refreshSeriesWatchProgress]);
+
+  const currentEpisodeProgress = useMemo(() => {
+    if (!episode?.id) return null;
+    return (
+      seriesWatchProgress.find((row) => contentIdsMatch(row.content_id, episode.id)) ??
+      null
+    );
+  }, [seriesWatchProgress, episode?.id]);
+
+  const lastWatchedEpisodeId = useMemo(() => {
+    if (!isLoggedIn() || seasons.length === 0) return null;
+    const boostPos =
+      resumeTime ??
+      (currentEpisodeProgress && !currentEpisodeProgress.completed
+        ? currentEpisodeProgress.position_seconds
+        : null) ??
+      (currentEpisodeProgress?.completed ? currentEpisodeProgress.position_seconds : null);
+    return pickLastWatchedEpisodeId(seriesWatchProgress, seasons, {
+      boostEpisodeId: episode?.id ?? null,
+      boostPositionSeconds: boostPos,
+      seriesSlug: series?.slug,
+    });
+  }, [
+    loggedIn,
+    seasons,
+    seriesWatchProgress,
+    episode?.id,
+    resumeTime,
+    series?.slug,
+    currentEpisodeProgress,
+  ]);
+
+  const episodeWatchProgress = useMemo(() => {
+    if (!isLoggedIn() || seasons.length === 0) return new Map<string, number>();
+    return episodeWatchFractions(seriesWatchProgress, seasons, series?.slug);
+  }, [loggedIn, seasons, seriesWatchProgress, series?.slug]);
 
   useEffect(() => {
     if (!activeSeason || !episode) return;
@@ -261,6 +396,7 @@ export function useSeriesWatch({
     isAdmin,
     playbackUrl,
     playbackLoading,
+    playbackError,
     resumeTime,
     loggedIn,
     seasonNum,
@@ -268,6 +404,11 @@ export function useSeriesWatch({
     activeSeason,
     episode,
     prefetchEpisode,
+    retryPlayback,
+    lastWatchedEpisodeId,
+    episodeWatchProgress,
+    refreshSeriesWatchProgress,
+    applyLocalWatchProgress,
     ...derived,
   };
 }

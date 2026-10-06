@@ -129,12 +129,24 @@ export interface SubscriptionPlanRead {
   updated_at: string;
 }
 
+export interface WatchProgressContentRead {
+  id: string;
+  type?: string;
+  slug?: string;
+  title?: string;
+  season_number?: number | null;
+  episode_number?: number | null;
+  duration_seconds?: number | null;
+  series?: { slug: string } | null;
+}
+
 export interface WatchProgressRead {
   user_id: string;
   content_id: string;
   position_seconds: number;
   completed: boolean;
   last_watched_at: string;
+  content?: WatchProgressContentRead | null;
 }
 
 /** Public live-TV channel row from GET /tv/channels. */

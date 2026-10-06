@@ -30,7 +30,7 @@ export function SectionHeader({
         type="button"
         onClick={() => scrollBy(-1)}
         aria-label="Scroll left"
-        className="flex items-center justify-center text-white/85 transition-colors hover:text-white"
+        className="flex h-11 w-11 items-center justify-center text-white/90 transition-colors hover:text-white"
       >
         <Play size={13} className="rotate-180 fill-current" aria-hidden />
       </button>
@@ -38,7 +38,7 @@ export function SectionHeader({
         type="button"
         onClick={() => scrollBy(1)}
         aria-label="Scroll right"
-        className="flex items-center justify-center text-white/85 transition-colors hover:text-white"
+        className="flex h-11 w-11 items-center justify-center text-white/90 transition-colors hover:text-white"
       >
         <Play size={13} className="fill-current" aria-hidden />
       </button>
@@ -48,14 +48,14 @@ export function SectionHeader({
     seeAllHref ? (
       <Link
         href={seeAllHref}
-        className="group shrink-0 inline-flex items-center gap-1 text-[13px] font-semibold text-white/85 transition-colors duration-150 hover:text-white"
+        className="group shrink-0 inline-flex items-center gap-1 text-[13px] font-semibold text-white/90 transition-colors duration-150 hover:text-white"
       >
         {seeAllLabel}
       </Link>
     ) : (
       <button
         type="button"
-        className="group shrink-0 inline-flex items-center gap-1 text-[13px] font-semibold text-white/85 transition-colors duration-150 hover:text-white"
+        className="group shrink-0 inline-flex items-center gap-1 text-[13px] font-semibold text-white/90 transition-colors duration-150 hover:text-white"
       >
         {seeAllLabel}
       </button>
@@ -66,14 +66,17 @@ export function SectionHeader({
     <div
       className={`rt-section-header flex items-center justify-between gap-4 py-3 ${paddingX}`}
       style={{
-        background: "linear-gradient(90deg, var(--rt-brand) 0%, var(--rt-brand-pressed) 40%, var(--rt-bg) 95%)",
+        // Stay on brand red through the full band so light-theme --rt-bg cannot
+        // wash out the white title / controls at the right edge.
+        background:
+          "linear-gradient(90deg, var(--rt-brand) 0%, var(--rt-brand-pressed) 55%, color-mix(in srgb, var(--rt-brand-pressed) 70%, #1a1a1a) 100%)",
       }}
     >
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex min-w-0 items-center gap-2.5">
         <span className="h-4 w-0.75 shrink-0 rounded-full bg-white/60" aria-hidden />
         <h2 className="text-[15px] font-bold tracking-tight text-white">{title}</h2>
       </div>
-      <div className="flex shrink-0 items-center gap-10">
+      <div className="flex shrink-0 items-center gap-6 sm:gap-10">
         {seeAllNode}
         {railControls}
       </div>

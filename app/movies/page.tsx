@@ -1,6 +1,5 @@
 import { MoviesView } from "@/components/catalog/MoviesView";
 import { listMovies } from "@/lib/api/movies";
-import { swallow } from "@/lib/log";
 
 // Public catalog is cached/revalidated on the server (ISR). Must be a literal —
 // Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
@@ -12,7 +11,11 @@ type MoviesPageProps = {
 
 export default async function MoviesPage({ searchParams }: MoviesPageProps) {
   const { genre, free, region } = await searchParams;
-  const movies = await listMovies().catch(swallow("movies: load catalog", []));
+  let loadError = false;
+  const movies = await listMovies().catch(() => {
+    loadError = true;
+    return [];
+  });
 
   return (
     <MoviesView
@@ -20,6 +23,7 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
       initialGenreLabel={genre?.trim() ?? ""}
       initialFree={free === "1"}
       region={region?.trim() ?? ""}
+      loadError={loadError}
     />
   );
 }

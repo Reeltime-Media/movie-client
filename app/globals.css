@@ -397,6 +397,81 @@ html[lang="km"] body {
   to { transform: translateY(35%); }
 }
 
+@keyframes rt-plan-card-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.rt-plan-card-float {
+  animation: rt-plan-card-float 4.5s ease-in-out infinite;
+}
+
+.rt-plan-pass-orbit {
+  animation: rt-plan-card-float 5.2s ease-in-out infinite;
+}
+
+.rt-plan-pass {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.85);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.rt-plan-pass--featured {
+  border-color: rgba(229, 9, 20, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(229, 9, 20, 0.18),
+    0 22px 48px -20px rgba(229, 9, 20, 0.55),
+    0 18px 40px -24px rgba(0, 0, 0, 0.85);
+}
+
+.rt-plan-pass:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(229, 9, 20, 0.45);
+}
+
+.rt-plan-pass-perforation {
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    transparent 0,
+    transparent 4px,
+    rgba(255, 255, 255, 0.18) 4px,
+    rgba(255, 255, 255, 0.18) 10px
+  );
+  background-size: 14px 1px;
+  background-repeat: repeat-x;
+  position: relative;
+}
+
+.rt-plan-pass-perforation::before,
+.rt-plan-pass-perforation::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--rt-bg);
+  transform: translateY(-50%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.rt-plan-pass-perforation::before {
+  left: -12px;
+}
+
+.rt-plan-pass-perforation::after {
+  right: -12px;
+}
+
 .rt-parallax-bg {
   /* Using scroll() for native scroll-driven parallax */
   animation: rt-parallax linear both;
@@ -407,6 +482,11 @@ html[lang="km"] body {
 
 @media (prefers-reduced-motion: reduce) {
   .rt-parallax-bg {
+    animation: none !important;
+  }
+
+  .rt-plan-card-float,
+  .rt-plan-pass-orbit {
     animation: none !important;
   }
 }

@@ -311,7 +311,7 @@ function FlipPosterCard(props: PosterCardProps) {
           {/* Front — poster; click flips (closes any other open card) */}
           <div
             role="button"
-            tabIndex={0}
+            tabIndex={flipped ? -1 : 0}
             aria-label={cardLabel}
             suppressHydrationWarning
             onClick={() => setActiveFlipId(flipId)}
@@ -373,6 +373,7 @@ function FlipPosterCard(props: PosterCardProps) {
                 embedUrl ? (
                   <button
                     type="button"
+                    tabIndex={flipped ? 0 : -1}
                     onClick={(e) => {
                       e.stopPropagation();
                       setTrailerOpen(true);
@@ -389,6 +390,7 @@ function FlipPosterCard(props: PosterCardProps) {
               ) : needsCheckout && contentId && paySlug ? (
                 <button
                   type="button"
+                  tabIndex={flipped ? 0 : -1}
                   onClick={(e) => {
                     e.stopPropagation();
                     setActiveFlipId(null);
@@ -402,6 +404,7 @@ function FlipPosterCard(props: PosterCardProps) {
               ) : (
                 <Link
                   href={watchHref}
+                  tabIndex={flipped ? 0 : -1}
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-success px-2.5 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-[#16a34a] sm:px-3 sm:py-2 sm:text-[12px]"
                 >
@@ -412,6 +415,7 @@ function FlipPosterCard(props: PosterCardProps) {
               {!isComingSoon && embedUrl ? (
                 <button
                   type="button"
+                  tabIndex={flipped ? 0 : -1}
                   onClick={(e) => {
                     e.stopPropagation();
                     setTrailerOpen(true);

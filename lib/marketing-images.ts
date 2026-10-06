@@ -6,6 +6,10 @@ export const marketingImages = {
   /** Theater seats — matches login left panel */
   theaterSeats:
     "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1920&q=80",
+  /** Local cinema seats asset (catalog / fallback). */
+  cinemaSeatsLocal: "/asset/cinema-seats.png",
+  /** Live TV hero — media wall / neon library art. */
+  liveTvHero: "/asset/live-tv-hero.png",
   /** Red cinema curtains — matches register left panel */
   cinemaCurtains:
     "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1920&q=80",

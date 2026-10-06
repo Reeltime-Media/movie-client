@@ -82,6 +82,8 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
   const [playbackLoading, setPlaybackLoading] = useState(seedPlayback.playbackLoading);
   const [resumeTime, setResumeTime] = useState<number | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [playbackError, setPlaybackError] = useState(false);
+  const [playbackRetryKey, setPlaybackRetryKey] = useState(0);
 
   // Reset content state when the slug changes (adjust-state-during-render pattern).
   const [prevSlug, setPrevSlug] = useState(slug);
@@ -103,10 +105,18 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     setPlaybackUrl(seedPlayback.playbackUrl);
     setPlaybackLoading(seedPlayback.playbackLoading);
     setResumeTime(null);
+    setPlaybackError(false);
   }
 
   const prefetchPlayback = useCallback((contentId: string) => {
     void prefetchPlaybackUrl(contentId);
+  }, []);
+
+  const retryPlayback = useCallback(() => {
+    setPlaybackError(false);
+    setPlaybackUrl(null);
+    setPlaybackLoading(true);
+    setPlaybackRetryKey((k) => k + 1);
   }, []);
 
   useEffect(() => {
@@ -134,18 +144,21 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
         const url = await resolvePlaybackUrl(m.id);
         if (cancelled) return;
         setCanPlay(true);
+        setPlaybackError(false);
         setPlaybackUrl(url);
         setPlaybackLoading(false);
       } catch (err) {
         if (cancelled) return;
         if (isForbidden(err)) {
           setCanPlay(false);
+          setPlaybackError(false);
           setPlaybackUrl(null);
           setResumeTime(null);
           setPlaybackLoading(false);
           return;
         }
         setPlaybackUrl(null);
+        setPlaybackError(true);
         setPlaybackLoading(false);
         return;
       }
@@ -196,7 +209,7 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     return () => {
       cancelled = true;
     };
-  }, [slug, router, loggedIn, isAdmin, initialMovie]);
+  }, [slug, router, loggedIn, isAdmin, initialMovie, playbackRetryKey]);
 
   const priceLabel = useMemo(() => {
     if (!movie?.price_usd) return null;
@@ -210,9 +223,11 @@ export function useMovieWatch(slug: string, options: UseMovieWatchOptions = {}) 
     canPlay,
     playbackUrl,
     playbackLoading,
+    playbackError,
     resumeTime,
     loggedIn,
     prefetchPlayback,
+    retryPlayback,
     priceLabel,
   };
 }

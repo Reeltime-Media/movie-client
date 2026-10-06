@@ -121,7 +121,12 @@ function SearchPageInner() {
   const isAdmin = isAdminUser(user);
   const urlQuery = params.get("q") ?? "";
   const [input, setInput] = useState(urlQuery);
-  const [fetched, setFetched] = useState<{ q: string; results: SearchResult[] } | null>(null);
+  const [fetched, setFetched] = useState<{
+    q: string;
+    results: SearchResult[];
+    error?: boolean;
+  } | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   // Sync the input box when the ?q= param changes (adjust-state-during-render pattern).
   const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
@@ -132,6 +137,7 @@ function SearchPageInner() {
 
   const trimmedQuery = urlQuery.trim();
   const results = fetched && fetched.q === trimmedQuery ? fetched.results : [];
+  const searchFailed = Boolean(fetched && fetched.q === trimmedQuery && fetched.error);
   const loading = Boolean(trimmedQuery) && (!fetched || fetched.q !== trimmedQuery);
 
   useEffect(() => {
@@ -145,18 +151,23 @@ function SearchPageInner() {
       ? listMySubscriptions().catch(swallow("search: load subscriptions", []))
       : Promise.resolve([]);
 
+    // Fetch independently so one catalog failure does not wipe the other.
     Promise.all([
-      listMovies({ search: q }),
-      listSeries({ search: q }),
+      listMovies({ search: q }).catch(() => null),
+      listSeries({ search: q }).catch(() => null),
       purchasesPromise,
       subsPromise,
     ])
       .then(([movies, seriesList, purchases, subs]) => {
         if (cancelled) return;
+        if (movies === null && seriesList === null) {
+          setFetched({ q, results: [], error: true });
+          return;
+        }
         const ownedIds = new Set(purchases.map((p) => p.content_id));
         const hasSubscription = hasActiveSubscription(subs);
 
-        const movieResults: SearchResult[] = movies.map((m) => {
+        const movieResults: SearchResult[] = (movies ?? []).map((m) => {
           const isFree = !m.price_usd || parseFloat(m.price_usd) === 0;
           const isOwned = isFree || ownedIds.has(m.id) || hasSubscription;
           return {
@@ -166,22 +177,21 @@ function SearchPageInner() {
           };
         });
 
-        const seriesResults: SearchResult[] = seriesList.map((s) => ({
+        const seriesResults: SearchResult[] = (seriesList ?? []).map((s) => ({
           kind: "series",
           data: s,
           freeEpisodeCount: s.free_episode_count ?? 0,
         }));
 
-        if (!cancelled) setFetched({ q, results: [...movieResults, ...seriesResults] });
-      })
-      .catch(() => {
-        if (!cancelled) setFetched({ q, results: [] });
+        if (!cancelled) {
+          setFetched({ q, results: [...movieResults, ...seriesResults], error: false });
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [urlQuery, loggedIn, isAdmin]);
+  }, [urlQuery, loggedIn, isAdmin, retryKey]);
 
   const submitSearch = useCallback(() => {
     const next = input.trim();
@@ -212,6 +222,20 @@ function SearchPageInner() {
         ) : loading ? (
           <div className="flex h-40 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
+          </div>
+        ) : searchFailed ? (
+          <div className="py-6 text-center">
+            <p className="text-[14px] font-semibold text-text-muted">{t("searchLoadError")}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setFetched(null);
+                setRetryKey((k) => k + 1);
+              }}
+              className="mt-3 cursor-pointer rounded-md bg-brand px-4 py-2 text-[13px] font-bold text-white hover:bg-brand-hover"
+            >
+              {t("catalogRetry")}
+            </button>
           </div>
         ) : results.length === 0 ? (
           <p className="text-[14px] font-semibold text-text-muted">{t("searchNoResults")}</p>

@@ -6,7 +6,6 @@ import {
   LogIn,
   Lock,
   PlayCircle,
-  Radio,
   Tv as TvIcon,
   X,
 } from "lucide-react";
@@ -29,7 +28,6 @@ import { isAdminUser } from "@/lib/auth/is-admin";
 import { loginPathWithNext } from "@/lib/auth-redirect";
 import { marketingImages } from "@/lib/marketing-images";
 import { swallow } from "@/lib/log";
-import { pageTitleOnHeroClassName } from "@/lib/ui/page-title";
 import { kickerBadgeClassName } from "@/lib/ui/surfaces";
 
 const importWatchPlayer = () => import("@/components/watch/WatchPlayer");
@@ -309,8 +307,8 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
   return (
     <PageShell fullWidth>
       <CinematicDecor
-        imageSrc={marketingImages.theaterSeats}
-        imageDescription="A dark theater with rows of empty seats"
+        imageSrc={marketingImages.liveTvHero}
+        imageDescription="A glowing media wall of video thumbnails in a dark theater"
         showBrandGlow
         viewportBleed
         contentAlign="center"
@@ -320,11 +318,10 @@ export function TvView({ channels }: { channels: TvChannelRead[] }) {
           className={["rt-page-fade-up mb-3 w-fit", kickerBadgeClassName].join(" ")}
           style={{ "--rt-enter-delay": "40ms" } as CSSProperties}
         >
-          <Radio size={12} aria-hidden />
           {t("tvBadge")}
         </span>
         <h1
-          className={["rt-page-fade-up max-w-[20ch]", pageTitleOnHeroClassName].join(" ")}
+          className="rt-page-fade-up max-w-[20ch] text-balance text-[28px] font-extrabold tracking-[-0.02em] text-brand md:text-[32px]"
           style={{ "--rt-enter-delay": "80ms" } as CSSProperties}
         >
           {t("tvHeroTitle")}

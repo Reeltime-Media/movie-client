@@ -11,6 +11,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
+import { useI18n } from "@/components/providers/LocaleProvider";
 import { FavouriteButton } from "@/components/watch/FavouriteButton";
 import { RatingInput } from "@/components/watch/RatingInput";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
@@ -70,6 +71,7 @@ function ShareButton({ href, label, children }: { href: string; label: string; c
 }
 
 export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientProps) {
+  const { t } = useI18n();
   const {
     movie,
     loading,
@@ -77,8 +79,10 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
     canPlay,
     playbackUrl,
     playbackLoading,
+    playbackError,
     resumeTime,
     priceLabel,
+    retryPlayback,
   } = useMovieWatch(slug, { initialMovie });
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -148,7 +152,18 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
       {canPlay || trailerEmbed ? (
         <WatchPlayerBand>
           {canPlay ? (
-            playbackLoading || !playbackUrl ? (
+            playbackError ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black px-4 text-center">
+                <p className="text-[14px] font-semibold text-white/90">{t("playbackLoadError")}</p>
+                <button
+                  type="button"
+                  onClick={retryPlayback}
+                  className="cursor-pointer rounded-md bg-brand px-4 py-2 text-[13px] font-bold text-white hover:bg-brand-hover"
+                >
+                  {t("playbackRetry")}
+                </button>
+              </div>
+            ) : playbackLoading || !playbackUrl ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black">
                 <Loader2 size={36} className="animate-spin text-white/60" aria-hidden />
                 <span className="sr-only">Loading stream</span>

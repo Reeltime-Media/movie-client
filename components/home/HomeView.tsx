@@ -7,6 +7,7 @@ import { BannerScrollRail } from "@/components/catalog/BannerScrollRail";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { Hero } from "@/components/home/Hero";
 import { HomeGenreRails } from "@/components/home/HomeGenreRails";
+import { HomePlansSection } from "@/components/home/HomePlansSection";
 import { PromotionBannerStrip } from "@/components/home/PromotionBannerStrip";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
@@ -43,6 +44,7 @@ type HomeViewProps = {
 };
 
 const RAIL_LIMIT = 12;
+const RECENT_LIMIT = 10;
 
 export function HomeView({
   movies,
@@ -93,7 +95,9 @@ export function HomeView({
 
   const topMovieBanners = useMemo<BannerCardProps[]>(
     () =>
-      movies.slice(0, RAIL_LIMIT).map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription)),
+      movies
+        .slice(0, RECENT_LIMIT)
+        .map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription)),
     [movies, ownedIds, isAdmin, hasSubscription],
   );
 
@@ -106,7 +110,17 @@ export function HomeView({
     [movies, ownedIds, isAdmin, hasSubscription],
   );
 
-  const trendingPosters = moviePosters.length > 0 ? moviePosters : initialTrending.slice(0, RAIL_LIMIT);
+  // Distinct from the "recently added" banner rail — skip the first RECENT_LIMIT.
+  const trendingPosters = useMemo(() => {
+    const fromCatalog = movies
+      .slice(RECENT_LIMIT, RECENT_LIMIT + RAIL_LIMIT)
+      .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription));
+    if (fromCatalog.length > 0) return fromCatalog;
+    const recentIds = new Set(movies.slice(0, RECENT_LIMIT).map((m) => m.id));
+    return initialTrending
+      .filter((p) => !p.contentId || !recentIds.has(p.contentId))
+      .slice(0, RAIL_LIMIT);
+  }, [movies, ownedIds, isAdmin, hasSubscription, initialTrending]);
   const visibleContinuePosters = loggedIn ? continuePosters : [];
 
   useEffect(() => {
@@ -212,6 +226,10 @@ export function HomeView({
       <ScrollReveal as="section" className="pt-8 pb-6">
         <SectionHeader title={t("homeMostWatchedTitle")} showSeeAll seeAllHref="/movies" seeAllLabel={t("sectionSeeAll")} />
         <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
+      </ScrollReveal>
+
+      <ScrollReveal>
+        <HomePlansSection />
       </ScrollReveal>
 
       {initialComingSoon.length > 0 && (

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CSSProperties, ElementType } from "react";
-import { Camera, Clock, Crown, CreditCard, Heart, Lock, ShoppingBag } from "lucide-react";
+import { Camera, Crown, CreditCard, Heart, Lock, ShoppingBag } from "lucide-react";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import { PosterCard } from "@/components/catalog/PosterCard";
 import { PageShell } from "@/components/layout/PageShell";
@@ -26,12 +26,11 @@ import type { TranslationKey } from "@/lib/i18n";
 import type { ContentListItemRead, SeriesRead, SubscriptionRead, UserRead } from "@/lib/api/types";
 import type { PosterCardProps } from "@/types/poster-card";
 
-type LibraryTab = "owned" | "favourites" | "watchlist";
+type LibraryTab = "owned" | "favourites";
 
 const tabs: { id: LibraryTab; labelKey: TranslationKey; icon: ElementType }[] = [
   { id: "owned", labelKey: "libraryOwned", icon: ShoppingBag },
   { id: "favourites", labelKey: "libraryFavourites", icon: Heart },
-  { id: "watchlist", labelKey: "libraryWatchlist", icon: Clock },
 ];
 
 /** Known plan codes get a curated crown color; anything else falls back to a deterministic hash. */
@@ -147,13 +146,6 @@ const EMPTY_CONTENT: Record<
     body: "Add any movie or series to your favourites to see it here.",
     ctaHref: "/movies",
     cta: "Browse movies",
-  },
-  watchlist: {
-    Icon: Clock,
-    heading: "Nothing saved yet",
-    body: "Browse movies and series to add to your watchlist.",
-    ctaHref: "/movies",
-    cta: "Browse titles",
   },
 };
 
@@ -275,9 +267,8 @@ export function MyLibraryView({ catalogMovies, catalogSeries }: MyLibraryViewPro
   }, [router, loggedIn, favoriteIds, catalogMovies, catalogSeries]);
 
   const activePosters =
-    activeTab === "owned" ? ownedPosters : activeTab === "favourites" ? favoritePosters : [];
-  const activeCount =
-    activeTab === "owned" ? ownedCount : activeTab === "favourites" ? favoriteCount : 0;
+    activeTab === "owned" ? ownedPosters : favoritePosters;
+  const activeCount = activeTab === "owned" ? ownedCount : favoriteCount;
   const activeSubscriptions = subscriptions.filter(isSubscriptionActive);
   const isAdmin = isAdminUser(user);
   const shortId = user ? user.id.replace(/-/g, "").slice(-8).toUpperCase() : "";
@@ -371,11 +362,7 @@ export function MyLibraryView({ catalogMovies, catalogSeries }: MyLibraryViewPro
         >
           <span className="h-5 w-0.75 shrink-0 rounded-full bg-brand" aria-hidden />
           <h2 className="text-[15px] font-bold tracking-tight text-text">
-            {activeTab === "owned"
-              ? t("libraryOwned")
-              : activeTab === "favourites"
-                ? t("libraryFavourites")
-                : t("libraryWatchlist")}
+            {activeTab === "owned" ? t("libraryOwned") : t("libraryFavourites")}
           </h2>
           {activeCount > 0 && !dataLoading ? (
             <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-[11px] font-bold text-text-muted">

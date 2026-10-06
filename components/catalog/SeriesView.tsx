@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { CdnImage } from "@/components/ui/CdnImage";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { GenreFilterSelect } from "@/components/catalog/GenreFilterSelect";
 import { PageSearchBar } from "@/components/catalog/PageSearchBar";
 import { PosterCard } from "@/components/catalog/PosterCard";
@@ -43,6 +44,8 @@ type SeriesViewProps = {
   initialFree?: boolean;
   /** Region code from ?region= (e.g. "CH" from the nav dropdown), or empty for all. */
   region?: string;
+  /** True when the server failed to load the catalog (not a successful empty list). */
+  loadError?: boolean;
 };
 
 function Top10Sidebar({ posters }: { posters: PosterCardProps[] }) {
@@ -95,8 +98,11 @@ export function SeriesView({
   initialGenreLabel = ALL_GENRES,
   initialFree = false,
   region = "",
+  loadError = false,
 }: SeriesViewProps) {
   const { t } = useI18n();
+  const router = useRouter();
+  const pathname = usePathname();
   const { loggedIn } = useAuth();
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
@@ -125,6 +131,16 @@ export function SeriesView({
     setPage(0);
   }
   const regionTitleKey = regionLabelKey(region, "series");
+
+  const clearFreeFilter = () => {
+    setFreeOnly(false);
+    setPage(0);
+    const params = new URLSearchParams();
+    if (activeGenre.trim()) params.set("genre", activeGenre.trim());
+    if (region.trim()) params.set("region", region.trim());
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  };
 
   const genreOptions = useMemo(() => {
     const labels = collectGenreLabels(seriesList);
@@ -209,7 +225,7 @@ export function SeriesView({
         className="rt-page-fade-up relative z-10 border-b border-border px-4 py-3 sm:px-6 sm:py-4 md:px-8"
         style={{ "--rt-enter-delay": "240ms" } as CSSProperties}
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex w-full flex-col gap-3 sm:w-[60%] sm:flex-row sm:items-center">
           <PageSearchBar
             className="max-w-none min-w-0 flex-1"
             label={t("seriesSearchLabel")}
@@ -221,7 +237,7 @@ export function SeriesView({
             }}
           />
           <GenreFilterSelect
-            className="w-full sm:w-44"
+            className="w-full sm:w-44 sm:shrink-0"
             label={t("moviesFilterGenre")}
             value={activeGenre}
             onChange={(genre) => {
@@ -231,6 +247,19 @@ export function SeriesView({
             options={genreOptions}
           />
         </div>
+        {freeOnly ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={clearFreeFilter}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/40 bg-brand/10 px-3 py-1.5 text-[12px] font-semibold text-brand transition-colors hover:bg-brand/15"
+              aria-label={t("filterClearFree")}
+            >
+              {t("filterFree")}
+              <X size={12} aria-hidden />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {/* Main layout: grid + sidebar */}
@@ -240,7 +269,18 @@ export function SeriesView({
       >
         {/* Series grid + pagination */}
         <div className="min-w-0 flex-1">
-          {hasActiveFilters && allPosters.length === 0 ? (
+          {loadError && seriesList.length === 0 ? (
+            <div className="py-10 text-center">
+              <p className="text-[14px] font-semibold text-text-muted">{t("catalogLoadError")}</p>
+              <button
+                type="button"
+                onClick={() => router.refresh()}
+                className="mt-3 cursor-pointer rounded-md bg-brand px-4 py-2 text-[13px] font-bold text-white hover:bg-brand-hover"
+              >
+                {t("catalogRetry")}
+              </button>
+            </div>
+          ) : hasActiveFilters && allPosters.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-[14px] font-semibold text-text-muted">{t("searchNoResults")}</p>
             </div>
