@@ -11,7 +11,7 @@ import { useFavorites } from "@/components/providers/FavoritesProvider";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { getMe } from "@/lib/api/auth";
 import { listFavorites } from "@/lib/api/favorites";
-import { listOwnedMovies } from "@/lib/api/purchases";
+import { listOwnedMovies, listPurchasedSeries } from "@/lib/api/purchases";
 import {
   hasActiveSubscription,
   listMySubscriptions,
@@ -136,7 +136,7 @@ const EMPTY_CONTENT: Record<
   owned: {
     Icon: ShoppingBag,
     heading: "No owned titles yet",
-    body: "Purchase movies to find them here.",
+    body: "Purchase movies or unlock series to find them here.",
     ctaHref: "/movies",
     cta: "Browse movies",
   },
@@ -213,8 +213,9 @@ export function MyLibraryView({ catalogMovies, catalogSeries }: MyLibraryViewPro
     // Only the small, user-specific data is fetched client-side; the public
     // catalog comes from the server (cached) via the `catalogMovies` prop.
     (async () => {
-      const [ownedMovies, favorites, me, subs] = await Promise.all([
+      const [ownedMovies, purchasedSeries, favorites, me, subs] = await Promise.all([
         listOwnedMovies().catch(swallow("my-library: load owned movies", [])),
+        listPurchasedSeries().catch(swallow("my-library: load purchased series", [])),
         listFavorites().catch(swallow("my-library: load favorites", [])),
         getMe().catch(swallow("my-library: load user", null)),
         listMySubscriptions().catch(swallow("my-library: load subscriptions", [])),
@@ -224,22 +225,41 @@ export function MyLibraryView({ catalogMovies, catalogSeries }: MyLibraryViewPro
 
       const isAdmin = isAdminUser(me);
       const purchasedIds = new Set(ownedMovies.map((m) => m.id));
+      const purchasedSeriesIds = new Set(purchasedSeries.map((p) => p.series_id));
       const hasSubscription = hasActiveSubscription(subs);
-      setOwnedCount(ownedMovies.length);
-      setOwnedPosters(
-        ownedMovies.map((m, i) => movieToPoster(m, i, purchasedIds, isAdmin, hasSubscription)),
+      const seriesById = new Map(catalogSeries.map((s) => [s.id, s]));
+
+      // Series unlocked one at a time (Mini plan), newest unlock first. A
+      // series missing from the published catalog is skipped, like movies.
+      const ownedSeries: SeriesRead[] = [];
+      const newestFirst = [...purchasedSeries].sort(
+        (a, b) => Date.parse(b.purchased_at) - Date.parse(a.purchased_at),
       );
+      for (const { series_id } of newestFirst) {
+        const series = seriesById.get(series_id);
+        if (series && !ownedSeries.includes(series)) ownedSeries.push(series);
+      }
+      const ownedList = [
+        ...ownedSeries.map((s, i) => seriesToPoster(s, i, { owned: true, hasSubscription, isAdmin })),
+        ...ownedMovies.map((m, i) =>
+          movieToPoster(m, ownedSeries.length + i, purchasedIds, isAdmin, hasSubscription),
+        ),
+      ];
+      setOwnedCount(ownedList.length);
+      setOwnedPosters(ownedList);
 
       // A favourite is a movie or a series id; keep the API's newest-first order.
       const moviesById = new Map(catalogMovies.map((m) => [m.id, m]));
-      const seriesById = new Map(catalogSeries.map((s) => [s.id, s]));
       const favPosters: PosterCardProps[] = [];
       for (const { content_id } of favorites) {
         const movie = moviesById.get(content_id);
         const series = seriesById.get(content_id);
         const i = favPosters.length;
         if (movie) favPosters.push(movieToPoster(movie, i, purchasedIds, isAdmin, hasSubscription));
-        else if (series) favPosters.push(seriesToPoster(series, i, { hasSubscription, isAdmin }));
+        else if (series) {
+          const owned = purchasedSeriesIds.has(series.id);
+          favPosters.push(seriesToPoster(series, i, { owned, hasSubscription, isAdmin }));
+        }
       }
       // Count what can be shown, so an unpublished favourite doesn't leave a
       // non-zero badge over the empty state.

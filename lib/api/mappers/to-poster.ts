@@ -12,6 +12,8 @@ import type { ContentListItemRead, SeasonRead, SeriesRead } from "../types";
 export type SeriesPosterOptions = {
   hasSubscription?: boolean;
   isAdmin?: boolean;
+  /** Unlocked with a one-time series purchase (the Mini plan). */
+  owned?: boolean;
   seasons?: SeasonRead[];
 };
 
@@ -83,6 +85,7 @@ export function seriesToPoster(
   const opts: SeriesPosterOptions =
     typeof options === "boolean" ? { hasSubscription: options } : (options ?? {});
   const hasSubscription = Boolean(opts.hasSubscription) || Boolean(opts.isAdmin);
+  const owned = Boolean(opts.owned);
   const seasons = opts.seasons ?? [];
   const firstFree = findFirstFreeEpisode(seasons);
   // Prefer concrete free-episode coords when seasons were prefetched; otherwise
@@ -95,7 +98,7 @@ export function seriesToPoster(
   let watchLabel = "View series";
   let watchHref = `/watch/series/${series.slug}/1/1`;
 
-  if (hasSubscription) {
+  if (hasSubscription || owned) {
     watchLabel = "Watch";
   } else if (firstFree) {
     watchLabel = "Watch now";
@@ -117,7 +120,7 @@ export function seriesToPoster(
       : null,
     posterGradient: gradient,
     accentColor: accent,
-    badge: { kind: "hd", label: "HD" },
+    badge: owned ? { kind: "owned", label: "OWNED" } : { kind: "hd", label: "HD" },
     subtitle: { text: "A SERIES", color: accent },
     entitlement: hasSubscription ? { kind: "subscribed", value: "Subscribed" } : { kind: "none" },
     watchLabel,

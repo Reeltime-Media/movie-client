@@ -62,6 +62,23 @@ describe("movieToPoster", () => {
   });
 });
 
+describe("seriesToPoster", () => {
+  const series = { id: "series-1", slug: "dragon-love-1999", title: "Dragon Love" } as SeriesRead;
+
+  it("marks a series unlocked with a one-time purchase as owned and watchable", () => {
+    const poster = seriesToPoster(series, 0, { owned: true });
+    expect(poster.badge).toEqual({ kind: "owned", label: "OWNED" });
+    expect(poster.watchLabel).toBe("Watch");
+    expect(poster.watchHref).toBe("/watch/series/dragon-love-1999/1/1");
+  });
+
+  it("keeps the HD badge and 'View series' when not unlocked", () => {
+    const poster = seriesToPoster(series, 0);
+    expect(poster.badge).toEqual({ kind: "hd", label: "HD" });
+    expect(poster.watchLabel).toBe("View series");
+  });
+});
+
 describe("movieToBanner", () => {
   it("unlocks a paid movie's banner CTA for an active subscriber", () => {
     const banner = movieToBanner(paidMovie(), undefined, false, true);
