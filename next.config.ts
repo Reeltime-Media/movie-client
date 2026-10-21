@@ -10,12 +10,13 @@ function securityHeaders(): { key: string; value: string }[] {
       key: "Content-Security-Policy",
       value: [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
+        // Google Identity + Telegram Login Widget (script + oauth iframe).
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://telegram.org",
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob: https:",
         "font-src 'self' data:",
         `connect-src ${cspConnectSrc()}`,
-        "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
+        "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://oauth.telegram.org https://telegram.org",
         "media-src 'self' https: blob:",
       ].join("; "),
     },
