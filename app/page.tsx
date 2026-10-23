@@ -18,9 +18,9 @@ const HOME_SERIES_LIMIT = 12;
 /** Teaser of live TV on home — live channels first, then offline. */
 const HOME_TV_LIMIT = 12;
 
-// Public catalog is cached/revalidated on the server (ISR). Must be a literal —
-// Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
-export const revalidate = 300;
+// Public catalog is cached/revalidated on the server (ISR). Must be a literal.
+// Keep this short so admin genre-rail / free-today edits show up quickly.
+export const revalidate = 60;
 
 export default async function Home() {
   const [
