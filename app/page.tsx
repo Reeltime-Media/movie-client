@@ -1,8 +1,12 @@
 import { HomeView } from "@/components/home/HomeView";
-import { listComingSoon, listFreeToday } from "@/lib/api/catalog";
-import { listHeroFeatured } from "@/lib/api/catalog";
+import {
+  listComingSoon,
+  listFreeToday,
+  listGenreRails,
+  listHeroFeatured,
+  listPromotionBanners,
+} from "@/lib/api/catalog";
 import { listMoviesPage } from "@/lib/api/movies";
-import { listPromotionBanners } from "@/lib/api/catalog";
 import { listSeriesPage } from "@/lib/api/series";
 import { listTvChannels } from "@/lib/api/tv";
 import { movieToPoster } from "@/lib/api/mappers";
@@ -19,16 +23,25 @@ const HOME_TV_LIMIT = 12;
 export const revalidate = 300;
 
 export default async function Home() {
-  const [movies, seriesList, promotionBanners, heroFeatured, freeToday, comingSoon, tvChannels] =
-    await Promise.all([
-      listMoviesPage(undefined, HOME_MOVIE_LIMIT).catch(swallow("home: load movies", [])),
-      listSeriesPage(undefined, HOME_SERIES_LIMIT).catch(swallow("home: load series", [])),
-      listPromotionBanners("home").catch(swallow("home: load promotion banners", [])),
-      listHeroFeatured("home").catch(swallow("home: load hero featured", [])),
-      listFreeToday().catch(swallow("home: load free today", [])),
-      listComingSoon().catch(swallow("home: load coming soon", [])),
-      listTvChannels().catch(swallow("home: load tv channels", [])),
-    ]);
+  const [
+    movies,
+    seriesList,
+    promotionBanners,
+    heroFeatured,
+    freeToday,
+    comingSoon,
+    tvChannels,
+    genreRails,
+  ] = await Promise.all([
+    listMoviesPage(undefined, HOME_MOVIE_LIMIT).catch(swallow("home: load movies", [])),
+    listSeriesPage(undefined, HOME_SERIES_LIMIT).catch(swallow("home: load series", [])),
+    listPromotionBanners("home").catch(swallow("home: load promotion banners", [])),
+    listHeroFeatured("home").catch(swallow("home: load hero featured", [])),
+    listFreeToday().catch(swallow("home: load free today", [])),
+    listComingSoon().catch(swallow("home: load coming soon", [])),
+    listTvChannels().catch(swallow("home: load tv channels", [])),
+    listGenreRails().catch(swallow("home: load genre rails", [])),
+  ]);
 
   const homeTvChannels = [...tvChannels]
     .sort((a, b) => Number(b.status === "live") - Number(a.status === "live"))
@@ -62,6 +75,7 @@ export default async function Home() {
       tvChannels={homeTvChannels}
       promotionBanners={promotionBanners}
       heroFeatured={heroFeatured}
+      genreRails={genreRails}
     />
   );
 }

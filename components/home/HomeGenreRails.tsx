@@ -6,12 +6,14 @@ import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { genreKeyFromLabel } from "@/lib/catalog-filter";
-import { buildHomeGenreRails, moviesGenreHref } from "@/lib/home-genre-rails";
+import { resolveHomeGenreRails, moviesGenreHref } from "@/lib/home-genre-rails";
+import type { GenreRailRead } from "@/lib/api/catalog";
 import type { ContentListItemRead } from "@/lib/api/types";
 import type { PosterCardProps } from "@/types/poster-card";
 
 type HomeGenreRailsProps = {
   movies: ContentListItemRead[];
+  curatedRails?: GenreRailRead[];
   ownedIds: Set<string>;
   isAdmin: boolean;
   hasSubscription?: boolean;
@@ -46,6 +48,7 @@ function GenreRail({
 
 export function HomeGenreRails({
   movies,
+  curatedRails,
   ownedIds,
   isAdmin,
   hasSubscription = false,
@@ -53,8 +56,8 @@ export function HomeGenreRails({
   const { t } = useI18n();
 
   const rails = useMemo(
-    () => buildHomeGenreRails(movies, ownedIds, isAdmin, hasSubscription),
-    [movies, ownedIds, isAdmin, hasSubscription],
+    () => resolveHomeGenreRails(curatedRails, movies, ownedIds, isAdmin, hasSubscription),
+    [curatedRails, movies, ownedIds, isAdmin, hasSubscription],
   );
 
   if (rails.length === 0) return null;

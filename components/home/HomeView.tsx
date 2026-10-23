@@ -23,8 +23,7 @@ import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
-import type { HeroFeaturedSlide } from "@/lib/api/catalog";
-import type { PromotionBannerRead } from "@/lib/api/catalog";
+import type { GenreRailRead, HeroFeaturedSlide, PromotionBannerRead } from "@/lib/api/catalog";
 import type {
   ContentListItemRead,
   SeriesRead,
@@ -41,6 +40,7 @@ type HomeViewProps = {
   tvChannels: TvChannelRead[];
   promotionBanners: PromotionBannerRead[];
   heroFeatured: HeroFeaturedSlide[];
+  genreRails?: GenreRailRead[];
 };
 
 const RAIL_LIMIT = 12;
@@ -55,6 +55,7 @@ export function HomeView({
   tvChannels,
   promotionBanners,
   heroFeatured,
+  genreRails = [],
 }: HomeViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
@@ -271,6 +272,7 @@ export function HomeView({
 
       <HomeGenreRails
         movies={movies}
+        curatedRails={genreRails}
         ownedIds={ownedIds}
         isAdmin={isAdmin}
         hasSubscription={hasSubscription}
