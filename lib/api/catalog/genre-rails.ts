@@ -1,11 +1,18 @@
-import { apiFetch } from "@/lib/api/client";
-import type { ContentListItemRead } from "@/lib/api/types";
+import { apiFetch } from "../core/client";
+import type { ContentListItemRead } from "../types";
 
 export type GenreRailRead = {
   genre: string;
   movies: ContentListItemRead[];
 };
 
-export async function listGenreRails(init?: RequestInit): Promise<GenreRailRead[]> {
+/** Admin-curated home rails — revalidate often so reorder shows up quickly. */
+const genreRailsCache: RequestInit = {
+  next: { revalidate: 30 },
+} as RequestInit;
+
+export async function listGenreRails(
+  init: RequestInit = genreRailsCache,
+): Promise<GenreRailRead[]> {
   return apiFetch<GenreRailRead[]>("/genre-rails/", init);
 }
