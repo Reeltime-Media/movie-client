@@ -31,12 +31,13 @@ function TelegramAuthBridge() {
   const [status, setStatus] = useState("Waiting for Telegram…");
 
   const ready = useMemo(() => Boolean(nonce && botUsername), [nonce, botUsername]);
+  // A missing nonce/bot is known at render time — derive it rather than set it in the effect.
+  const shownError = ready
+    ? error
+    : "Missing Telegram login session. Return to the app and try again.";
 
   useEffect(() => {
-    if (!ready) {
-      setError("Missing Telegram login session. Return to the app and try again.");
-      return;
-    }
+    if (!ready) return;
 
     window.onTelegramAuth = (user: TelegramUser) => {
       try {
@@ -95,9 +96,9 @@ function TelegramAuthBridge() {
           Sign in with Telegram, then we will send you back to the REELTIME app.
         </p>
 
-        {error ? (
+        {shownError ? (
           <p className="mt-6 rounded-md border border-danger/30 bg-danger/10 px-3 py-2.5 text-[12px] font-medium text-danger">
-            {error}
+            {shownError}
           </p>
         ) : (
           <>
