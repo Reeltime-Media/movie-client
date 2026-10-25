@@ -1,0 +1,29 @@
+# Production on the movie-backend VM (reeltime.fun, www.reeltime.fun).
+# CI builds the image and ships it here (.github/workflows/ci.yml) — the VM
+# never runs `next build`, which needs more memory than it can spare next to
+# the API. Cloudflare Tunnel `reeltime-web` carries the traffic, so nothing is
+# exposed on the host. VM-only files next to this one: `.env` (ALERT_RELAY_*)
+# and `cloudflared/` (config.yml + tunnel credentials).
+services:
+  web:
+    image: movie-client:latest
+    env_file: .env
+    environment:
+      # Server-side catalog fetches go straight to the API container's host port.
+      API_PROXY_TARGET: http://host.docker.internal:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3000:3000"
+    # Keep a runaway render from starving the API on the same VM.
+    mem_limit: 1g
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.3
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - web
+    restart: unless-stopped

@@ -34,3 +34,115 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # ── CD: build the image here and ship it to the GCE VM (main only) ─────────
+  # The VM only loads the image and restarts the container: `next build` needs
+  # more memory than movie-backend can spare next to the API.
+  deploy:
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      # Public values — they end up in the browser bundle anyway.
+      NEXT_PUBLIC_API_URL: https://api.reeltime.fun
+      NEXT_PUBLIC_APP_URL: https://reeltime.fun
+      NEXT_PUBLIC_R2_PUBLIC_URL: https://pub-4a89afeb70a742338b4ea1c0cdffc06c.r2.dev
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: 377818572638-0pcok515390da7qdun9b7644irmg9akm.apps.googleusercontent.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL \
+            --build-arg NEXT_PUBLIC_APP_URL \
+            --build-arg NEXT_PUBLIC_R2_PUBLIC_URL \
+            --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID \
+            --build-arg API_PROXY_TARGET="$NEXT_PUBLIC_API_URL" \
+            -t movie-client:latest -t "movie-client:${GITHUB_SHA::7}" .
+          docker save movie-client:latest "movie-client:${GITHUB_SHA::7}" | gzip > movie-client.tar.gz
+
+      - name: Copy image to GCE
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.GCE_HOST }}
+          username: ${{ secrets.GCE_USER }}
+          key: ${{ secrets.GCE_SSH_KEY }}
+          source: movie-client.tar.gz,docker-compose.yml
+          target: /tmp/movie-client-deploy
+          overwrite: true
+
+      - name: Restart on GCE
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.GCE_HOST }}
+          username: ${{ secrets.GCE_USER }}
+          key: ${{ secrets.GCE_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            STAGE=/tmp/movie-client-deploy
+            DIR=/home/thychanna17_gmail_com/movie/movie-client
+
+            gunzip -c "$STAGE/movie-client.tar.gz" | sudo docker load
+            sudo install -m 644 "$STAGE/docker-compose.yml" "$DIR/docker-compose.yml"
+            rm -rf "$STAGE"
+
+            sudo docker compose --project-directory "$DIR" -f "$DIR/docker-compose.yml" up -d
+
+            # Keep the three newest commit tags for rollback.
+            sudo docker images movie-client --format '{{.Tag}}' | grep -v '^latest$' | tail -n +4 \
+              | xargs -r -I{} sudo docker rmi "movie-client:{}" || true
+
+            for i in $(seq 1 30); do
+              if curl -sf -o /dev/null http://127.0.0.1:3000/; then
+                echo "health ok"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "health check failed"
+            sudo docker compose --project-directory "$DIR" -f "$DIR/docker-compose.yml" ps
+            exit 1
+
+  # ── Notify: deploy result → ops alert relay → Telegram (main only) ─────────
+  notify:
+    needs: [checks, deploy]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send result to Telegram
+        env:
+          RELAY_URL: https://reeltime-alerts-377818572638.asia-southeast1.run.app
+          RELAY_TOKEN: ${{ secrets.ALERT_RELAY_TOKEN }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          # Passed via env, never inlined into the script (commit text is untrusted).
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          AUTHOR: ${{ github.event.head_commit.author.name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$RELAY_TOKEN" ]; then
+            echo "ALERT_RELAY_TOKEN secret not set; skipping"
+            exit 0
+          fi
+          commit="${GITHUB_SHA::7} $(printf '%s\n' "$COMMIT_MESSAGE" | head -n1)"
+          if [ "$DEPLOY_RESULT" = success ]; then
+            level=resolved  # shows as ✅
+            title="movie-client deployed: $commit"
+          elif [ "$CHECKS_RESULT" = failure ]; then
+            level=error
+            title="movie-client not deployed: checks failed"
+          elif [ "$DEPLOY_RESULT" = failure ]; then
+            level=error
+            title="movie-client deploy failed"
+          else
+            level=warning
+            title="movie-client deploy $DEPLOY_RESULT (checks $CHECKS_RESULT)"
+          fi
+          detail=$(printf 'Commit: %s\nBy: %s\n%s' "$commit" "$AUTHOR" "$RUN_URL")
+          jq -n --arg level "$level" --arg title "$title" --arg detail "$detail" \
+            '{source: "deploy", level: $level, title: $title, detail: $detail}' \
+            | curl -fsS --max-time 20 -X POST "$RELAY_URL/event" \
+                -H "Authorization: Bearer $RELAY_TOKEN" -H "Content-Type: application/json" -d @- \
+            || echo "::warning::alert relay unreachable"

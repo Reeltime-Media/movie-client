@@ -24,6 +24,8 @@ function securityHeaders(): { key: string; value: string }[] {
 }
 
 const nextConfig: NextConfig = {
+  // Self-contained server (.next/standalone) for the Docker image on movie-backend.
+  output: "standalone",
   // Auto-memoize components/hooks; the codebase passes the compiler's lint rules.
   reactCompiler: true,
   experimental: {
