@@ -142,6 +142,7 @@ export const en = {
   cardComingSoon: "Coming soon",
   heroWatchNow: "Watch now",
   heroMoreInfo: "More info",
+  heroOpenPromotion: "Open promotion",
   heroFeaturedTitlesAria: "Featured titles",
 
   promotionEyebrow: "Promotion",

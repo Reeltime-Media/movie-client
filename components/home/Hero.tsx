@@ -14,6 +14,11 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 
 const AUTO_MS = 6500;
 
+/** "//host" is protocol-relative — off-site, never an internal route. */
+function isExternalHref(href: string): boolean {
+  return href.startsWith("http") || href.startsWith("//");
+}
+
 function subscribeReducedMotion(onChange: () => void) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
   mq.addEventListener("change", onChange);
@@ -183,10 +188,32 @@ export function Hero({
         </>
       )}
 
+      {/* Custom slides with a link (image promos) are clickable edge to edge */}
+      {activeSlide?.isCustom && activeSlide.watchHref ? (
+        isExternalHref(activeSlide.watchHref) ? (
+          <a
+            key={`link-${activeSlide.id}`}
+            href={activeSlide.watchHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={activeSlide.title || t("heroOpenPromotion")}
+            className="absolute inset-0 z-1"
+          />
+        ) : (
+          <Link
+            key={`link-${activeSlide.id}`}
+            href={activeSlide.watchHref}
+            aria-label={activeSlide.title || t("heroOpenPromotion")}
+            className="absolute inset-0 z-1"
+          />
+        )
+      ) : null}
+
       <div className="pointer-events-none relative z-2 h-full">
         <div className="flex h-full w-full items-end justify-between px-4 pb-6 sm:px-6 sm:pb-8 md:px-12 md:pb-10">
-          {/* Left: title + year + button */}
-          <div className="pointer-events-auto relative min-w-0 max-w-xl">
+          {/* Left: title + year + button. Only the buttons and dots take clicks,
+              so a slide link underneath stays clickable through the text. */}
+          <div className="pointer-events-none relative min-w-0 max-w-xl">
             {slides.length === 0 ? (
               <div className="animate-pulse space-y-3">
                 <div className="h-8 w-64 rounded bg-white/10" />
@@ -246,9 +273,8 @@ export function Hero({
                     </div>
 
                     {!s.isCustom && s.watchHref ? (
-                      <div className="mt-4 flex items-center gap-2.5">
-                        {/* "//host" is protocol-relative — off-site, never an internal route */}
-                        {s.watchHref.startsWith("http") || s.watchHref.startsWith("//") ? (
+                      <div className="pointer-events-auto mt-4 flex items-center gap-2.5">
+                        {isExternalHref(s.watchHref) ? (
                           <a
                             href={s.watchHref}
                             target="_blank"

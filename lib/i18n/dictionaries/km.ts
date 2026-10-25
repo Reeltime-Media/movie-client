@@ -138,6 +138,7 @@ export const km = {
   cardComingSoon: "មកដល់ឆាប់ៗ",
   heroWatchNow: "មើលឥឡូវនេះ",
   heroMoreInfo: "ព័ត៌មានបន្ថែម",
+  heroOpenPromotion: "បើកការផ្សព្វផ្សាយ",
   heroFeaturedTitlesAria: "ចំណងជើងណែនាំ",
 
   promotionEyebrow: "ការផ្សព្វផ្សាយ",

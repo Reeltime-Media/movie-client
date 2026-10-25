@@ -32,6 +32,19 @@ describe("slideFromFeatured", () => {
     expect(slide.title).toBe("Summer promo");
   });
 
+  it("maps an image-only custom slide to its banner with no video", () => {
+    // Full URL: posterUrl passes it through without NEXT_PUBLIC_R2_PUBLIC_URL.
+    const banner = "https://cdn.reeltime.fun/hero/banners/x.jpg";
+    const slide = slideFromFeatured(
+      featured({ title: "", banner_key: banner, watch_href: "/pricing" }),
+    );
+    expect(slide.isCustom).toBe(true);
+    expect(slide.bannerSrc).toBe(banner);
+    expect(slide.videoSrc).toBeNull();
+    expect(slide.youtubeUrl).toBeNull();
+    expect(slide.watchHref).toBe("/pricing");
+  });
+
   it("keeps watchHref null when the custom slide has no link", () => {
     const slide = slideFromFeatured(featured({ watch_href: null }));
     expect(slide.watchHref).toBeNull();
