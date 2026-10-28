@@ -206,6 +206,9 @@ export function HomeView({
           fallbackTvChannels={tvChannels}
           fallbackHero={heroFeatured}
           fallbackBanners={displayBanners}
+          fallbackFreeToday={initialFreeToday}
+          fallbackComingSoon={initialComingSoon}
+          fallbackGenreRails={genreRails}
           ownedIds={ownedIds}
           isAdmin={isAdmin}
           hasSubscription={hasSubscription}

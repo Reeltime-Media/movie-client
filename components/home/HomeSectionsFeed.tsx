@@ -12,9 +12,14 @@ import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { TvChannelRail } from "@/components/tv/TvChannelRail";
 import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/mappers";
-import { moviesGenreHref } from "@/lib/home-genre-rails";
+import { buildHomeGenreRails, moviesGenreHref } from "@/lib/home-genre-rails";
 import { genreKeyFromLabel } from "@/lib/catalog-filter";
-import type { HomeSectionPublic, PromotionBannerRead, HeroFeaturedSlide } from "@/lib/api/catalog";
+import type {
+  GenreRailRead,
+  HomeSectionPublic,
+  PromotionBannerRead,
+  HeroFeaturedSlide,
+} from "@/lib/api/catalog";
 import type { ContentListItemRead, SeriesRead, TvChannelRead } from "@/lib/api/types";
 import type { PosterCardProps } from "@/types/poster-card";
 
@@ -25,6 +30,10 @@ type HomeSectionsFeedProps = {
   fallbackTvChannels: TvChannelRead[];
   fallbackHero: HeroFeaturedSlide[];
   fallbackBanners: PromotionBannerRead[];
+  /** Legacy rails used when a CMS section has no curated items yet. */
+  fallbackFreeToday: PosterCardProps[];
+  fallbackComingSoon: PosterCardProps[];
+  fallbackGenreRails?: GenreRailRead[];
   ownedIds: Set<string>;
   isAdmin: boolean;
   hasSubscription: boolean;
@@ -44,6 +53,9 @@ export function HomeSectionsFeed({
   fallbackTvChannels,
   fallbackHero,
   fallbackBanners,
+  fallbackFreeToday,
+  fallbackComingSoon,
+  fallbackGenreRails = [],
   ownedIds,
   isAdmin,
   hasSubscription,
@@ -132,6 +144,8 @@ export function HomeSectionsFeed({
   };
 
   const nodes: ReactNode[] = [];
+  let genreHeaderAdded = false;
+  const curatedGenreLabels = new Set<string>();
 
   for (const section of sections) {
     const title = defaultTitle(section);
@@ -169,7 +183,8 @@ export function HomeSectionsFeed({
     }
 
     if (section.type === "free_today") {
-      const posters = freePosters(section.movies);
+      const posters =
+        section.movies.length > 0 ? freePosters(section.movies) : fallbackFreeToday;
       if (posters.length === 0) continue;
       nodes.push(
         <ScrollReveal key={section.id} as="section" className="pt-8 pb-6">
@@ -212,7 +227,8 @@ export function HomeSectionsFeed({
     }
 
     if (section.type === "coming_soon") {
-      const posters = soonPosters(section.movies);
+      const posters =
+        section.movies.length > 0 ? soonPosters(section.movies) : fallbackComingSoon;
       if (posters.length === 0) continue;
       nodes.push(
         <ScrollReveal key={section.id} as="section" className="pt-8 pb-6">
@@ -300,6 +316,16 @@ export function HomeSectionsFeed({
           ? section.series.map((s) => seriesToBanner(s as SeriesRead))
           : [];
       if (posters.length === 0 && seriesCards.length === 0) continue;
+      if (section.type === "genre" && !genreHeaderAdded) {
+        genreHeaderAdded = true;
+        nodes.push(
+          <section key="browse-by-genre" className="px-4 pt-10 pb-2 sm:px-6 md:px-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted">
+              {t("homeBrowseByGenre")}
+            </p>
+          </section>,
+        );
+      }
       nodes.push(
         <section key={section.id} className="pt-4 pb-6">
           <SectionHeader
@@ -316,6 +342,59 @@ export function HomeSectionsFeed({
             <PosterScrollRail posters={posters} gutter="sm" />
           ) : null}
           {seriesCards.length > 0 ? <BannerScrollRail cards={seriesCards} /> : null}
+        </section>,
+      );
+      if (section.type === "genre" && section.genre_name) {
+        curatedGenreLabels.add(section.genre_name.trim().toLowerCase());
+      }
+    }
+  }
+
+  // Fill remaining popular genres (same cap as before) when CMS only curated some.
+  const autoGenreRails = buildHomeGenreRails(
+    movies,
+    ownedIds,
+    isAdmin,
+    hasSubscription,
+  ).filter((rail) => !curatedGenreLabels.has(rail.label.trim().toLowerCase()));
+  const curatedFromLegacy = fallbackGenreRails
+    .filter((rail) => !curatedGenreLabels.has(rail.genre.trim().toLowerCase()))
+    .map((rail) => ({
+      label: rail.genre,
+      posters: moviePosters(rail.movies),
+    }));
+  const extraGenreRails = [
+    ...curatedFromLegacy,
+    ...autoGenreRails.filter(
+      (rail) =>
+        !curatedFromLegacy.some(
+          (r) => r.label.trim().toLowerCase() === rail.label.trim().toLowerCase(),
+        ),
+    ),
+  ];
+  if (extraGenreRails.length > 0) {
+    if (!genreHeaderAdded) {
+      nodes.push(
+        <section key="browse-by-genre" className="px-4 pt-10 pb-2 sm:px-6 md:px-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted">
+            {t("homeBrowseByGenre")}
+          </p>
+        </section>,
+      );
+    }
+    for (const rail of extraGenreRails) {
+      if (rail.posters.length === 0) continue;
+      const knownKey = genreKeyFromLabel(rail.label);
+      const railTitle = knownKey !== "genreAll" ? t(knownKey) : rail.label;
+      nodes.push(
+        <section key={`auto-genre-${rail.label}`} className="pt-4 pb-6">
+          <SectionHeader
+            title={railTitle}
+            showSeeAll
+            seeAllHref={moviesGenreHref(rail.label)}
+            seeAllLabel={t("sectionSeeAll")}
+          />
+          <PosterScrollRail posters={rail.posters} gutter="sm" />
         </section>,
       );
     }
