@@ -4,5 +4,7 @@ export { listGenreRails } from "./genre-rails";
 export type { GenreRailRead } from "./genre-rails";
 export { listHeroFeatured } from "./hero-featured";
 export type { HeroFeaturedSlide } from "./hero-featured";
+export { listHomeSections } from "./home-sections";
+export type { HomeSectionPublic } from "./home-sections";
 export { listPromotionBanners } from "./promotion-banners";
 export type { PromotionBannerRead } from "./promotion-banners";

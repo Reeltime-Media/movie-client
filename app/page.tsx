@@ -4,6 +4,7 @@ import {
   listFreeToday,
   listGenreRails,
   listHeroFeatured,
+  listHomeSections,
   listPromotionBanners,
 } from "@/lib/api/catalog";
 import { listMoviesPage } from "@/lib/api/movies";
@@ -32,6 +33,7 @@ export default async function Home() {
     comingSoon,
     tvChannels,
     genreRails,
+    homeSections,
   ] = await Promise.all([
     listMoviesPage(undefined, HOME_MOVIE_LIMIT).catch(swallow("home: load movies", [])),
     listSeriesPage(undefined, HOME_SERIES_LIMIT).catch(swallow("home: load series", [])),
@@ -41,6 +43,7 @@ export default async function Home() {
     listComingSoon().catch(swallow("home: load coming soon", [])),
     listTvChannels().catch(swallow("home: load tv channels", [])),
     listGenreRails().catch(swallow("home: load genre rails", [])),
+    listHomeSections().catch(swallow("home: load home sections", null)),
   ]);
 
   const homeTvChannels = [...tvChannels]
@@ -76,6 +79,7 @@ export default async function Home() {
       promotionBanners={promotionBanners}
       heroFeatured={heroFeatured}
       genreRails={genreRails}
+      homeSections={homeSections}
     />
   );
 }

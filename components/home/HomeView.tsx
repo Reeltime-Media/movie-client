@@ -8,6 +8,7 @@ import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { Hero } from "@/components/home/Hero";
 import { HomeGenreRails } from "@/components/home/HomeGenreRails";
 import { HomePlansSection } from "@/components/home/HomePlansSection";
+import { HomeSectionsFeed } from "@/components/home/HomeSectionsFeed";
 import { PromotionBannerStrip } from "@/components/home/PromotionBannerStrip";
 import { PageShell } from "@/components/layout/PageShell";
 import { useI18n } from "@/components/providers/LocaleProvider";
@@ -23,7 +24,12 @@ import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
 import { swallow } from "@/lib/log";
 import type { PosterCardProps } from "@/types/poster-card";
-import type { GenreRailRead, HeroFeaturedSlide, PromotionBannerRead } from "@/lib/api/catalog";
+import type {
+  GenreRailRead,
+  HeroFeaturedSlide,
+  HomeSectionPublic,
+  PromotionBannerRead,
+} from "@/lib/api/catalog";
 import type {
   ContentListItemRead,
   SeriesRead,
@@ -41,6 +47,8 @@ type HomeViewProps = {
   promotionBanners: PromotionBannerRead[];
   heroFeatured: HeroFeaturedSlide[];
   genreRails?: GenreRailRead[];
+  /** When present, home layout is driven by the page builder. */
+  homeSections?: HomeSectionPublic[] | null;
 };
 
 const RAIL_LIMIT = 12;
@@ -56,6 +64,7 @@ export function HomeView({
   promotionBanners,
   heroFeatured,
   genreRails = [],
+  homeSections = null,
 }: HomeViewProps) {
   const { t } = useI18n();
   const { loggedIn } = useAuth();
@@ -185,111 +194,152 @@ export function HomeView({
     ];
   }, [promotionBanners, t]);
 
+  const useBuilder = Boolean(homeSections && homeSections.length > 0);
+
   return (
     <PageShell fullWidth footer>
-      <div
-        className="rt-page-fade-in hidden md:block"
-        style={{ "--rt-enter-delay": "0ms" } as CSSProperties}
-      >
-        <Hero
-          featuredSlides={heroFeatured}
-          fallbackMovies={movies}
-          fallbackSeries={seriesList}
+      {useBuilder ? (
+        <HomeSectionsFeed
+          sections={homeSections!}
+          movies={movies}
+          seriesList={seriesList}
+          fallbackTvChannels={tvChannels}
+          fallbackHero={heroFeatured}
+          fallbackBanners={displayBanners}
+          ownedIds={ownedIds}
+          isAdmin={isAdmin}
+          hasSubscription={hasSubscription}
+          loggedIn={loggedIn}
+          continuePosters={visibleContinuePosters}
+          libraryPosters={libraryPosters}
+          isEntitled={(channel) =>
+            channel.is_free || (loggedIn && hasSubscription) || isAdmin
+          }
         />
-      </div>
+      ) : (
+        <>
+          <div
+            className="rt-page-fade-in hidden md:block"
+            style={{ "--rt-enter-delay": "0ms" } as CSSProperties}
+          >
+            <Hero
+              featuredSlides={heroFeatured}
+              fallbackMovies={movies}
+              fallbackSeries={seriesList}
+            />
+          </div>
 
-      {tvChannels.length > 0 ? (
-        <ScrollReveal as="section" className="pt-8 pb-6">
-          <TvChannelRail
-            channels={tvChannels}
-            isEntitled={(channel) =>
-              channel.is_free || (loggedIn && hasSubscription) || isAdmin
-            }
+          {tvChannels.length > 0 ? (
+            <ScrollReveal as="section" className="pt-8 pb-6">
+              <TvChannelRail
+                channels={tvChannels}
+                isEntitled={(channel) =>
+                  channel.is_free || (loggedIn && hasSubscription) || isAdmin
+                }
+              />
+            </ScrollReveal>
+          ) : null}
+
+          {initialFreeToday.length > 0 && (
+            <ScrollReveal as="section" className="pt-8 pb-6">
+              <SectionHeader title={t("homeFreeTodayTitle")} scrollRef={freeTodayRailRef} />
+              <PosterScrollRail
+                posters={initialFreeToday}
+                gutter="sm"
+                scrollRef={freeTodayRailRef}
+              />
+            </ScrollReveal>
+          )}
+
+          <ScrollReveal as="section" className="pt-8 pb-6">
+            <SectionHeader
+              title={t("homeMostWatchedTitle")}
+              showSeeAll
+              seeAllHref="/movies"
+              seeAllLabel={t("sectionSeeAll")}
+            />
+            <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
+          </ScrollReveal>
+
+          <ScrollReveal>
+            <HomePlansSection />
+          </ScrollReveal>
+
+          {initialComingSoon.length > 0 && (
+            <ScrollReveal as="section" className="pt-8 pb-6">
+              <SectionHeader title={t("homeComingSoonTitle")} scrollRef={comingSoonRailRef} />
+              <PosterScrollRail
+                posters={initialComingSoon}
+                gutter="sm"
+                scrollRef={comingSoonRailRef}
+              />
+            </ScrollReveal>
+          )}
+
+          <section className="pt-8 pb-6">
+            <SectionHeader
+              title={t("moviesTrendingTitle")}
+              showSeeAll
+              seeAllHref="/movies"
+              seeAllLabel={t("sectionSeeAll")}
+              scrollRef={trendingRailRef}
+            />
+            <PosterScrollRail posters={trendingPosters} gutter="sm" scrollRef={trendingRailRef} />
+          </section>
+
+          <section className="pt-8 pb-6">
+            <SectionHeader
+              title={t("seriesSubscribeTitle")}
+              showSeeAll
+              seeAllHref="/series"
+              seeAllLabel={t("sectionSeeAll")}
+            />
+            <BannerScrollRail cards={seriesBanners} />
+          </section>
+
+          <section className="pt-4 pb-2">
+            <PromotionBannerStrip banners={displayBanners} />
+          </section>
+
+          {visibleContinuePosters.length > 0 ? (
+            <section className="pt-8 pb-6">
+              <SectionHeader
+                title={t("homeContinueWatching")}
+                showSeeAll
+                seeAllHref="/my-library"
+                seeAllLabel={t("sectionSeeAll")}
+                scrollRef={continueRailRef}
+              />
+              <PosterScrollRail
+                posters={visibleContinuePosters}
+                gutter="sm"
+                scrollRef={continueRailRef}
+              />
+            </section>
+          ) : null}
+
+          <HomeGenreRails
+            movies={movies}
+            curatedRails={genreRails}
+            ownedIds={ownedIds}
+            isAdmin={isAdmin}
+            hasSubscription={hasSubscription}
           />
-        </ScrollReveal>
-      ) : null}
 
-      {initialFreeToday.length > 0 && (
-        <ScrollReveal as="section" className="pt-8 pb-6">
-          <SectionHeader title={t("homeFreeTodayTitle")} scrollRef={freeTodayRailRef} />
-          <PosterScrollRail posters={initialFreeToday} gutter="sm" scrollRef={freeTodayRailRef} />
-        </ScrollReveal>
+          {libraryPosters.length > 0 ? (
+            <section className="pt-8 pb-12">
+              <SectionHeader
+                title={t("homeLibrarySpotlight")}
+                showSeeAll
+                seeAllHref="/my-library"
+                seeAllLabel={t("sectionSeeAll")}
+                scrollRef={libraryRailRef}
+              />
+              <PosterScrollRail posters={libraryPosters} gutter="sm" scrollRef={libraryRailRef} />
+            </section>
+          ) : null}
+        </>
       )}
-
-      <ScrollReveal as="section" className="pt-8 pb-6">
-        <SectionHeader title={t("homeMostWatchedTitle")} showSeeAll seeAllHref="/movies" seeAllLabel={t("sectionSeeAll")} />
-        <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
-      </ScrollReveal>
-
-      <ScrollReveal>
-        <HomePlansSection />
-      </ScrollReveal>
-
-      {initialComingSoon.length > 0 && (
-        <ScrollReveal as="section" className="pt-8 pb-6">
-          <SectionHeader title={t("homeComingSoonTitle")} scrollRef={comingSoonRailRef} />
-          <PosterScrollRail posters={initialComingSoon} gutter="sm" scrollRef={comingSoonRailRef} />
-        </ScrollReveal>
-      )}
-
-      <section className="pt-8 pb-6">
-        <SectionHeader
-          title={t("moviesTrendingTitle")}
-          showSeeAll
-          seeAllHref="/movies"
-          seeAllLabel={t("sectionSeeAll")}
-          scrollRef={trendingRailRef}
-        />
-        <PosterScrollRail posters={trendingPosters} gutter="sm" scrollRef={trendingRailRef} />
-      </section>
-
-      <section className="pt-8 pb-6">
-        <SectionHeader
-          title={t("seriesSubscribeTitle")}
-          showSeeAll
-          seeAllHref="/series"
-          seeAllLabel={t("sectionSeeAll")}
-        />
-        <BannerScrollRail cards={seriesBanners} />
-      </section>
-
-      <section className="pt-4 pb-2">
-        <PromotionBannerStrip banners={displayBanners} />
-      </section>
-
-      {visibleContinuePosters.length > 0 ? (
-        <section className="pt-8 pb-6">
-          <SectionHeader
-            title={t("homeContinueWatching")}
-            showSeeAll
-            seeAllHref="/my-library"
-            seeAllLabel={t("sectionSeeAll")}
-            scrollRef={continueRailRef}
-          />
-          <PosterScrollRail posters={visibleContinuePosters} gutter="sm" scrollRef={continueRailRef} />
-        </section>
-      ) : null}
-
-      <HomeGenreRails
-        movies={movies}
-        curatedRails={genreRails}
-        ownedIds={ownedIds}
-        isAdmin={isAdmin}
-        hasSubscription={hasSubscription}
-      />
-
-      {libraryPosters.length > 0 ? (
-        <section className="pt-8 pb-12">
-          <SectionHeader
-            title={t("homeLibrarySpotlight")}
-            showSeeAll
-            seeAllHref="/my-library"
-            seeAllLabel={t("sectionSeeAll")}
-            scrollRef={libraryRailRef}
-          />
-          <PosterScrollRail posters={libraryPosters} gutter="sm" scrollRef={libraryRailRef} />
-        </section>
-      ) : null}
     </PageShell>
   );
 }
