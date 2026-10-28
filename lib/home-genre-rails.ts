@@ -16,7 +16,7 @@ const RAIL_LIMIT = 12;
 const GENRE_RAIL_LIMIT = 6;
 
 /** Build home poster rails for the most popular genres (by movie count) that actually appear on movies. */
-function buildHomeGenreRails(
+export function buildHomeGenreRails(
   movies: ContentListItemRead[],
   ownedIds: Set<string>,
   isAdmin: boolean,

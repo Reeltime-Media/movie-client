@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import { BannerScrollRail } from "@/components/catalog/BannerScrollRail";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
@@ -65,8 +65,6 @@ export function HomeSectionsFeed({
   isEntitled,
 }: HomeSectionsFeedProps) {
   const { t } = useI18n();
-  const continueInjected = useRef(false);
-  continueInjected.current = false;
 
   const defaultTitle = (section: HomeSectionPublic): string => {
     if (section.title?.trim()) return section.title.trim();
@@ -127,9 +125,14 @@ export function HomeSectionsFeed({
   const fallbackSeries = (): BannerCardProps[] =>
     seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s));
 
-  const renderContinue = () => {
-    if (!loggedIn || continuePosters.length === 0 || continueInjected.current) return null;
-    continueInjected.current = true;
+  const nodes: ReactNode[] = [];
+  let genreHeaderAdded = false;
+  let continueInjected = false;
+  const curatedGenreLabels = new Set<string>();
+
+  const renderContinue = (): ReactNode => {
+    if (!loggedIn || continuePosters.length === 0 || continueInjected) return null;
+    continueInjected = true;
     return (
       <section className="pt-8 pb-6" key="continue-watching">
         <SectionHeader
@@ -142,10 +145,6 @@ export function HomeSectionsFeed({
       </section>
     );
   };
-
-  const nodes: ReactNode[] = [];
-  let genreHeaderAdded = false;
-  const curatedGenreLabels = new Set<string>();
 
   for (const section of sections) {
     const title = defaultTitle(section);
@@ -400,7 +399,7 @@ export function HomeSectionsFeed({
     }
   }
 
-  if (!continueInjected.current) {
+  if (!continueInjected) {
     nodes.push(renderContinue());
   }
 
