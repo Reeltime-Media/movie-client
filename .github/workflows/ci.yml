@@ -1,10 +1,11 @@
-name: CI
+name: CI/CD
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   checks:
@@ -40,12 +41,12 @@ jobs:
   # more memory than movie-backend can spare next to the API.
   deploy:
     needs: checks
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     env:
       # Public values — they end up in the browser bundle anyway.
       NEXT_PUBLIC_API_URL: https://api.reeltime.fun
-      NEXT_PUBLIC_APP_URL: https://reeltime.fun
+      NEXT_PUBLIC_APP_URL: https://www.reeltime.fun
       NEXT_PUBLIC_R2_PUBLIC_URL: https://pub-4a89afeb70a742338b4ea1c0cdffc06c.r2.dev
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: 377818572638-0pcok515390da7qdun9b7644irmg9akm.apps.googleusercontent.com
     steps:
@@ -108,7 +109,7 @@ jobs:
   # ── Notify: deploy result → ops alert relay → Telegram (main only) ─────────
   notify:
     needs: [checks, deploy]
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - name: Send result to Telegram
