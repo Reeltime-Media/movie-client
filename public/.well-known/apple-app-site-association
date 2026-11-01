@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["GUGBLZ8KD2.com.reeltimemedia.movieMobile"],
+        "components": [
+          { "/": "/watch" },
+          { "/": "/watch/*" },
+          { "/": "/movies" },
+          { "/": "/series" },
+          { "/": "/tv" }
+        ]
+      }
+    ]
+  }
+}

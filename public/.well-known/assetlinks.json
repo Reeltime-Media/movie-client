@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.reeltimemedia.movie_mobile",
+      "sha256_cert_fingerprints": [
+        "DE:53:39:62:A8:83:A9:05:AD:F2:13:4B:2C:30:6E:33:D1:69:A7:8C:64:E7:63:8A:9C:7D:EE:2A:A4:6E:BF:B9"
+      ]
+    }
+  }
+]

@@ -49,6 +49,11 @@ const nextConfig: NextConfig = {
         headers: securityHeaders(),
       },
       {
+        // No file extension, so Next would serve it as a binary download.
+        source: "/.well-known/apple-app-site-association",
+        headers: [{ key: "Content-Type", value: "application/json" }],
+      },
+      {
         // Build-hashed — safe to cache forever.
         source: "/_next/static/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
