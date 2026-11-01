@@ -13,9 +13,7 @@ export function cspConnectSrc(): string {
 
   add(process.env.NEXT_PUBLIC_API_URL);
   add(process.env.API_PROXY_TARGET);
-  add(process.env.MOVIE_API_ORIGIN ?? "http://34.124.135.215:8000");
-  add("http://34.124.135.215");
-  add("http://34.124.135.215:8000");
+  add(process.env.MOVIE_API_ORIGIN);
 
   return parts.join(" ");
 }
