@@ -91,8 +91,9 @@ export function HomeSectionsFeed({
     }
   };
 
+  // The API applies each section's limit, which admins can change per section.
   const freePosters = (rows: ContentListItemRead[]): PosterCardProps[] =>
-    rows.slice(0, RAIL_LIMIT).map((m, i) => ({
+    rows.map((m, i) => ({
       ...movieToPoster(m, i, ownedIds, isAdmin, hasSubscription),
       badge: { kind: "free", label: "FREE" } as const,
       entitlement: { kind: "none" } as const,
@@ -100,7 +101,7 @@ export function HomeSectionsFeed({
     }));
 
   const soonPosters = (rows: ContentListItemRead[]): PosterCardProps[] =>
-    rows.slice(0, RAIL_LIMIT).map((m, i) => ({
+    rows.map((m, i) => ({
       ...movieToPoster(m, i, ownedIds, isAdmin, hasSubscription),
       badge: { kind: "soon", label: "SOON" } as const,
       entitlement: { kind: "none" } as const,
@@ -108,9 +109,7 @@ export function HomeSectionsFeed({
     }));
 
   const moviePosters = (rows: ContentListItemRead[]): PosterCardProps[] =>
-    rows
-      .slice(0, RAIL_LIMIT)
-      .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription));
+    rows.map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription));
 
   const fallbackTrending = (): PosterCardProps[] =>
     movies
@@ -197,9 +196,7 @@ export function HomeSectionsFeed({
     if (section.type === "most_watched") {
       const cards: BannerCardProps[] =
         section.movies.length > 0
-          ? section.movies
-              .slice(0, RECENT_LIMIT)
-              .map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription))
+          ? section.movies.map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription))
           : fallbackMostWatched();
       if (cards.length === 0) continue;
       nodes.push(
@@ -360,7 +357,7 @@ export function HomeSectionsFeed({
     .filter((rail) => !curatedGenreLabels.has(rail.genre.trim().toLowerCase()))
     .map((rail) => ({
       label: rail.genre,
-      posters: moviePosters(rail.movies),
+      posters: moviePosters(rail.movies.slice(0, RAIL_LIMIT)),
     }));
   const extraGenreRails = [
     ...curatedFromLegacy,
