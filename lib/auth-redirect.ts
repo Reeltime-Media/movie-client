@@ -3,7 +3,7 @@ import { clearToken } from "@/lib/auth/token";
 let redirectingToLogin = false;
 
 /** Paths where 401 is expected and should stay on the page (e.g. bad login credentials). */
-function isAuthEntryPath(path: string): boolean {
+export function isAuthEntryPath(path: string): boolean {
   const base = path.split("?")[0] ?? path;
   return base.startsWith("/auth/");
 }
