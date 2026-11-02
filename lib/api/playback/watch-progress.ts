@@ -40,12 +40,13 @@ export function upsertWatchProgress(
     }).then(() => undefined);
   }
 
+  // apiFetch encodes the body itself; a pre-encoded string would be sent as a
+  // JSON string literal and rejected.
   return apiFetch<WatchProgressRead>(`/watch-progress/${contentId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+    body: {
       position_seconds: data.position_seconds,
       completed: data.completed,
-    }),
+    },
   });
 }
