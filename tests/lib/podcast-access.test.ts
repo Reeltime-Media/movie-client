@@ -34,7 +34,7 @@ describe("podcastTitles", () => {
 
   it("shows the English title first and the Khmer title below it", () => {
     expect(podcastTitles(episode, "en")).toEqual({
-      primary: "Domnak Akum EP65 — ភូមាហែកគុក",
+      primary: "Domnak Akum EP65",
       secondary: "ភូមាហែកគុក",
     });
   });
@@ -42,7 +42,21 @@ describe("podcastTitles", () => {
   it("shows the Khmer title first for Khmer viewers", () => {
     expect(podcastTitles(episode, "km")).toEqual({
       primary: "ភូមាហែកគុក",
-      secondary: "Domnak Akum EP65 — ភូមាហែកគុក",
+      secondary: "Domnak Akum EP65",
+    });
+  });
+
+  it("keeps a title that does not contain the Khmer name as it is", () => {
+    expect(podcastTitles({ title: "Episode 7", title_km: "ភូមា" }, "en")).toEqual({
+      primary: "Episode 7",
+      secondary: "ភូមា",
+    });
+  });
+
+  it("shows one name when the title is only the Khmer name", () => {
+    expect(podcastTitles({ title: "ភូមា", title_km: "ភូមា" }, "en")).toEqual({
+      primary: "ភូមា",
+      secondary: null,
     });
   });
 
