@@ -76,6 +76,24 @@ export function TvPageSkeleton() {
   );
 }
 
+/** Loading skeleton for the podcasts route (header + a list of episode rows). */
+export function PodcastPageSkeleton() {
+  return (
+    <PageShell fullWidth>
+      <div className="border-b border-border px-4 py-8 sm:px-6 md:px-8">
+        <div className="h-5 w-24 animate-pulse rounded bg-surface-elevated" />
+        <div className="mt-3 h-8 w-64 max-w-full animate-pulse rounded bg-surface-elevated" />
+        <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded bg-surface-elevated" />
+      </div>
+      <div className="flex flex-col gap-3 px-4 py-6 sm:px-6 md:px-8">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-24 animate-pulse rounded-md bg-surface-elevated" />
+        ))}
+      </div>
+    </PageShell>
+  );
+}
+
 /** Loading skeleton for the home route (hero + a couple of rails). */
 export function HomePageSkeleton() {
   return (

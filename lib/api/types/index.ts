@@ -165,3 +165,11 @@ export interface TvChannelAuthorizeRead {
   master_url: string;
   expires_in: number;
 }
+
+/** GET /podcasts/{id}/audio — a playable audio URL for a viewer who may listen. */
+export interface PodcastAudioAuthorizeRead {
+  audio_url: string;
+  expires_in: number;
+  content_id: string;
+  title: string;
+}

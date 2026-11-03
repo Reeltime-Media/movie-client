@@ -1,4 +1,4 @@
-import { Bookmark, Clapperboard, Film, Home, Radio, Tv, User, type LucideIcon } from "lucide-react";
+import { Bookmark, Clapperboard, Film, Home, Mic, Radio, Tv, User, type LucideIcon } from "lucide-react";
 
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -19,6 +19,7 @@ export const primaryBottomNavTabs: BottomNavTab[] = [
 /** Secondary destinations opened from the More sheet. */
 export const moreBottomNavTabs: BottomNavTab[] = [
   { href: "/tv", labelKey: "navTv", Icon: Radio },
+  { href: "/podcasts", labelKey: "navPodcasts", Icon: Mic },
   { href: "/short-movies", labelKey: "navShortMovies", Icon: Clapperboard },
   { href: "/profile", labelKey: "navProfile", Icon: User },
 ];
