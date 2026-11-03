@@ -94,6 +94,16 @@ body {
   overflow-x: hidden;
 }
 
+/* The podcast player docks beside the list with position: sticky, which fails
+   while an ancestor is a scroll container. html, body and the page shell use
+   overflow-x: hidden (that makes them one), so on the podcast page only they
+   clip instead: same horizontal clipping, no scroll container. */
+html:has(#podcast-dock),
+html:has(#podcast-dock) body,
+[data-page-shell]:has(#podcast-dock) {
+  overflow-x: clip;
+}
+
 /* Watch player CSS immersive (phones / iOS): overflow-x:hidden on ancestors
    creates a containing block that traps position:fixed. Lift the clip so the
    player can cover the real viewport while keeping custom controls. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { podcastLockReason, podcastTitles } from "@/lib/podcast-access";
+import { formatPodcastClock, podcastHeadline, podcastLockReason } from "@/lib/podcast-access";
 
 const viewer = { isFree: false, loggedIn: false, hasSubscription: false, isAdmin: false };
 
@@ -29,41 +29,43 @@ describe("podcastLockReason", () => {
   });
 });
 
-describe("podcastTitles", () => {
+describe("podcastHeadline", () => {
   const episode = { title: "Domnak Akum EP65 — ភូមាហែកគុក", title_km: " ភូមាហែកគុក " };
 
-  it("shows the English title first and the Khmer title below it", () => {
-    expect(podcastTitles(episode, "en")).toEqual({
-      primary: "Domnak Akum EP65",
-      secondary: "ភូមាហែកគុក",
+  it("makes the Khmer name the headline with the series and number above it", () => {
+    expect(podcastHeadline(episode)).toEqual({ eyebrow: "Domnak Akum EP65", title: "ភូមាហែកគុក" });
+  });
+
+  it("keeps a title that does not contain the Khmer name as the label", () => {
+    expect(podcastHeadline({ title: "Episode 7", title_km: "ភូមា" })).toEqual({
+      eyebrow: "Episode 7",
+      title: "ភូមា",
     });
   });
 
-  it("shows the Khmer title first for Khmer viewers", () => {
-    expect(podcastTitles(episode, "km")).toEqual({
-      primary: "ភូមាហែកគុក",
-      secondary: "Domnak Akum EP65",
-    });
-  });
-
-  it("keeps a title that does not contain the Khmer name as it is", () => {
-    expect(podcastTitles({ title: "Episode 7", title_km: "ភូមា" }, "en")).toEqual({
-      primary: "Episode 7",
-      secondary: "ភូមា",
-    });
-  });
-
-  it("shows one name when the title is only the Khmer name", () => {
-    expect(podcastTitles({ title: "ភូមា", title_km: "ភូមា" }, "en")).toEqual({
-      primary: "ភូមា",
-      secondary: null,
-    });
+  it("has no label when the title is only the Khmer name", () => {
+    expect(podcastHeadline({ title: "ភូមា", title_km: "ភូមា" })).toEqual({ eyebrow: null, title: "ភូមា" });
   });
 
   it("falls back to the English title when there is no Khmer title", () => {
-    expect(podcastTitles({ title: "Episode", title_km: null }, "km")).toEqual({
-      primary: "Episode",
-      secondary: null,
-    });
+    expect(podcastHeadline({ title: "Episode", title_km: null })).toEqual({ eyebrow: null, title: "Episode" });
+    expect(podcastHeadline({ title: "Episode", title_km: "  " })).toEqual({ eyebrow: null, title: "Episode" });
+  });
+});
+
+describe("formatPodcastClock", () => {
+  it("formats minutes and seconds", () => {
+    expect(formatPodcastClock(5)).toBe("0:05");
+    expect(formatPodcastClock(38 * 60 + 2)).toBe("38:02");
+  });
+
+  it("adds hours from one hour up", () => {
+    expect(formatPodcastClock(3600 + 2 * 60 + 3)).toBe("1:02:03");
+  });
+
+  it("shows 0:00 for unusable values", () => {
+    expect(formatPodcastClock(-4)).toBe("0:00");
+    expect(formatPodcastClock(Number.NaN)).toBe("0:00");
+    expect(formatPodcastClock(Number.POSITIVE_INFINITY)).toBe("0:00");
   });
 });

@@ -5,7 +5,7 @@ import { CdnImage } from "@/components/ui/CdnImage";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { posterThumbUrl } from "@/lib/api/core";
 import type { ContentListItemRead } from "@/lib/api/types";
-import { podcastTitles } from "@/lib/podcast-access";
+import { podcastHeadline } from "@/lib/podcast-access";
 
 export type PodcastEpisodeRowProps = {
   podcast: ContentListItemRead;
@@ -23,10 +23,10 @@ export function PodcastEpisodeRow({
   isLoading,
   onSelect,
 }: PodcastEpisodeRowProps) {
-  const { t, locale } = useI18n();
-  const { primary, secondary } = podcastTitles(podcast, locale);
+  const { t } = useI18n();
+  const { eyebrow, title } = podcastHeadline(podcast);
   const cover = posterThumbUrl(podcast.poster_key, 400, podcast.updated_at);
-  const description = podcast.description?.trim() || null;
+  const locked = !podcast.is_free && !isEntitled;
 
   return (
     <button
@@ -34,19 +34,15 @@ export function PodcastEpisodeRow({
       aria-pressed={isSelected}
       onClick={() => onSelect(podcast)}
       className={[
-        "rt-card-hover group flex w-full items-center gap-3 rounded-md border bg-surface p-2.5 text-left transition-colors sm:gap-4 sm:p-3",
-        isSelected ? "border-brand ring-1 ring-brand/40" : "border-border hover:border-border-hover",
+        "group flex w-full items-center gap-3 rounded-md border p-2.5 text-left transition-colors sm:gap-4 sm:p-3",
+        isSelected
+          ? "border-brand bg-surface-elevated"
+          : "border-border bg-surface hover:border-border-hover hover:bg-surface-elevated",
       ].join(" ")}
     >
-      <div className="relative aspect-[2/3] w-14 shrink-0 overflow-hidden rounded-[4px] bg-surface-elevated sm:w-16">
+      <div className="relative aspect-[2/3] w-14 shrink-0 overflow-hidden rounded-[4px] bg-surface-elevated sm:w-[60px]">
         {cover ? (
-          <CdnImage
-            src={cover}
-            alt=""
-            fill
-            sizes="64px"
-            className="object-cover transition-transform duration-200 group-hover:scale-[1.04]"
-          />
+          <CdnImage src={cover} alt="" fill sizes="64px" className="object-cover" />
         ) : (
           <div className="absolute inset-0 grid place-items-center text-text-muted" aria-hidden>
             <Mic size={20} />
@@ -55,25 +51,13 @@ export function PodcastEpisodeRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 break-words text-[14px] font-bold leading-snug text-text">{primary}</p>
-        {secondary ? (
-          <p className="mt-0.5 truncate text-[12px] font-medium text-text-muted">{secondary}</p>
-        ) : null}
-        {description ? (
-          <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-text-disabled">
-            {description}
-          </p>
-        ) : null}
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold">
-          {podcast.runtime ? <span className="text-text-muted">{podcast.runtime}</span> : null}
+        {eyebrow ? <p className="truncate text-[12px] font-medium text-text-muted">{eyebrow}</p> : null}
+        <p className="mt-0.5 line-clamp-2 break-words text-[15px] font-bold leading-snug text-text">{title}</p>
+        <div className="mt-1.5 flex items-center gap-2 text-[12px] font-medium text-text-muted">
+          {podcast.runtime ? <span>{podcast.runtime}</span> : null}
           {podcast.is_free ? (
-            <span className="rounded-sm bg-success/15 px-1.5 py-0.5 text-success">
+            <span className="rounded-sm bg-success/15 px-1.5 py-0.5 text-[11px] font-semibold text-success">
               {t("podcastFree")}
-            </span>
-          ) : !isEntitled ? (
-            <span className="inline-flex items-center gap-1 rounded-sm bg-surface-elevated px-1.5 py-0.5 text-text-muted">
-              <Lock size={10} aria-hidden />
-              {t("podcastPlanOnly")}
             </span>
           ) : null}
         </div>
@@ -83,18 +67,24 @@ export function PodcastEpisodeRow({
         aria-hidden
         className={[
           "grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors",
-          isSelected ? "bg-brand text-white" : "bg-surface-elevated text-text group-hover:bg-brand group-hover:text-white",
+          isSelected
+            ? "bg-brand text-white"
+            : locked
+              ? "border border-border text-text-muted group-hover:border-border-hover group-hover:text-text"
+              : "bg-surface-elevated text-text group-hover:bg-text group-hover:text-bg",
         ].join(" ")}
       >
         {isLoading ? (
           <Loader2 size={16} className="animate-spin" />
         ) : isSelected ? (
           <Headphones size={16} />
+        ) : locked ? (
+          <Lock size={15} />
         ) : (
-          <Play size={16} className="translate-x-px" />
+          <Play size={16} fill="currentColor" className="translate-x-px" />
         )}
       </span>
-      <span className="sr-only">{t("podcastPlay")}</span>
+      <span className="sr-only">{locked ? t("podcastPlanOnly") : t("podcastPlay")}</span>
     </button>
   );
 }

@@ -1,5 +1,3 @@
-import type { Locale } from "@/lib/i18n";
-
 export type PodcastLockReason = "signin" | "subscribe";
 
 type PodcastViewer = {
@@ -33,14 +31,26 @@ function englishPart(title: string, km: string): string | null {
   return rest || null;
 }
 
-/** Episode name for the viewer's language, plus the other language as a subtitle. */
-export function podcastTitles(
-  podcast: { title: string; title_km?: string | null },
-  locale: Locale,
-): { primary: string; secondary: string | null } {
+/**
+ * How an episode is named in lists and the player: the Khmer episode name is
+ * the headline (the podcast is in Khmer), with the series and number
+ * ("Domnak Akum EP65") as a small label above it. Without a Khmer name the
+ * English title is the headline.
+ */
+export function podcastHeadline(podcast: { title: string; title_km?: string | null }): {
+  eyebrow: string | null;
+  title: string;
+} {
   const km = podcast.title_km?.trim() || null;
-  if (!km) return { primary: podcast.title, secondary: null };
-  const english = englishPart(podcast.title, km);
-  if (!english) return { primary: km, secondary: null };
-  return locale === "km" ? { primary: km, secondary: english } : { primary: english, secondary: km };
+  if (!km) return { eyebrow: null, title: podcast.title };
+  return { eyebrow: englishPart(podcast.title, km), title: km };
+}
+
+/** `m:ss`, or `h:mm:ss` from an hour up; "0:00" for anything unusable. */
+export function formatPodcastClock(seconds: number): string {
+  const total = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
 }
