@@ -19,6 +19,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useWatchProgressSync } from "@/hooks/watch/use-watch-progress-sync";
 import { safePlay } from "@/lib/video/safe-play";
+import { fitVerticalPicture } from "@/lib/watch/vertical-fit";
 
 type QualityLevel = { height: number; bitrate: number; index: number };
 
@@ -72,6 +73,7 @@ export function WatchPlayer({
   attribution,
   bleed = false,
   fill = false,
+  vertical = false,
   live = false,
   initialTime = 0,
   onProgressSaved,
@@ -84,6 +86,11 @@ export function WatchPlayer({
   bleed?: boolean;
   /** Stretch to parent height instead of locking to 16:9 (series theater). */
   fill?: boolean;
+  /**
+   * The stream is a 9:16 picture centred in a 16:9 frame (every Short Series). The video is then sized
+   * so the picture fills the player, and iPhones use the CSS fullscreen (the native one only shows the frame).
+   */
+  vertical?: boolean;
   /** Live HLS: join near the edge, keep a short buffer. */
   live?: boolean;
   /** Resume position in seconds (skipped when 0). */
@@ -510,6 +517,25 @@ export function WatchPlayer({
     };
   }, []);
 
+  // Vertical picture in a 16:9 frame: size the frame to the player (inline, fullscreen, CSS immersive and
+  // rotation all change the player's size, which the observer follows).
+  const [verticalFit, setVerticalFit] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!vertical || !el) {
+      setVerticalFit(null);
+      return;
+    }
+    const measure = () => {
+      const next = fitVerticalPicture(el.clientWidth, el.clientHeight);
+      setVerticalFit((prev) => (prev?.w === next?.w && prev?.h === next?.h ? prev : next));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [vertical]);
+
   // Lock page scroll + reparent player shell to <body> for CSS immersive.
   // iOS Safari traps position:fixed inside overflow-x:hidden ancestors
   // (PageShell / WatchPlayerFrame), so fixed inset-0 looks like a no-op.
@@ -663,6 +689,11 @@ export function WatchPlayer({
     // iOS/iPadOS: shell requestFullscreen is a silent no-op. Use the video's
     // webkitEnterFullscreen (native controls) or CSS immersive reparented to body.
     if (isAppleTouchDevice()) {
+      // The native iPhone fullscreen shows the whole 16:9 frame, so a vertical picture stays small: use ours.
+      if (vertical) {
+        enterCssImmersive();
+        return;
+      }
       if (
         video &&
         video.webkitSupportsFullscreen !== false &&
@@ -718,7 +749,7 @@ export function WatchPlayer({
       }
     }
     enterCssImmersive();
-  }, [cssFullscreen]);
+  }, [cssFullscreen, vertical]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -784,7 +815,13 @@ export function WatchPlayer({
       >
         <video
           ref={videoRef}
-          className="absolute inset-0 h-full w-full object-contain"
+          className={
+            verticalFit
+              ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain"
+              : "absolute inset-0 h-full w-full object-contain"
+          }
+          // maxWidth none: the global `video { max-width: 100% }` would squeeze the (wider than the player) frame back
+          style={verticalFit ? { width: verticalFit.w, height: verticalFit.h, maxWidth: "none", maxHeight: "none" } : undefined}
           playsInline
           preload={preloadMode}
           aria-label={`Video player: ${title}`}

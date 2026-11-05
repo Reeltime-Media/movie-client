@@ -46,9 +46,18 @@ type WatchSeriesClientProps = {
   initialSeasons?: SeasonRead[];
 };
 
-function SeriesPlayerShell({ children }: { children: ReactNode }) {
+/**
+ * Short Series are vertical (9:16): on a phone the player is as tall as the picture needs
+ * (never more than 78% of the screen), from lg up it stays 16:9 beside the episode list.
+ */
+function SeriesPlayerShell({ vertical, children }: { vertical: boolean; children: ReactNode }) {
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border bg-black">
+    <div
+      className={[
+        "relative w-full overflow-hidden rounded-md border border-border bg-black",
+        vertical ? "h-[min(177.78vw,78dvh)] lg:aspect-video lg:h-auto" : "aspect-video",
+      ].join(" ")}
+    >
       {children}
     </div>
   );
@@ -199,6 +208,7 @@ export function WatchSeriesClient({
           initialTime={resumeTime ?? 0}
           onProgressSaved={handleProgressSaved}
           fill
+          vertical={series.is_short_movie}
         />
       );
     }
@@ -245,7 +255,7 @@ export function WatchSeriesClient({
 
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
               <div className="min-w-0 flex-1">
-                <SeriesPlayerShell>{playerContent}</SeriesPlayerShell>
+                <SeriesPlayerShell vertical={series.is_short_movie}>{playerContent}</SeriesPlayerShell>
 
                 <div id="details" className="mt-5 flex items-start gap-5 sm:gap-6">
                   {series.poster_key ? (
