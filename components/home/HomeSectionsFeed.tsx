@@ -1,8 +1,6 @@
 "use client";
 
 import { type ReactNode } from "react";
-import type { BannerCardProps } from "@/components/catalog/BannerCard";
-import { BannerScrollRail } from "@/components/catalog/BannerScrollRail";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { Hero } from "@/components/home/Hero";
 import { HomePlansSection } from "@/components/home/HomePlansSection";
@@ -11,7 +9,7 @@ import { useI18n } from "@/components/providers/LocaleProvider";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { TvChannelRail } from "@/components/tv/TvChannelRail";
-import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/mappers";
+import { movieToPoster, seriesToPoster } from "@/lib/api/mappers";
 import { buildHomeGenreRails, moviesGenreHref } from "@/lib/home-genre-rails";
 import { genreKeyFromLabel } from "@/lib/catalog-filter";
 import type {
@@ -116,13 +114,15 @@ export function HomeSectionsFeed({
       .slice(RECENT_LIMIT, RECENT_LIMIT + RAIL_LIMIT)
       .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription));
 
-  const fallbackMostWatched = (): BannerCardProps[] =>
+  const fallbackMostWatched = (): PosterCardProps[] =>
     movies
       .slice(0, RECENT_LIMIT)
-      .map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription));
+      .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription));
 
-  const fallbackSeries = (): BannerCardProps[] =>
-    seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s));
+  const seriesPosters = (rows: SeriesRead[]): PosterCardProps[] =>
+    rows.map((s, i) => seriesToPoster(s, i, { hasSubscription, isAdmin }));
+
+  const fallbackSeries = (): PosterCardProps[] => seriesPosters(seriesList.slice(0, RAIL_LIMIT));
 
   const nodes: ReactNode[] = [];
   let genreHeaderAdded = false;
@@ -194,11 +194,9 @@ export function HomeSectionsFeed({
     }
 
     if (section.type === "most_watched") {
-      const cards: BannerCardProps[] =
-        section.movies.length > 0
-          ? section.movies.map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription))
-          : fallbackMostWatched();
-      if (cards.length === 0) continue;
+      const posters =
+        section.movies.length > 0 ? moviePosters(section.movies) : fallbackMostWatched();
+      if (posters.length === 0) continue;
       nodes.push(
         <ScrollReveal key={section.id} as="section" className="pt-8 pb-6">
           <SectionHeader
@@ -207,7 +205,7 @@ export function HomeSectionsFeed({
             seeAllHref="/movies"
             seeAllLabel={t("sectionSeeAll")}
           />
-          <BannerScrollRail cards={cards} autoScroll direction="left" />
+          <PosterScrollRail posters={posters} gutter="sm" autoScroll direction="left" />
         </ScrollReveal>,
       );
       continue;
@@ -254,11 +252,11 @@ export function HomeSectionsFeed({
     }
 
     if (section.type === "series") {
-      const cards: BannerCardProps[] =
+      const posters =
         section.series.length > 0
-          ? section.series.map((s) => seriesToBanner(s as SeriesRead))
+          ? seriesPosters(section.series as SeriesRead[])
           : fallbackSeries();
-      if (cards.length === 0) continue;
+      if (posters.length === 0) continue;
       nodes.push(
         <section key={section.id} className="pt-8 pb-6">
           <SectionHeader
@@ -267,7 +265,7 @@ export function HomeSectionsFeed({
             seeAllHref="/series"
             seeAllLabel={t("sectionSeeAll")}
           />
-          <BannerScrollRail cards={cards} />
+          <PosterScrollRail posters={posters} gutter="sm" />
         </section>,
       );
       continue;
@@ -306,12 +304,12 @@ export function HomeSectionsFeed({
     }
 
     if (section.type === "genre" || section.type === "custom") {
-      const posters = moviePosters(section.movies);
-      const seriesCards =
-        section.series.length > 0
-          ? section.series.map((s) => seriesToBanner(s as SeriesRead))
-          : [];
-      if (posters.length === 0 && seriesCards.length === 0) continue;
+      // Movies first, then series, in one rail of vertical posters.
+      const posters = [
+        ...moviePosters(section.movies),
+        ...seriesPosters(section.series as SeriesRead[]),
+      ];
+      if (posters.length === 0) continue;
       if (section.type === "genre" && !genreHeaderAdded) {
         genreHeaderAdded = true;
         nodes.push(
@@ -334,10 +332,7 @@ export function HomeSectionsFeed({
             }
             seeAllLabel={t("sectionSeeAll")}
           />
-          {posters.length > 0 ? (
-            <PosterScrollRail posters={posters} gutter="sm" />
-          ) : null}
-          {seriesCards.length > 0 ? <BannerScrollRail cards={seriesCards} /> : null}
+          <PosterScrollRail posters={posters} gutter="sm" />
         </section>,
       );
       if (section.type === "genre" && section.genre_name) {

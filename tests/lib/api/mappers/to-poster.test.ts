@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { movieToBanner, movieToPoster, seriesToPoster } from "@/lib/api/mappers";
+import { movieToPoster, seriesToPoster } from "@/lib/api/mappers";
 import type { ContentListItemRead, SeriesRead } from "@/lib/api/types";
 
 const paidMovie = (over: Partial<ContentListItemRead> = {}): ContentListItemRead => ({
@@ -76,13 +76,6 @@ describe("seriesToPoster", () => {
     const poster = seriesToPoster(series, 0);
     expect(poster.badge).toEqual({ kind: "hd", label: "HD" });
     expect(poster.watchLabel).toBe("View series");
-  });
-});
-
-describe("movieToBanner", () => {
-  it("unlocks a paid movie's banner CTA for an active subscriber", () => {
-    const banner = movieToBanner(paidMovie(), undefined, false, true);
-    expect(banner.watchHref).toBe("/watch?slug=the-last-drive");
   });
 });
 

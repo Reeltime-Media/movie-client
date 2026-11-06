@@ -1,5 +1,4 @@
 import { movieCardHref } from "@/lib/movie-routes";
-import type { BannerCardProps } from "@/components/catalog/BannerCard";
 import type { PosterCardProps } from "@/types/poster-card";
 import { posterThumbUrl, posterUrl } from "../core/config";
 import {
@@ -127,46 +126,5 @@ export function seriesToPoster(
     watchHref,
     year: series.release_year,
     rating: series.rating,
-  };
-}
-
-export function movieToBanner(
-  movie: ContentListItemRead,
-  ownedIds?: Set<string>,
-  isAdmin = false,
-  hasSubscription = false,
-): BannerCardProps {
-  const isFree = !movie.price_usd || parseFloat(movie.price_usd) === 0;
-  const owned = isFree || Boolean(ownedIds?.has(movie.id)) || isAdmin || hasSubscription;
-  const price =
-    !isFree && movie.price_usd ? `$${parseFloat(movie.price_usd).toFixed(2)}` : undefined;
-  return {
-    imageSrc:
-      posterUrl(movie.banner_key, movie.updated_at) ??
-      posterUrl(movie.poster_key, movie.updated_at),
-    imageAlt: movie.title_km ? `${movie.title_km} · ${movie.title}` : movie.title,
-    title: movie.title,
-    titleKm: typeof movie.title_km === "string" && movie.title_km.trim()
-      ? movie.title_km.trim()
-      : null,
-    year: movie.release_year,
-    badgeLabel: price,
-    watchHref: movieCardHref(movie, owned, isAdmin),
-  };
-}
-
-export function seriesToBanner(series: SeriesRead, badgeLabel = "រឿងភាគ"): BannerCardProps {
-  return {
-    imageSrc:
-      posterUrl(series.banner_key, series.updated_at) ??
-      posterUrl(series.poster_key, series.updated_at),
-    imageAlt: series.title_km ? `${series.title_km} · ${series.title}` : series.title,
-    title: series.title,
-    titleKm: typeof series.title_km === "string" && series.title_km.trim()
-      ? series.title_km.trim()
-      : null,
-    year: series.release_year,
-    badgeLabel,
-    watchHref: `/watch/series/${series.slug}/1/1`,
   };
 }

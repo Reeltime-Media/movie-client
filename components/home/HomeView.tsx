@@ -2,8 +2,6 @@
 
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { BannerCardProps } from "@/components/catalog/BannerCard";
-import { BannerScrollRail } from "@/components/catalog/BannerScrollRail";
 import { PosterScrollRail } from "@/components/catalog/PosterScrollRail";
 import { Hero } from "@/components/home/Hero";
 import { HomeGenreRails } from "@/components/home/HomeGenreRails";
@@ -18,7 +16,7 @@ import { TvChannelRail } from "@/components/tv/TvChannelRail";
 import { listPurchases } from "@/lib/api/purchases";
 import { listWatchProgress } from "@/lib/api/playback";
 import { hasActiveSubscription, listMySubscriptions } from "@/lib/api/subscriptions";
-import { movieToBanner, movieToPoster, seriesToBanner } from "@/lib/api/mappers";
+import { movieToPoster, seriesToPoster } from "@/lib/api/mappers";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { useUser } from "@/hooks/auth/use-user";
 import { isAdminUser } from "@/lib/auth/is-admin";
@@ -90,16 +88,19 @@ export function HomeView({
     return map;
   }, [movies]);
 
-  const seriesBanners = useMemo(
-    () => seriesList.slice(0, RAIL_LIMIT).map((s) => seriesToBanner(s)),
-    [seriesList],
+  const seriesPosters = useMemo(
+    () =>
+      seriesList
+        .slice(0, RAIL_LIMIT)
+        .map((s, i) => seriesToPoster(s, i, { hasSubscription, isAdmin })),
+    [seriesList, hasSubscription, isAdmin],
   );
 
-  const topMovieBanners = useMemo<BannerCardProps[]>(
+  const topMoviePosters = useMemo(
     () =>
       movies
         .slice(0, RECENT_LIMIT)
-        .map((m) => movieToBanner(m, ownedIds, isAdmin, hasSubscription)),
+        .map((m, i) => movieToPoster(m, i, ownedIds, isAdmin, hasSubscription)),
     [movies, ownedIds, isAdmin, hasSubscription],
   );
 
@@ -261,7 +262,7 @@ export function HomeView({
               seeAllHref="/movies"
               seeAllLabel={t("sectionSeeAll")}
             />
-            <BannerScrollRail cards={topMovieBanners} autoScroll direction="left" />
+            <PosterScrollRail posters={topMoviePosters} gutter="sm" autoScroll direction="left" />
           </ScrollReveal>
 
           <ScrollReveal>
@@ -297,7 +298,7 @@ export function HomeView({
               seeAllHref="/series"
               seeAllLabel={t("sectionSeeAll")}
             />
-            <BannerScrollRail cards={seriesBanners} />
+            <PosterScrollRail posters={seriesPosters} gutter="sm" />
           </section>
 
           <section className="pt-4 pb-2">

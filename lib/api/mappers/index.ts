@@ -1,6 +1,1 @@
-export {
-  movieToPoster,
-  seriesToPoster,
-  movieToBanner,
-  seriesToBanner,
-} from "./to-poster";
+export { movieToPoster, seriesToPoster } from "./to-poster";
