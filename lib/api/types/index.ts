@@ -33,6 +33,7 @@ export interface ContentListItemRead {
   runtime: string | null;
   release_year: number | null;
   is_free: boolean;
+  sort_order?: number;
   /** Lets catalog cards offer a trailer preview without a detail fetch. */
   trailer_url?: string | null;
   updated_at: string;
@@ -73,6 +74,7 @@ export interface SeriesRead {
   trailer_url: string | null;
   is_published: boolean;
   is_short_movie: boolean;
+  sort_order?: number;
   /** Published free episode count from list endpoints (0 if unknown). */
   free_episode_count?: number;
   created_at: string;

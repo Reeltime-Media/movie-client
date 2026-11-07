@@ -3,7 +3,7 @@ import { listMovies } from "@/lib/api/movies";
 
 // Public catalog is cached/revalidated on the server (ISR). Must be a literal —
 // Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
-export const revalidate = 300;
+export const revalidate = 60;
 
 type MoviesPageProps = {
   searchParams: Promise<{ genre?: string; free?: string; region?: string }>;
