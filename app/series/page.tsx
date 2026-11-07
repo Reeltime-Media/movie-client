@@ -3,7 +3,7 @@ import { listSeries } from "@/lib/api/series";
 
 // Public catalog is cached/revalidated on the server (ISR). Must be a literal —
 // Next statically analyzes this; keep in sync with CATALOG_REVALIDATE_SECONDS.
-export const revalidate = 300;
+export const revalidate = 60;
 
 type SeriesPageProps = {
   searchParams: Promise<{ genre?: string; free?: string; region?: string }>;

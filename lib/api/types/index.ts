@@ -161,6 +161,7 @@ export interface TvChannelRead {
   /** "live" | "offline" — server never reports intermediate states publicly. */
   status: string;
   is_free: boolean;
+  sort_order?: number;
 }
 
 export interface TvChannelAuthorizeRead {

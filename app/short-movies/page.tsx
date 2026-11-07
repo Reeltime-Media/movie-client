@@ -3,7 +3,7 @@ import { listSeries } from "@/lib/api/series";
 import { swallow } from "@/lib/log";
 
 // Public catalog is cached/revalidated on the server (ISR), same as /series.
-export const revalidate = 300;
+export const revalidate = 60;
 
 export default async function ShortMoviesPage() {
   // Free-episode CTAs use `free_episode_count` from the list API — skip the
