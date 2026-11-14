@@ -2,7 +2,7 @@ import type { LegalDocument } from "@/components/legal/LegalPage";
 
 export const PRIVACY_POLICY: LegalDocument = {
   title: "Reeltime Privacy Policy",
-  lastUpdated: "September 14, 2026",
+  lastUpdated: "November 14, 2026",
   intro:
     "Reeltime Media (\"Reeltime,\" \"we,\" \"us,\" or \"our\") operates Reeltime, Cambodia's home for cinema — a streaming service offering feature movies, series and TV shows, short-form movies, and live TV channels. This Privacy Policy explains what personal information we collect when you use the Reeltime website and app, how we use it, how we share it, and the choices you have. By creating an account or otherwise using Reeltime, you agree to the collection and use of information as described in this policy. If you have any questions, you can reach us at any time at support@reeltime.com.",
   sections: [
@@ -12,28 +12,29 @@ export const PRIVACY_POLICY: LegalDocument = {
         "We collect the following categories of information in order to provide and operate the Reeltime service:",
       ],
       bullets: [
-        "Account information: when you register, we collect the email address and password you choose, or, if you sign up with Google Sign-In, basic profile information from your Google account (such as your name, email address, and profile picture) that Google shares with us with your permission.",
+        "Account information: when you register, we collect the email address and password you choose. If you sign in with Google, Apple, or Telegram instead, we receive basic profile information that the provider shares with your permission: from Google, your name, email address, and profile picture; from Apple, your email address (which may be a private relay address Apple creates for you) and, the first time only, your name; from Telegram, your Telegram user ID, name, username, and profile picture. We do not receive your password for any of these providers.",
         "Device-linking (pairing) information: when you use the \"link device\" feature to add an additional device or screen (for example, a TV) to your account, we collect information needed to complete and manage that pairing, such as a pairing code and basic information identifying the linked device.",
         "Purchase and transaction records: when you buy an access pass, we collect records of your purchase, including the plan purchased, price paid, date, and payment status, processed through KHQR / Bakong (Cambodia's national instant QR payment system). Neither Reeltime nor our payment partners store your card numbers.",
         "Viewing activity: information about the content you watch on Reeltime, such as titles viewed and playback progress, so we can operate features like resuming playback.",
         "Comments and other content you post: any comments or other content you choose to submit on movies, series, or other parts of the service.",
         "Cookies and local storage data: small pieces of data stored in your browser or app, including authentication/session tokens, your theme preference (dark or light), and your language preference (English or Khmer). See \"Cookies and Similar Technologies\" below for more detail.",
         "Technical and log data: information about how you access Reeltime, such as your IP address, device and browser type, operating system, app version, and similar diagnostic or log information generated when you use the service.",
+        "Crash reports: if the Reeltime mobile app crashes or hits an unexpected error, it sends a report to our error-monitoring provider, Sentry. A report contains technical details such as the error, the device model, operating system, and app version. We set it up not to attach your name, email address, or account details, and not to record your network requests.",
       ],
     },
     {
       heading: "How We Use Your Information",
       paragraphs: ["We use the information described above for the following purposes:"],
       bullets: [
-        "To create, maintain, and secure your account, including authenticating you when you sign in with email/password or Google Sign-In, and supporting password reset requests.",
+        "To create, maintain, and secure your account, including authenticating you when you sign in with email/password, Google, Apple, or Telegram, and supporting password reset requests.",
         "To let you pair and manage linked devices, and to keep access to your account working at a reasonable number of devices and simultaneous streams, as shown in the app or at checkout.",
         "To process your purchases through KHQR / Bakong, confirm and record transactions, and grant you access to the content or pass you purchased for its paid duration.",
         "To operate core streaming features, such as remembering your viewing progress, your theme preference, and your language preference.",
-        "To display comments you post, and to moderate or remove user-generated content that violates our rules (for example, content that is illegal, infringing, harassing, or spam).",
+        "To display comments you post, to hide comments from people you have blocked, and to moderate or remove user-generated content that violates our rules (for example, content that is illegal, infringing, harassing, or spam).",
         "To respond to your support requests and communicate with you about your account, purchases, or this policy.",
         "To help keep Reeltime secure, including detecting and preventing fraud, abuse, and unauthorized access to accounts or content.",
         "To comply with applicable law, and to establish, exercise, or defend legal claims.",
-        "To maintain and improve the reliability and performance of the Reeltime service generally.",
+        "To find and fix crashes and errors, and to maintain and improve the reliability and performance of the Reeltime service generally.",
       ],
     },
     {
@@ -44,6 +45,8 @@ export const PRIVACY_POLICY: LegalDocument = {
       bullets: [
         "Payment partners: to process purchases, we share the information necessary to complete your transaction with the payment providers that operate KHQR / Bakong on our behalf. As noted above, card numbers are not stored by Reeltime or these partners.",
         "Hosting and service providers: we use cloud video hosting, content delivery, and other service providers to store data and deliver streaming content and to help us run the service. These providers process information on our behalf and only as needed to provide their services to us.",
+        "Sign-in providers: when you choose to sign in with Google, Apple, or Telegram, that provider confirms your identity to us. We do not share your Reeltime activity with them.",
+        "Error monitoring: crash reports from the mobile app are sent to Sentry, which processes them on our behalf so we can fix problems.",
         "Other users: if you post a comment, it may be visible publicly to other users of Reeltime alongside an identifier such as your display name.",
         "Legal and safety reasons: we may disclose information where we believe in good faith it is necessary to comply with applicable law, respond to a valid legal request, or protect the rights, property, or safety of Reeltime, our users, or others.",
         "Business transfers: if Reeltime is ever involved in a merger, acquisition, or sale of assets, personal information may be transferred as part of that transaction, subject to this policy or a successor policy.",
@@ -53,7 +56,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: "Cookies and Similar Technologies",
       paragraphs: [
         "Reeltime uses cookies and similar local storage technologies for core functionality: to keep you signed in via authentication/session tokens, to remember your theme preference (dark or light), and to remember your language preference (English or Khmer).",
-        "Reeltime does not currently use any third-party advertising or analytics trackers (for example, tools like Google Analytics or Meta Pixel). If this changes in the future, we will update this Privacy Policy to describe any such tools and how they are used.",
+        "Reeltime does not currently use any third-party advertising or analytics trackers (for example, tools like Google Analytics or Meta Pixel), and we do not track you across other companies' apps or websites. The only third-party diagnostic tool is the crash reporting in the mobile app described above. If this changes in the future, we will update this Privacy Policy to describe any such tools and how they are used.",
         "Most browsers let you control or disable cookies through their settings. Because some cookies are required for basic functions like signing in, disabling them may prevent parts of Reeltime from working properly.",
       ],
     },
@@ -62,6 +65,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       paragraphs: [
         "When you post a comment or other content on Reeltime, it may be displayed publicly within the app to other users. By posting content, you grant Reeltime a license to display that content as part of the service.",
         "You are responsible for what you post. Reeltime may review, moderate, or remove user-generated content that we determine violates our rules, including content that is illegal, infringing, harassing, or spam, and may take action against accounts responsible for it.",
+        "You can report any comment, and you can block its author so that you no longer see their comments. We keep a record of who you have blocked so we can hide their comments from you; the person you block is not told.",
       ],
     },
     {
@@ -69,6 +73,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       paragraphs: [
         "We keep personal information for as long as your account is active and as reasonably necessary to provide the Reeltime service to you.",
         "We may also retain certain information for a longer period where necessary to comply with legal, tax, or accounting obligations, to resolve disputes, to enforce our agreements, or for other legitimate business purposes, such as maintaining records of purchases and transactions. When information is no longer needed for these purposes, we take reasonable steps to delete or anonymize it.",
+        "When you delete your account, we remove your name, email address, password, profile picture, and the IDs of any Google, Apple, or Telegram sign-in; your watch history and progress, favorites, and ratings; your linked devices and sign-in sessions; and your blocks and reports. Comments you posted are blanked and hidden. Records of completed purchases and payments, including the transaction details our payment provider sends us, are kept for accounting, tax, and fraud-prevention purposes, but are no longer linked to your name or email address. Crash reports are kept by Sentry for a limited period and are then deleted automatically.",
       ],
     },
     {
@@ -90,7 +95,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       bullets: [
         "Request access to the personal information we hold about you.",
         "Ask us to correct information that is inaccurate or incomplete.",
-        "Request that we delete your account and associated personal information, subject to any information we are required or permitted to retain (for example, transaction records needed for legal or accounting purposes).",
+        "Delete your account and associated personal information, subject to any information we are required or permitted to retain (for example, transaction records needed for legal or accounting purposes). In the Reeltime mobile app, open the Library tab, then Settings, then Delete account; the deletion happens immediately. You can also ask us to delete it, without signing in, by following the steps at https://www.reeltime.fun/delete-account.",
         "Ask us questions about how your information is collected, used, or shared.",
       ],
     },

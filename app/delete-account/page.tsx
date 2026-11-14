@@ -16,7 +16,9 @@ const COPY = {
   en: {
     title: "Delete your account",
     intro: "You can ask us to delete your Reeltime account and the personal data associated with it at any time, whether or not you're currently signed in. Follow the steps below to submit a request.",
-    howToTitle: "How to request deletion",
+    inAppTitle: "Delete it in the app",
+    inAppText: "In the Reeltime mobile app, open the Library tab, then Settings, then Delete account. Your account is deleted straight away.",
+    howToTitle: "Or ask us by email",
     step1Prefix: "Email ",
     step1Suffix: " from the address on your Reeltime account, or include that email address in your message.",
     step2: `Use the subject line "${MAIL_SUBJECT}" so we can route your request quickly.`,
@@ -29,10 +31,11 @@ const COPY = {
     mailBodyEmailPlaceholder: "[enter your account email]",
     deletedTitle: "What gets deleted",
     deletedItems: [
-      "Your profile (name, email, password, avatar)",
-      "Your watch history, watch progress, and library/favorites",
-      "Comments you've posted",
-      "Any devices linked to your account",
+      "Your profile (name, email, password, avatar) and any Google, Apple, or Telegram sign-in linked to it",
+      "Your watch history, watch progress, library/favorites, and ratings",
+      "Comments you've posted (they're blanked and hidden)",
+      "Any devices linked to your account, and all sign-in sessions",
+      "The people you've blocked and comments you've reported",
     ],
     retainTitle: "What we retain, and why",
     retainText: "We keep records of completed purchases and payments (made via KHQR/Bakong) for a limited period after deletion, as required for accounting, tax, and legal compliance, and to prevent fraud. These records aren't used for any other purpose and are deleted or anonymized once that retention period ends.",
@@ -42,7 +45,9 @@ const COPY = {
   km: {
     title: "លុបគណនីរបស់អ្នក",
     intro: "អ្នកអាចស្នើសុំឲ្យយើងលុបគណនី Reeltime និងទិន្នន័យផ្ទាល់ខ្លួនពាក់ព័ន្ធនឹងវា នៅពេលណាមួយ មិនថាអ្នកកំពុងចូលគណនីឬអត់នោះទេ។ សូមអនុវត្តតាមជំហានខាងក្រោម ដើម្បីដាក់ស្នើសំណើ។",
-    howToTitle: "របៀបស្នើសុំលុបគណនី",
+    inAppTitle: "លុបនៅក្នុងកម្មវិធី",
+    inAppText: "នៅក្នុងកម្មវិធីទូរស័ព្ទ Reeltime សូមបើកផ្ទាំង បណ្ណាល័យ បន្ទាប់មក Settings បន្ទាប់មក លុបគណនី។ គណនីរបស់អ្នកនឹងត្រូវលុបភ្លាមៗ។",
+    howToTitle: "ឬស្នើសុំមកយើងតាមអ៊ីមែល",
     step1Prefix: "ផ្ញើអ៊ីមែលទៅ ",
     step1Suffix: " ពីអាសយដ្ឋានដែលភ្ជាប់ជាមួយគណនី Reeltime របស់អ្នក ឬបញ្ចូលអាសយដ្ឋានអ៊ីមែលនោះនៅក្នុងសាររបស់អ្នក។",
     step2: `ប្រើចំណងជើងសារ "${MAIL_SUBJECT}" ដើម្បីឲ្យយើងអាចដំណើរការសំណើរបស់អ្នកបានលឿន។`,
@@ -54,10 +59,11 @@ const COPY = {
     mailBodyEmailPlaceholder: "[បញ្ចូលអាសយដ្ឋានអ៊ីមែលគណនីរបស់អ្នក]",
     deletedTitle: "អ្វីដែលនឹងត្រូវលុប",
     deletedItems: [
-      "ព័ត៌មានប្រវត្តិរូបរបស់អ្នក (ឈ្មោះ អ៊ីមែល ពាក្យសម្ងាត់ រូបភាពប្រវត្តិរូប)",
-      "ប្រវត្តិទស្សនា វឌ្ឍនភាពទស្សនា និងបណ្ណាល័យ/ចំណូលចិត្តរបស់អ្នក",
-      "មតិយោបល់ដែលអ្នកបានបង្ហោះ",
-      "ឧបករណ៍ណាមួយដែលបានភ្ជាប់ជាមួយគណនីរបស់អ្នក",
+      "ព័ត៌មានប្រវត្តិរូបរបស់អ្នក (ឈ្មោះ អ៊ីមែល ពាក្យសម្ងាត់ រូបភាពប្រវត្តិរូប) និងការចូលគណនីតាម Google, Apple ឬ Telegram ដែលបានភ្ជាប់",
+      "ប្រវត្តិទស្សនា វឌ្ឍនភាពទស្សនា បណ្ណាល័យ/ចំណូលចិត្ត និងការវាយតម្លៃរបស់អ្នក",
+      "មតិយោបល់ដែលអ្នកបានបង្ហោះ (ត្រូវបានលុបខ្លឹមសារ និងលាក់)",
+      "ឧបករណ៍ណាមួយដែលបានភ្ជាប់ជាមួយគណនីរបស់អ្នក និងសម័យចូលគណនីទាំងអស់",
+      "អ្នកដែលអ្នកបានរារាំង និងមតិយោបល់ដែលអ្នកបានរាយការណ៍",
     ],
     retainTitle: "អ្វីដែលយើងរក្សាទុក និងហេតុអ្វី",
     retainText: "យើងរក្សាទុកកំណត់ត្រានៃការទិញ និងការទូទាត់ដែលបានបញ្ចប់ (ធ្វើឡើងតាមរយៈ KHQR/Bakong) សម្រាប់រយៈពេលមានកម្រិតមួយ បន្ទាប់ពីការលុបគណនី ដូចដែលតម្រូវសម្រាប់ការគណនេយ្យ ពន្ធដារ និងការអនុលោមតាមច្បាប់ និងដើម្បីទប់ស្កាត់ការក្លែងបន្លំ។ កំណត់ត្រាទាំងនេះមិនត្រូវបានប្រើសម្រាប់គោលបំណងផ្សេងទៀតឡើយ ហើយនឹងត្រូវបានលុប ឬធ្វើឲ្យមិនអាចសម្គាល់អត្តសញ្ញាណបាន នៅពេលដែលរយៈពេលរក្សាទុកនោះបានផុតកំណត់។",
@@ -91,6 +97,11 @@ export default function DeleteAccountPage() {
           <p className="mt-4 text-[13px] leading-relaxed text-text-muted">{copy.intro}</p>
 
           <div className="mt-8 rounded-xl border border-border bg-surface p-5 md:p-6">
+            <h2 className="text-[14px] font-bold text-text">{copy.inAppTitle}</h2>
+            <p className="mt-3 text-[13px] leading-relaxed text-text-muted">{copy.inAppText}</p>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-border bg-surface p-5 md:p-6">
             <h2 className="text-[14px] font-bold text-text">{copy.howToTitle}</h2>
             <ol className="mt-3 list-decimal space-y-2.5 pl-5 text-[13px] leading-relaxed text-text-muted">
               <li>

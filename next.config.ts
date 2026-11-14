@@ -68,6 +68,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    // Short URLs for app store listings and links typed by hand.
+    return [
+      { source: "/privacy", destination: "/privacy-policy", permanent: true },
+      { source: "/terms", destination: "/terms-of-service", permanent: true },
+    ];
+  },
   images: {
     // Serve modern, smaller formats; the browser picks the best it supports.
     formats: ["image/avif", "image/webp"],
