@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { useMemo, useState } from "react";
-import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
+import { SeriesUnlockCheckoutModal } from "@/components/pay/CheckoutModals";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import type { SeasonRead } from "@/lib/api/types";
 import { contentIdsMatch, findEpisodeByContentId } from "@/lib/watch/series-progress";
@@ -235,7 +235,7 @@ export function WatchSeriesEpisodes({
       </div>
 
       {checkoutEpisode !== null ? (
-        <SeriesUnlockBakongCheckoutModal
+        <SeriesUnlockCheckoutModal
           seriesSlug={seriesSlug}
           title={seriesTitle}
           watchHref={`/watch/series/${seriesSlug}/${activeSeason}/${checkoutEpisode}`}

@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
+import { MovieCheckoutModal } from "@/components/pay/CheckoutModals";
 import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { useI18n } from "@/components/providers/LocaleProvider";
@@ -325,7 +325,7 @@ export function WatchPageClient({ slug, initialMovie = null }: WatchPageClientPr
       <WatchDiscoveryRails movieSlug={movie.slug} genres={genre ? [genre] : []} />
 
       {checkoutOpen ? (
-        <BakongCheckoutModal
+        <MovieCheckoutModal
           contentId={movie.id}
           title={title}
           priceLabel={priceLabel ?? undefined}

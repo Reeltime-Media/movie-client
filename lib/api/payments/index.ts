@@ -28,6 +28,23 @@ export interface BakongPaymentIntentRead {
 export interface CatalogPricingRead {
   series_unlock_usd: string;
   min_paid_usd: string;
+  /** True once the API has PayPal credentials: only then show the PayPal button. */
+  paypal_enabled?: boolean;
+}
+
+export interface PaypalIntentRead {
+  intent_id: string;
+  order_id: string;
+  /** Send the buyer here (full-page redirect) to pay on PayPal. */
+  approve_url: string;
+  amount_usd: string;
+  status: string;
+  created_at: string;
+}
+
+export interface PaypalCheckoutOptions {
+  /** Same-site path to open after payment (e.g. the movie's watch page). */
+  returnPath?: string;
 }
 
 /** Flat catalog amounts charged by checkout — keep UI in sync with the API. */
@@ -40,6 +57,57 @@ export function getCatalogPricing(): Promise<CatalogPricingRead> {
 export function createMovieBakongIntent(contentId: string): Promise<BakongPaymentIntentRead> {
   return apiFetch<BakongPaymentIntentRead>(`/payments/movies/${contentId}/bakong-intent`, {
     method: "POST",
+  });
+}
+
+function paypalBody(options: PaypalCheckoutOptions) {
+  return {
+    return_path: options.returnPath ?? null,
+    client: "web",
+    // Come back to the origin the buyer started on (their login lives there).
+    return_origin: typeof window !== "undefined" ? window.location.origin : null,
+  };
+}
+
+/** PayPal checkout for one movie. Redirect the buyer to `approve_url`; PayPal returns them
+ * to /pay/paypal/return, which captures the payment. */
+export function createMoviePaypalIntent(
+  contentId: string,
+  options: PaypalCheckoutOptions = {},
+): Promise<PaypalIntentRead> {
+  return apiFetch<PaypalIntentRead>(`/payments/paypal/movies/${contentId}/intent`, {
+    method: "POST",
+    body: paypalBody(options),
+  });
+}
+
+export function createSeriesUnlockPaypalIntent(
+  seriesSlug: string,
+  options: PaypalCheckoutOptions = {},
+): Promise<PaypalIntentRead> {
+  return apiFetch<PaypalIntentRead>(
+    `/payments/paypal/series/${encodeURIComponent(seriesSlug)}/unlock-intent`,
+    { method: "POST", body: paypalBody(options) },
+  );
+}
+
+export function createSubscriptionPaypalIntent(
+  planCode: string,
+  options: PaypalCheckoutOptions = {},
+): Promise<PaypalIntentRead> {
+  const query = `?plan_code=${encodeURIComponent(planCode)}`;
+  return apiFetch<PaypalIntentRead>(`/payments/paypal/subscription-intent${query}`, {
+    method: "POST",
+    body: paypalBody(options),
+  });
+}
+
+/** Finish a payment the buyer approved on PayPal (the `token` PayPal adds to the return URL).
+ * Safe to call twice: the second call just reports the same result. */
+export function capturePaypalOrder(orderId: string): Promise<PaymentIntentRead> {
+  return apiFetch<PaymentIntentRead>("/payments/paypal/capture", {
+    method: "POST",
+    body: { order_id: orderId },
   });
 }
 

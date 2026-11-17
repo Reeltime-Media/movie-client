@@ -44,3 +44,18 @@ export function safeCheckoutUrl(url: string): string {
     throw new Error("Invalid checkout URL from payment provider");
   }
 }
+
+/** The URL we send the buyer to for PayPal must be a PayPal page, whatever the API says. */
+export function safePaypalUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    const isPaypal = host === "paypal.com" || host.endsWith(".paypal.com");
+    if (parsed.protocol !== "https:" || !isPaypal) {
+      throw new Error("Not a PayPal URL");
+    }
+    return parsed.toString();
+  } catch {
+    throw new Error("Invalid PayPal checkout URL");
+  }
+}

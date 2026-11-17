@@ -7,8 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { CheckoutSpinner } from "@/components/pay/CheckoutSpinner";
 import { PageShell } from "@/components/layout/PageShell";
 import { SeriesPickerModal } from "@/components/pay/SeriesPickerModal";
-import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
-import { SubscriptionBakongCheckoutModal } from "@/components/pay/SubscriptionBakongCheckoutModal";
+import { SeriesUnlockCheckoutModal, SubscriptionCheckoutModal } from "@/components/pay/CheckoutModals";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { useAuth } from "@/hooks/auth/use-auth";
 import { listSubscriptionPlans } from "@/lib/api/subscriptions";
@@ -218,14 +217,14 @@ function PricingPageInner() {
       </section>
 
       {checkoutPlanCode ? (
-        <SubscriptionBakongCheckoutModal
+        <SubscriptionCheckoutModal
           planCode={checkoutPlanCode}
           onClose={() => setCheckoutPlanCode(null)}
         />
       ) : null}
 
       {checkoutSeries ? (
-        <SeriesUnlockBakongCheckoutModal
+        <SeriesUnlockCheckoutModal
           seriesSlug={checkoutSeries.slug}
           title={checkoutSeries.title}
           watchHref={checkoutSeries.watchHref}

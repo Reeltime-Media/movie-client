@@ -9,7 +9,7 @@ import { LazyWhenVisible } from "@/components/shared/LazyWhenVisible";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { useI18n } from "@/components/providers/LocaleProvider";
 import { posterThumbUrl, posterUrl } from "@/lib/api/core";
-import { SeriesUnlockBakongCheckoutModal } from "@/components/pay/SeriesUnlockBakongCheckoutModal";
+import { SeriesUnlockCheckoutModal } from "@/components/pay/CheckoutModals";
 import { FavouriteButton } from "@/components/watch/FavouriteButton";
 import { WatchDiscoveryRails } from "@/components/watch/WatchDiscoveryRails";
 import { WatchDetailBody } from "@/components/watch/WatchPageSection";
@@ -381,7 +381,7 @@ export function WatchSeriesClient({
       </section>
 
       {checkoutOpen ? (
-        <SeriesUnlockBakongCheckoutModal
+        <SeriesUnlockCheckoutModal
           seriesSlug={series.slug}
           title={series.title}
           watchHref={`/watch/series/${series.slug}/${seasonNum}/${episodeNum}`}

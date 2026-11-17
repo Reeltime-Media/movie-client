@@ -5,7 +5,7 @@ import { Play, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { BakongCheckoutModal } from "@/components/pay/BakongCheckoutModal";
+import { MovieCheckoutModal } from "@/components/pay/CheckoutModals";
 import { CdnImage } from "@/components/ui/CdnImage";
 import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { useI18n } from "@/components/providers/LocaleProvider";
@@ -443,7 +443,7 @@ function FlipPosterCard(props: PosterCardProps) {
       ) : null}
 
       {checkoutOpen && contentId && paySlug ? (
-        <BakongCheckoutModal
+        <MovieCheckoutModal
           contentId={contentId}
           title={trailerTitle}
           priceLabel={priceLabel}
