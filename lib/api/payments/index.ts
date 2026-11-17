@@ -42,9 +42,14 @@ export interface PaypalIntentRead {
   created_at: string;
 }
 
+/** "paypal" = PayPal login page. "card" = ask PayPal for its Visa/Mastercard page, for
+ * buyers without a PayPal account (still paid on paypal.com; PayPal decides if it shows). */
+export type PaypalFunding = "paypal" | "card";
+
 export interface PaypalCheckoutOptions {
   /** Same-site path to open after payment (e.g. the movie's watch page). */
   returnPath?: string;
+  funding?: PaypalFunding;
 }
 
 /** Flat catalog amounts charged by checkout — keep UI in sync with the API. */
@@ -64,6 +69,7 @@ function paypalBody(options: PaypalCheckoutOptions) {
   return {
     return_path: options.returnPath ?? null,
     client: "web",
+    funding: options.funding ?? "paypal",
     // Come back to the origin the buyer started on (their login lives there).
     return_origin: typeof window !== "undefined" ? window.location.origin : null,
   };

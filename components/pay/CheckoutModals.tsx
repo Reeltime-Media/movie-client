@@ -18,6 +18,7 @@ import {
   createMoviePaypalIntent,
   createSeriesUnlockPaypalIntent,
   createSubscriptionPaypalIntent,
+  type PaypalFunding,
   type PaypalIntentRead,
 } from "@/lib/api/payments";
 import { movieWatchHref } from "@/lib/movie-routes";
@@ -29,7 +30,7 @@ type GateProps = {
   onClose: () => void;
   /** Where the buyer goes if the API says they already own it. */
   ownedHref: string;
-  startPaypal: () => Promise<PaypalIntentRead>;
+  startPaypal: (funding: PaypalFunding) => Promise<PaypalIntentRead>;
   renderBakong: () => ReactNode;
 };
 
@@ -69,7 +70,9 @@ export function MovieCheckoutModal(props: BakongCheckoutModalProps) {
       priceLabel={props.priceLabel}
       onClose={props.onClose}
       ownedHref={watchHref}
-      startPaypal={() => createMoviePaypalIntent(props.contentId, { returnPath: watchHref })}
+      startPaypal={(funding) =>
+        createMoviePaypalIntent(props.contentId, { returnPath: watchHref, funding })
+      }
       renderBakong={() => <BakongCheckoutModal {...props} />}
     />
   );
@@ -81,8 +84,11 @@ export function SeriesUnlockCheckoutModal(props: SeriesUnlockBakongCheckoutModal
       title={props.title}
       onClose={props.onClose}
       ownedHref={props.watchHref}
-      startPaypal={() =>
-        createSeriesUnlockPaypalIntent(props.seriesSlug, { returnPath: props.watchHref })
+      startPaypal={(funding) =>
+        createSeriesUnlockPaypalIntent(props.seriesSlug, {
+          returnPath: props.watchHref,
+          funding,
+        })
       }
       renderBakong={() => <SeriesUnlockBakongCheckoutModal {...props} />}
     />
@@ -95,7 +101,9 @@ export function SubscriptionCheckoutModal(props: SubscriptionBakongCheckoutModal
       title="Subscription"
       onClose={props.onClose}
       ownedHref="/profile"
-      startPaypal={() => createSubscriptionPaypalIntent(props.planCode, { returnPath: "/profile" })}
+      startPaypal={(funding) =>
+        createSubscriptionPaypalIntent(props.planCode, { returnPath: "/profile", funding })
+      }
       renderBakong={() => <SubscriptionBakongCheckoutModal {...props} />}
     />
   );

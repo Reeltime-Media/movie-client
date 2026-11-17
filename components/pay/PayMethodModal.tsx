@@ -1,10 +1,10 @@
 "use client";
 
-import { Loader2, X } from "lucide-react";
+import { CreditCard, Loader2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { safePaypalUrl } from "@/lib/safe-redirect";
-import type { PaypalIntentRead } from "@/lib/api/payments";
+import type { PaypalFunding, PaypalIntentRead } from "@/lib/api/payments";
 
 export type PayMethodModalProps = {
   title: string;
@@ -14,8 +14,8 @@ export type PayMethodModalProps = {
   loading?: boolean;
   onClose: () => void;
   onChooseBakong: () => void;
-  /** Creates the PayPal order; the buyer is then sent to PayPal. */
-  startPaypal: () => Promise<PaypalIntentRead>;
+  /** Creates the PayPal order; the buyer is then sent to PayPal (card = card page first). */
+  startPaypal: (funding: PaypalFunding) => Promise<PaypalIntentRead>;
   /** Called instead of redirecting when the API says the buyer already owns it (409). */
   onAlreadyOwned: () => void;
 };
@@ -35,7 +35,7 @@ export function PayMethodModal({
   startPaypal,
   onAlreadyOwned,
 }: PayMethodModalProps) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<PaypalFunding | null>(null);
   const [error, setError] = useState("");
   const startedRef = useRef(false);
 
@@ -52,18 +52,18 @@ export function PayMethodModal({
     };
   }, [onClose]);
 
-  async function handlePaypal() {
+  async function handlePaypal(funding: PaypalFunding) {
     if (startedRef.current) return;
     startedRef.current = true;
-    setBusy(true);
+    setBusy(funding);
     setError("");
     try {
-      const intent = await startPaypal();
+      const intent = await startPaypal(funding);
       // Full-page redirect: PayPal sends the buyer back to /pay/paypal/return.
       window.location.assign(safePaypalUrl(intent.approve_url));
     } catch (err: unknown) {
       startedRef.current = false;
-      setBusy(false);
+      setBusy(null);
       const code = statusOf(err);
       if (code === 409) {
         onAlreadyOwned();
@@ -94,7 +94,7 @@ export function PayMethodModal({
         <button
           type="button"
           onClick={onClose}
-          disabled={busy}
+          disabled={busy !== null}
           aria-label="Close checkout"
           className="absolute right-3 top-3 flex size-7 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/70 text-white transition-colors hover:bg-black/90 disabled:opacity-50"
         >
@@ -114,11 +114,11 @@ export function PayMethodModal({
           <div className="mt-5 flex flex-col gap-2.5">
             <button
               type="button"
-              onClick={handlePaypal}
-              disabled={busy}
+              onClick={() => void handlePaypal("paypal")}
+              disabled={busy !== null}
               className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-[#FFC439] text-[13px] font-bold text-[#111] transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
             >
-              {busy ? (
+              {busy === "paypal" ? (
                 <>
                   <Loader2 size={14} className="animate-spin" aria-hidden />
                   Opening PayPal…
@@ -129,8 +129,26 @@ export function PayMethodModal({
             </button>
             <button
               type="button"
+              onClick={() => void handlePaypal("card")}
+              disabled={busy !== null}
+              className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-surface-elevated text-[13px] font-semibold text-text transition-colors hover:border-border-hover disabled:cursor-wait disabled:opacity-70"
+            >
+              {busy === "card" ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" aria-hidden />
+                  Opening secure card page…
+                </>
+              ) : (
+                <>
+                  <CreditCard size={15} aria-hidden />
+                  Pay by card (Visa / Mastercard)
+                </>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={onChooseBakong}
-              disabled={busy}
+              disabled={busy !== null}
               className="h-11 cursor-pointer rounded-md border border-border bg-surface-elevated text-[13px] font-semibold text-text transition-colors hover:border-border-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               Pay with Bakong KHQR
@@ -141,7 +159,7 @@ export function PayMethodModal({
               </p>
             ) : null}
             <p className="text-center text-[11px] text-text-muted">
-              You will be sent to PayPal to finish, then brought back here.
+              Card and PayPal payments are completed securely on PayPal, then you come back here.
             </p>
           </div>
         )}
